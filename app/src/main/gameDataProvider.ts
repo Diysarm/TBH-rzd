@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import type { GameDataStatus } from "../../shared/types";
 import {
   extractAndEnrichItemsFromHtml,
+  fetchItemFromDetailPage,
   indexById,
   catalogHasGearLevels,
   normalizeGameItem,
@@ -12,11 +13,14 @@ import {
 } from "../core/gamedata";
 
 const SOURCE_URL = "https://tbh.city/items";
+const DISCOVERED_SOURCE = "https://tbh.city/items/{id}";
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000; // a week
 
 export class GameDataProvider {
   private data: GameData | null = null;
   private index = new Map<number, GameItem>();
+  /** ItemKeys resolved from tbh.city detail pages (not in the bulk list). */
+  private discovered = new Map<number, GameItem>();
   private source: "cache" | "bundled" | "none" = "none";
 
   private cachePath(): string {
@@ -24,6 +28,14 @@ export class GameDataProvider {
       return join(app.getPath("userData"), "gamedata.json");
     } catch {
       return join(process.cwd(), "gamedata.cache.json");
+    }
+  }
+
+  private discoveredPath(): string {
+    try {
+      return join(app.getPath("userData"), "discovered_items.json");
+    } catch {
+      return join(process.cwd(), "discovered_items.cache.json");
     }
   }
 
@@ -37,19 +49,11 @@ export class GameDataProvider {
 
   private bundledPath(): string {
     const candidates = [
-      join(process.resourcesPath ?? "", "data", "gamedata.json"), // packaged
-      join(process.cwd(), "..", "data", "gamedata.json"), // dev (cwd = app/)
+      join(process.resourcesPath ?? "", "data", "gamedata.json"),
+      join(process.cwd(), "..", "data", "gamedata.json"),
       join(process.cwd(), "data", "gamedata.json"),
     ];
     return candidates.find((p) => existsSync(p)) ?? candidates[candidates.length - 1];
-  }
-
-  private supplementPaths(): string[] {
-    return [
-      join(process.resourcesPath ?? "", "data", "hero_items.json"),
-      join(process.cwd(), "..", "data", "hero_items.json"),
-      join(process.cwd(), "data", "hero_items.json"),
-    ];
   }
 
   private loadLevelCache(): Map<string, number> {
@@ -71,22 +75,34 @@ export class GameDataProvider {
     writeFileSync(path, JSON.stringify({ levels: Object.fromEntries(levels) }));
   }
 
-  private mergeSupplements(): void {
-    for (const p of this.supplementPaths()) {
-      if (!existsSync(p)) continue;
-      try {
-        const raw = readFileSync(p, "utf-8").replace(/^\uFEFF/, "");
-        const sup = JSON.parse(raw) as { items?: Record<string, unknown>[] };
-        if (!Array.isArray(sup.items)) continue;
-        for (const row of sup.items) {
-          const item = normalizeGameItem(row);
-          if (item && !this.index.has(item.id)) this.index.set(item.id, item);
-        }
-        break;
-      } catch {
-        // skip malformed supplement
+  private loadDiscoveredCache(): void {
+    const path = this.discoveredPath();
+    if (!existsSync(path)) return;
+    try {
+      const raw = JSON.parse(readFileSync(path, "utf-8").replace(/^\uFEFF/, "")) as {
+        items?: unknown[];
+      };
+      if (!Array.isArray(raw.items)) return;
+      for (const row of raw.items) {
+        const item = normalizeGameItem(row as Record<string, unknown>);
+        if (item) this.discovered.set(item.id, item);
       }
+    } catch {
+      // ignore corrupt cache
     }
+  }
+
+  private saveDiscoveredCache(): void {
+    const path = this.discoveredPath();
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(
+      path,
+      JSON.stringify({
+        source: DISCOVERED_SOURCE,
+        fetchedUtc: new Date().toISOString(),
+        items: [...this.discovered.values()],
+      }),
+    );
   }
 
   /** Load the best available snapshot. Safe to call once at startup. */
@@ -97,21 +113,21 @@ export class GameDataProvider {
     if (existsSync(cache) && this.tryLoad(cache)) {
       this.source = "cache";
       if (!catalogHasGearLevels(this.index.values()) && this.tryLoadBundledLevelsOverlay(bundled)) {
+        this.loadDiscoveredCache();
         return;
       }
+      this.loadDiscoveredCache();
       return;
     }
     if (existsSync(bundled) && this.tryLoad(bundled)) {
       this.source = "bundled";
+      this.loadDiscoveredCache();
       return;
     }
     this.source = "none";
+    this.loadDiscoveredCache();
   }
 
-  /**
-   * Legacy user caches (pre-level schema) win over bundled on load. Copy levels from
-   * the bundled snapshot by ItemKey so gear rows show Lv without waiting for refresh.
-   */
   overlayMissingLevelsFromBundled(): boolean {
     if (catalogHasGearLevels(this.index.values())) return false;
     return this.tryLoadBundledLevelsOverlay(this.bundledPath());
@@ -163,7 +179,6 @@ export class GameDataProvider {
         count: items.length,
       };
       this.index = indexById(items);
-      this.mergeSupplements();
       return true;
     } catch {
       return false;
@@ -171,13 +186,30 @@ export class GameDataProvider {
   }
 
   get(itemKey: number): GameItem | undefined {
-    return this.index.get(itemKey);
+    return this.index.get(itemKey) ?? this.discovered.get(itemKey);
+  }
+
+  /** Fetch tbh.city detail pages for ItemKeys missing from the main catalog. */
+  async discoverMissingItems(itemKeys: Iterable<number>): Promise<number> {
+    const pending = [...new Set(itemKeys)].filter((id) => id > 0 && !this.get(id));
+    if (pending.length === 0) return 0;
+
+    let added = 0;
+    for (const id of pending) {
+      const item = await fetchItemFromDetailPage(id);
+      if (item) {
+        this.discovered.set(id, item);
+        added++;
+      }
+    }
+    if (added > 0) this.saveDiscoveredCache();
+    return added;
   }
 
   status(): GameDataStatus {
     return {
       loaded: this.data !== null,
-      count: this.data?.count ?? 0,
+      count: (this.data?.count ?? 0) + this.discovered.size,
       fetchedUtc: this.data?.fetchedUtc ?? null,
       source: this.source,
       stale: this.isStale(),
@@ -191,7 +223,6 @@ export class GameDataProvider {
     return Date.now() - ts > REFRESH_TTL_MS;
   }
 
-  /** Re-scrape tbh.city and persist to the user cache. */
   async refresh(): Promise<{ ok: boolean; count?: number; error?: string }> {
     try {
       const res = await fetch(SOURCE_URL, {
@@ -215,7 +246,6 @@ export class GameDataProvider {
       this.saveLevelCache(levelsByTemplate);
       this.data = data;
       this.index = indexById(items);
-      this.mergeSupplements();
       this.source = "cache";
       return { ok: true, count: items.length };
     } catch (err) {
@@ -223,7 +253,6 @@ export class GameDataProvider {
     }
   }
 
-  /** Refresh in the background if the snapshot is past its TTL. */
   refreshIfStale(onComplete?: () => void): void {
     if (this.isStale()) {
       void this.refresh().then((result) => {

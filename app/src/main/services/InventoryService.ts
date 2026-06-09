@@ -36,7 +36,15 @@ export class InventoryService {
   onInventory(snap: InventorySnapshot): void {
     this.lastInventoryRaw = snap;
     this.resolveAndPushInventory();
+    void this.discoverCatalogGaps();
     void this.ensureOwnedPrices();
+  }
+
+  private async discoverCatalogGaps(): Promise<void> {
+    if (!this.lastInventoryRaw) return;
+    const keys = this.lastInventoryRaw.items.map((i) => i.itemKey);
+    const added = await this.gameData.discoverMissingItems(keys);
+    if (added > 0) this.resolveAndPushInventory();
   }
 
   parseFromSave(text: string, mtime: number): InventorySnapshot {

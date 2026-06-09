@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildGameItems,
   catalogHasGearLevels,
+  extractItemFromDetailHtml,
   extractItemsFromHtml,
   extractLevelFromDetailHtml,
   iconTemplateFromPath,
@@ -76,6 +77,21 @@ describe("gamedata", () => {
   it("detects when a catalog snapshot includes gear levels", () => {
     expect(catalogHasGearLevels([{ type: "GEAR", level: 50 } as never])).toBe(true);
     expect(catalogHasGearLevels([{ type: "GEAR", level: null } as never])).toBe(false);
+  });
+
+  it("parses STAGEBOX metadata from tbh.city detail HTML", () => {
+    const html = `<title>Stage Boss Box Lv50 — RARE STAGEBOX · Drop Sources · TBH.City</title>
+      Tradable on Market
+      "ItemKey":920501,"ITEMTYPE":"STAGEBOX","GRADE":"RARE","IsSteamItem":true`;
+    const item = extractItemFromDetailHtml(html, 920501);
+    expect(item).toEqual({
+      id: 920501,
+      name: "Stage Boss Box Lv50",
+      grade: "RARE",
+      type: "STAGEBOX",
+      level: 50,
+      marketTradable: true,
+    });
   });
 
   it("throws when no array is present", () => {

@@ -8,7 +8,7 @@ export interface GameItem {
   id: number; // == save itemSaveDatas[].ItemKey
   name: string;
   grade: string; // COMMON..COSMIC
-  type: string; // GEAR | MATERIAL
+  type: string; // GEAR | MATERIAL | STAGEBOX | ...
   level: number | null; // gear item level; null for materials / unknown
   marketTradable: boolean;
 }
@@ -40,6 +40,53 @@ interface RawListItem {
 }
 
 const DETAIL_LEVEL_RE = /Level\\":(\d+),\\"IsSteamItem/;
+const TBH_ITEM_BASE = "https://tbh.city/items";
+
+export function parseLevelFromName(name: string): number | null {
+  const m = name.match(/\bLv\s*(\d+)\b/i);
+  return m ? Number(m[1]) : null;
+}
+
+/** Parse tbh.city item detail HTML (types omitted from the bulk /items list). */
+export function extractItemFromDetailHtml(html: string, itemId: number): GameItem | null {
+  const keyTag = `"ItemKey":${itemId}`;
+  if (!html.includes(keyTag)) return null;
+
+  const at = html.indexOf(keyTag);
+  const slice = html.slice(at, at + 2000);
+  const titleMatch = html.match(/<title>([^<]+)<\/title>/)?.[1] ?? "";
+  const titleParts = titleMatch.match(/^(.+?) — ([A-Z]+) ([A-Z]+) ·/);
+
+  const grade = slice.match(/GRADE\\":\\"([^\\"]+)\\"/)?.[1] ?? titleParts?.[2] ?? "UNKNOWN";
+  const type = slice.match(/ITEMTYPE\\":\\"([^\\"]+)\\"/)?.[1] ?? titleParts?.[3] ?? "UNKNOWN";
+
+  let name = slice.match(/"en":"([^"]+)"/)?.[1] ?? "";
+  if (!name || /^Item \d+$/.test(name)) {
+    name = titleParts?.[1]?.trim() ?? "";
+  }
+  if (!name) return null;
+
+  const level = extractLevelFromDetailHtml(html) ?? parseLevelFromName(name);
+  const marketTradable =
+    /Tradable on Market/i.test(html) || /IsSteamItem\\":true/.test(slice);
+
+  return {
+    id: itemId,
+    name,
+    grade,
+    type,
+    level,
+    marketTradable,
+  };
+}
+
+export async function fetchItemFromDetailPage(itemId: number): Promise<GameItem | null> {
+  const res = await fetch(`${TBH_ITEM_BASE}/${itemId}`, {
+    headers: { "User-Agent": "Mozilla/5.0 (TBH Companion)" },
+  });
+  if (!res.ok) return null;
+  return extractItemFromDetailHtml(await res.text(), itemId);
+}
 
 export function iconTemplateFromPath(iconPath: string): string {
   const base = iconPath.split("/").pop() ?? iconPath;
@@ -113,7 +160,7 @@ export function extractItemsFromHtml(
 }
 
 export async function fetchLevelForItemId(itemId: number): Promise<number | null> {
-  const res = await fetch(`https://tbh.city/items/${itemId}`, {
+  const res = await fetch(`${TBH_ITEM_BASE}/${itemId}`, {
     headers: { "User-Agent": "Mozilla/5.0 (TBH Companion)" },
   });
   if (!res.ok) return null;

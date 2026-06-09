@@ -40,10 +40,14 @@ export function InventorySummary({
       <GradeBars composition={c} />
       {(c.unknownCount ?? 0) > 0 && (
         <div className="inv-hint">
-          {c.unknownCount} item(s) aren&apos;t in the catalog{" "}
-          {inv.gameDataLoaded ? "(possibly added by a game update)" : "(catalog not loaded)"}.{" "}
+          {c.unknownCount} item(s) are not in the main tbh.city list (often STAGEBOX or other
+          types). The app looks them up on{" "}
+          <a href="https://tbh.city/items" target="_blank" rel="noreferrer">
+            tbh.city
+          </a>{" "}
+          by ItemKey — reload the save tab if names stay as Unknown #id.{" "}
           <button type="button" className="btn small-btn" onClick={() => void window.tbh.refreshGameData()}>
-            Refresh game data
+            Refresh main catalog
           </button>
         </div>
       )}
