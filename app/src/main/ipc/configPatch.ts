@@ -1,14 +1,12 @@
-import type { AppConfig } from "../../../shared/types";
-import type { Config } from "../config";
-import type { XpTracker } from "../../core/tracker";
+import type { AppConfig } from "../../../shared/types";import type { XpTracker } from "../../core/tracker";
 import type { SteamMarketProvider } from "../steamMarketProvider";
 import { makeHistoryLogger } from "../historyLog";
 import { XpTracker as TrackerCtor } from "../../core/tracker";
 
 export interface ConfigPatchDeps {
-  getConfig: () => Config;
-  setConfig: (c: Config) => void;
-  saveConfig: (c: Config) => void;
+  getConfig: () => AppConfig;
+  setConfig: (c: AppConfig) => void;
+  saveConfig: (c: AppConfig) => void;
   getTracker: () => XpTracker;
   setTracker: (t: XpTracker) => void;
   getMarket: () => SteamMarketProvider;

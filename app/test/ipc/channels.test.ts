@@ -3,6 +3,10 @@ import { join } from "node:path";
 import { describe, it, expect } from "vitest";
 import { IPC, IPC_INVOKE_CHANNELS, IPC_PUSH_CHANNELS, IPC_SEND_CHANNELS } from "../../shared/ipc";
 
+function readHandler(name: string): string {
+  return readFileSync(join(__dirname, `../../src/main/ipc/handlers/${name}.ts`), "utf-8");
+}
+
 describe("IPC channel registry", () => {
   it("preload uses every invoke channel via IPC constants", () => {
     const preload = readFileSync(join(__dirname, "../../src/preload/index.ts"), "utf-8");
@@ -12,18 +16,21 @@ describe("IPC channel registry", () => {
     expect(preload).toContain("IPC.PRICES_REFRESH");
   });
 
-  it("registerIpc wires invoke handlers", () => {
-    const reg = readFileSync(join(__dirname, "../../src/main/ipc/registerIpc.ts"), "utf-8");
-    expect(reg).toContain("IPC.GET_STATS");
-    expect(reg).toContain("IPC.SAVE_CONFIG");
-    expect(reg).toContain("IPC.PRICES_REFRESH");
+  it("IPC handlers wire invoke and send channels", () => {
+    const stats = readHandler("stats");
+    const market = readHandler("market");
+    const config = readHandler("config");
+    expect(stats).toContain("IPC.GET_STATS");
+    expect(config).toContain("IPC.SAVE_CONFIG");
+    expect(market).toContain("IPC.PRICES_REFRESH");
   });
 
-  it("appState pushes on IPC constants", () => {
-    const state = readFileSync(join(__dirname, "../../src/main/app/appState.ts"), "utf-8");
-    expect(state).toContain("IPC.STATS");
-    expect(state).toContain("IPC.INVENTORY");
-    expect(state).toContain("IPC.PRICES_PROGRESS");
+  it("services broadcast on IPC push constants", () => {
+    const tracking = readFileSync(join(__dirname, "../../src/main/services/TrackingService.ts"), "utf-8");
+    const inventory = readFileSync(join(__dirname, "../../src/main/services/InventoryService.ts"), "utf-8");
+    expect(tracking).toContain("IPC.STATS");
+    expect(inventory).toContain("IPC.INVENTORY");
+    expect(inventory).toContain("IPC.PRICES_PROGRESS");
   });
 
   it("preload uses send channels via IPC constants", () => {
