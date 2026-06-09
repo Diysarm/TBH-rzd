@@ -33,7 +33,34 @@ cached per-currency. Refresh is manual (a button) because per-item pricing is
 slow + rate-limited; it's incremental (skips items priced <24h ago) and backs
 off on HTTP 429. See `docs/findings/steam-market.md`.
 
-## 2026-06 - No "Records" tab from the save (records are session-only)
+## 2026-06 - Inventory valuation: materials + Legendary+ gear only
+
+Steam prices on the Inventory tab target **owned** items only (not the full
+~650-item catalog). **Materials** are priced at any grade (1:1 on display name).
+**Gear** is priced only at **Legendary and above**; Rare or lower gear is
+skipped (low value + ambiguous Steam variant mapping). Gear maps to
+`<name> (<Grade>) A` on the Steam market; when the catalog grade has no
+matching listing (grade mismatch), the row shows no price. Background refresh
+runs automatically on save load, backs off on HTTP 429 until the queue finishes,
+and re-pushes inventory rows as prices arrive.
+
+## 2026-06 - Hero-class items via bundled supplement catalog
+
+tbh.city/items omits hero-bound `ItemKey`s in the `9xxxxx` range. We ship
+`data/hero_items.json` merged into the catalog at load time (names only; not on
+Steam). Refreshing game data from tbh.city does not remove these entries.
+
+## 2026-06 - Gear Steam mapping with grade fallback
+
+Gear prices use `<name> (<Grade>) A` when exact; if the catalog grade has no
+Steam listing, we pick the nearest market grade and mark the row as an estimate
+(`priceEstimate`). Materials map 1:1 by name. Gear below Legendary is not priced.
+
+## 2026-06 - Inventory location from slot refs (lossless UniqueId)
+
+Bag/stash/trading counts come from `inventorySaveDatas` / `stashSaveDatas` /
+`tradingStashSaveDatas` slot `ItemUniqueId`s matched against `itemSaveDatas`
+via string parsing (big-int safe). Equipped items use `equippedItemIds`.
 
 The in-game Records tab (per-stage clear times, chest-drop log) is NOT written
 to the save - only progress (`maxCompletedStage`), current chest holdings

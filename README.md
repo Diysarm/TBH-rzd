@@ -3,7 +3,7 @@
 A desktop companion app for the idle game **TBH: Task Bar Hero**. It reads your
 local, encrypted save file (read-only) and shows live stats - XP/hour,
 gold/hour, per-hero rates, session history - in a full window or a compact
-always-on-top mini overlay. Inventory valuation via the Steam Market is planned.
+always-on-top mini overlay. Inventory valuation uses live Steam Market prices.
 
 Built with **Electron + React + TypeScript**. It only **reads** your own local
 save to display statistics; it never modifies the save or talks to the game or
@@ -32,24 +32,31 @@ npm run dist     # Windows NSIS installer into release/
 
 - **Live tab** - big XP/hour (held steady between the game's periodic saves,
   not decaying), gold/hour (earned only), session totals, current map, a
-  per-hero level + XP/hour breakdown, a "last updated" counter that resets only
-  on real XP change, a scrollable history of every XP change, a reset button,
+  per-hero level + XP/hour breakdown, an "XP updated" counter (resets only on
+  real XP change), a scrollable history of every XP change, a reset button,
   and an idle warning after 2 minutes.
-- **Mini overlay** - a frameless, always-on-top, draggable readout. Toggle it
-  from the "Mini" button; the overlay's expand button restores the full window.
+- **Global save bar** - "Save written X ago" shared by all tabs (distinct from
+  the Live tab's XP timer).
+- **Mini overlay** - frameless always-on-top readout with XP/gold rates, map,
+  priced inventory total, and pricing status. Toggle from **Mini** in the tab bar.
 - **CSV history** - every XP change is appended to `logs/xp_history.csv` when
   `logHistoryCsv` is enabled.
-- **Inventory tab** - owned items resolved against the game catalog
-  (`data/gamedata.json`, scraped from tbh.city and self-refreshing), grouped by
-  type with composition stats (counts by rarity/type, tradable count, unopened
-  chests), search + sort, and graceful "Unknown #key" handling for items added
-  by a game update.
-- **Market tab** - pick a currency and refresh Steam Market prices via
-  `priceoverview` (rate-limited, incremental, cached per currency).
-- **Planned** - per-item Steam valuation on the inventory (price x count),
-  time-series charts. See `docs/findings/`.
+- **Inventory tab** - owned items from the save resolved against the game catalog
+  (`data/gamedata.json` + `data/hero_items.json`, self-refreshing from tbh.city),
+  grouped by type with composition stats, search/filter/sort (grade, type,
+  location, tradable, in-use), Steam price + value columns (materials + Legendary+
+  gear), location breakdown (inventory / stash / trading / equipped), and graceful
+  handling of unknown items after game updates.
+- **Market tab** - pick a currency and refresh Steam prices (background job on
+  save load; backs off on rate limits until done).
+- **Settings tab** - edit `config.json` (save path, poll interval, rolling window,
+  currency, cube XP, CSV logging, always-on-top).
+
+See `docs/BACKLOG.md` for deferred ideas (records tab, charts, etc.).
 
 ## Configuration - `config.json`
+
+Editable from the **Settings** tab or by hand. Stored under the app user-data folder.
 
 | Key | Meaning | Default |
 | --- | --- | --- |
@@ -58,11 +65,9 @@ npm run dist     # Windows NSIS installer into release/
 | `pollIntervalSeconds` | How often to re-read the save | `5` |
 | `rollingWindowMinutes` | Window for the "XP/hour" figure | `5` |
 | `trackCubeExp` | Also count Hero-dric Cube XP | `false` |
-| `startTopmost` | Start pinned on top | `true` |
+| `startTopmost` | Keep main window on top | `true` |
 | `logHistoryCsv` | Append every XP change to `logs/xp_history.csv` | `true` |
 | `currency` | ISO code for Steam Market prices (`USD`, `EUR`, `BRL`, ...) | `USD` |
-
-Currency is also selectable from the Market tab (it persists to `config.json`).
 
 If decryption stops working after a game update, the developer may have rotated
 the ES3 password; update `es3Password` and restart. See `docs/SAVE_FORMAT.md`.
@@ -77,8 +82,8 @@ app/                     # the companion app (Electron + React + TS)
   src/renderer/          # React UI (tabs + mini overlay)
   shared/types.ts        # types shared across processes
   test/                  # Vitest unit + integration tests
-config.json              # user settings
-data/                    # data artifacts (e.g. Steam market catalog snapshot)
+config.json              # default settings (overridden by userData copy)
+data/                    # bundled catalogs (gamedata, hero_items, steam snapshot)
 docs/                    # architecture, save format, decisions, findings
 ```
 

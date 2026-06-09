@@ -1,46 +1,37 @@
 # Backlog - future release ideas
 
-Parking lot for features we want but aren't building yet. Each entry notes the
-gist plus any known gotchas so we don't rediscover them. Newest first.
+Parking lot for features we want but aren't building yet. Newest first.
 
-## Inventory: filter by type and grade
+## Records tab (stage clears + chest drops)
 
-Add type and grade filters to the Inventory tab (today it only has free-text
-search + a "tradable only" toggle).
+The in-game Records tab is session-only - not written to the save. We could derive
+our own log from save deltas, but the save only rewrites ~every 2 min, so chest
+drops can be opened before we observe the `BoxData` delta (lossy). Needs a
+reliability design before building.
 
-- Data is already present: every `ResolvedInventoryRow` carries `grade` and
-  `type`, and the composition has `byGrade` / `byType`.
-- Implementation: two dropdowns (or multi-select chips) in `Inventory.tsx`
-  driven by the distinct grades/types in the current rows; combine with the
-  existing search + tradable filters. Sort grade options by the existing
-  `GRADE_ORDER` so they read low->high rarity.
-- Small/contained; no save or catalog changes needed.
+## Time-series charts + persistence
 
-## Inventory: "in use" (equipped) column + filter
+Store XP/gold/inventory value samples in SQLite (`userData/`) and chart trends
+(XP/hr over the last hour, inventory value over the week). Deferred for now.
 
-Show whether an item is currently equipped/in use, with a column and a filter.
+## Provider registry / extensibility
 
-- **Needs research:** `itemSaveDatas` is the flat master list; it does not say
-  what's equipped. Equipped items are referenced elsewhere (likely
-  `heroSaveDatas` / a loadout structure) by `UniqueId`. Step 1 is to find where
-  equipped item ids live in the save.
-- **Gotcha:** that mapping is a `UniqueId` join, and `UniqueId` exceeds JS's
-  safe-integer range (distinct ids collide after `JSON.parse`, ~6/185 observed).
-  Must parse those ids losslessly (string/bigint) - see `docs/SAVE_FORMAT.md`.
-- **UI nuance:** rows are grouped by `ItemKey`, so "in use" can be partial (e.g.
-  1 of 3 copies equipped). Show "X/Y in use" or split equipped vs spare. Likely
-  also wants pet/rune slots, not just hero gear.
+Extract a small provider interface so future tabs (pets, runes, stages) plug in
+without growing `main/index.ts`.
 
-## All tabs: global "last updated" header
+## `aggregateSaveDatas` decoding
 
-Every tab's data comes from the same save read, so surface the save freshness
-once at the app level instead of only on the Live tab.
+Lifetime counters `{ Type, SubKey, Value }` in the save with unknown meanings -
+could unlock more stats if reverse-engineered.
 
-- Add a thin status bar in `App.tsx` (above/within the tab area) showing
-  "Last updated: Ns ago" (and "is the game running?" idle state after the
-  threshold), shared by all tabs and the overlay.
-- The `stats` stream already ticks every second and carries `secondsSinceRead` /
-  save mtime, so a small shared hook can drive it without new IPC. Consider a
-  dedicated lightweight `save-status` channel if we don't want the full stats
-  payload on non-Live tabs.
-- De-duplicate: the Live tab's own "last updated" line would fold into this.
+## Per-location inventory split refinements
+
+Equipped items are tracked separately from bag/stash/trading slots. Some instances
+still show as "unknown" when slot refs don't resolve (timing/collisions). Could
+add pet/rune slot sources if found in the save.
+
+## Gear variant letter (` A`, ` B`, ...)
+
+Steam listings disambiguate variants with a trailing letter. We default to ` A` or
+pick the nearest market grade; the save may carry which variant an instance is -
+not yet decoded from datamine fields.
