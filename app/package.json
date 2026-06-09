@@ -34,7 +34,8 @@
       }
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "../docs/design/icons/concept-companion-512.png"
     },
     "nsis": {
       "oneClick": false,

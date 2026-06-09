@@ -2,6 +2,25 @@
 
 Terse record of architectural decisions. Newest first.
 
+## 2026-06-09 - Renderer IPC via `TbhProvider` context
+
+Stats, inventory, and price-progress IPC channels register once in
+`renderer/context/TbhProvider.tsx` (parallel initial fetch on mount). Tab
+components consume thin hooks (`useStats`, `useInventory`, `usePrices`) instead
+of each subscribing to `window.tbh.onStats` / `onInventory` independently.
+
+## 2026-06-09 - CSP tightened for production renderer
+
+`index.html` adds explicit `script-src 'self'`, `connect-src` for Steam market
+hosts, and keeps `style-src 'unsafe-inline'` (required for inline styles).
+Dev uses the same policy via electron-vite; prod builds disable source maps.
+
+## 2026-06-09 - Phase 9 domain deferrals (materials, gear variant, location `?`)
+
+Materials via `aggregateSaveDatas`, gear Steam suffix ` A`, and unknown location
+`?` slot mapping remain open — need save-format spikes before parser changes.
+Win icon wired from `docs/design/icons/concept-companion-512.png`.
+
 ## 2026-06 - Inventory reads `itemSaveDatas` directly, not a slot->item id join
 
 `itemSaveDatas` is the master list of every owned item instance (inventory +

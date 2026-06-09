@@ -17,9 +17,10 @@ Market. It never modifies the save and never talks to the game servers.
   - `app/src/main/` - Electron main process (Node): file watching, decryption,
     tracking, IPC. Owns all file/network access.
   - `app/src/preload/` - `contextBridge` exposing a typed `window.tbh` API.
-  - `app/src/core/` - framework-free, unit-tested logic (`es3`, `saveReader`,
-    `tracker`, `stages`, `heroes`, `gamedata`, `inventory`, `steamPrice`).
+  - `app/src/core/` - framework-free, unit-tested logic (`es3`, `save/snapshot`,
+    `tracker`, `stages`, `heroes`, `gamedata`, `inventory/*`, `steamPrice`).
   - `app/src/renderer/` - React UI (tabs + mini overlay). Pure UI, no Node APIs.
+    Shared IPC state via `context/TbhProvider.tsx`.
   - `app/shared/types.ts` - types shared across processes.
 - `data/` - bundled catalogs (`gamedata.json`, `hero_items.json`).
 - `docs/` - the knowledge base (see below).

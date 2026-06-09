@@ -31,3 +31,7 @@ jobs:
 
       - name: Automated QA gate
         run: npm run qa
+
+      - name: npm audit (high severity)
+        run: npm audit --audit-level=high
+        continue-on-error: true

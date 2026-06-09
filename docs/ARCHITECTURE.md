@@ -34,9 +34,10 @@ flowchart LR
 - **preload** exposes a narrow, typed `window.tbh` API via `contextBridge`
   (e.g. `onStats(cb)`, `reset()`, `getInventory()`). No direct Node access leaks
   into the renderer.
-- **renderer** is pure React UI. It subscribes to pushed stats and renders.
-- **core** (`es3`, `saveReader`, `tracker`, `stages`, `heroes`, `gamedata`) has
-  no Electron/React imports so it can be unit-tested with Vitest.
+- **renderer** is pure React UI. It subscribes to pushed stats via `TbhProvider`
+  (single IPC listener per channel) and renders.
+- **core** (`es3`, `save/snapshot`, `tracker`, `stages`, `heroes`, `gamedata`,
+  `inventory/*`) has no Electron/React imports so it can be unit-tested with Vitest.
 
 No local HTTP server: main <-> renderer communicate over Electron IPC, which
 removes the FastAPI/WebSocket bridge that a Python backend would have needed.

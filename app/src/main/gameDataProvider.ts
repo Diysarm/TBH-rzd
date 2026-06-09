@@ -17,8 +17,6 @@ import {
   type GameItem,
 } from "../core/gamedata";
 
-export type { GameDataStatus };
-
 const SOURCE_URL = "https://tbh.city/items";
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000; // a week
 

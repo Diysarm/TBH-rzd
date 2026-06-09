@@ -19,12 +19,12 @@ Maintainability, testability, performance, security, and code discipline — ali
 | Phase | Focus | Status |
 |-------|--------|--------|
 | **1–4** | Main/core structure (IPC, services, save split, inventory UI extract) | **Done** |
-| **5** | Renderer data layer — dedupe IPC, kill waterfalls | Planned |
-| **6** | Bundle & tab loading — lazy tabs, direct imports | Planned |
-| **7** | Re-render & list rendering — Inventory/Live perf | Planned |
-| **8** | Security & quality — CSP, audit, errors, semantics | Planned |
-| **9** | Domain backlog — materials, gear variant, locations | Planned |
-| **10** | **Cleanup** — dead code, shims, docs sync, merge readiness | Planned **(last)** |
+| **5** | Renderer data layer — dedupe IPC, kill waterfalls | **Done** (2026-06-09) |
+| **6** | Bundle & tab loading — lazy tabs, direct imports | **Done** (2026-06-09) |
+| **7** | Re-render & list rendering — Inventory/Live perf | **Done** (2026-06-09) |
+| **8** | Security & quality — CSP, audit, errors, semantics | **Done** (2026-06-09) |
+| **9** | Domain backlog — materials, gear variant, locations | **Partial** — icon wired; materials/gear/location deferred |
+| **10** | **Cleanup** — dead code, shims, docs sync, merge readiness | **Done** (2026-06-09) |
 
 **Execution order:** 5 → 6 → 7 → 8 → 9 (as prioritized) → **10 cleanup before merge to `main`**.
 
@@ -166,8 +166,8 @@ Apply [.cursor/skills/coding-guidelines/SKILL.md](../.cursor/skills/coding-guide
 
 ### 10.1 — Code removal
 
-- [ ] Remove back-compat re-exports if unused: `core/saveReader.ts`, `core/inventory.ts` (update imports to `core/save/snapshot`, `core/inventory/*`)
-- [ ] Remove duplicate type exports (`GameDataStatus` — single source in `shared/types.ts`)
+- [x] Remove back-compat re-exports if unused: `core/saveReader.ts`, `core/inventory.ts` (update imports to `core/save/snapshot`, `core/inventory/*`)
+- [x] Remove duplicate type exports (`GameDataStatus` — single source in `shared/types.ts`)
 - [ ] Remove unused exports (run `tsc --noEmit` + grep for orphaned files)
 - [ ] Remove migration-only hook aliases after context migration (Phase 5)
 - [ ] Delete commented-out code and stale TODOs introduced during refactor

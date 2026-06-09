@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { STEAM_CURRENCIES } from "../../core/steamPrice";
 import type { AppConfig } from "../../../shared/types";
+import { reportIpcError } from "../lib/reportError";
 
 export function Settings() {
   const [cfg, setCfg] = useState<AppConfig | null>(null);
@@ -24,6 +25,7 @@ export function Settings() {
         setLoadError(null);
       })
       .catch((err: unknown) => {
+        reportIpcError(err);
         const text = err instanceof Error ? err.message : "Could not load settings.";
         setLoadError(text);
       });
@@ -73,7 +75,8 @@ export function Settings() {
           ? "Saved. Session stats were reset for the new tracking settings."
           : "Saved. Save-path or poll changes take effect immediately.",
       );
-    } catch {
+    } catch (err) {
+      reportIpcError(err);
       setMessage("Failed to save settings.");
     } finally {
       setBusy(false);

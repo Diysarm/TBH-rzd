@@ -78,8 +78,8 @@ the ES3 password; update `es3Password` and restart. See `docs/SAVE_FORMAT.md`.
 app/                     # the companion app (Electron + React + TS)
   src/main/              # Electron main: save watcher, config, IPC, windows
   src/preload/           # contextBridge -> window.tbh
-  src/core/              # framework-free logic (es3, saveReader, tracker, ...)
-  src/renderer/          # React UI (tabs + mini overlay)
+  src/core/              # framework-free logic (es3, save/snapshot, inventory/*, ...)
+  src/renderer/          # React UI (tabs + mini overlay; TbhProvider for IPC state)
   shared/types.ts        # types shared across processes
   test/                  # Vitest unit + integration tests
 config.json              # default settings (overridden by userData copy)
