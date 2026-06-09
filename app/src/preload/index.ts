@@ -4,6 +4,9 @@ import type {
   TbhApi,
   GameDataStatus,
   GameDataRefreshResult,
+  PriceStatus,
+  PriceProgress,
+  PriceRefreshResult,
 } from "../../shared/types";
 
 // Narrow, typed bridge. The renderer never touches Node/Electron directly.
@@ -33,6 +36,23 @@ const api: TbhApi = {
   },
   refreshGameData(): Promise<GameDataRefreshResult> {
     return ipcRenderer.invoke("gamedata-refresh");
+  },
+  pricesStatus(): Promise<PriceStatus> {
+    return ipcRenderer.invoke("prices-status");
+  },
+  refreshPrices(force?: boolean): Promise<PriceRefreshResult & { status: PriceStatus }> {
+    return ipcRenderer.invoke("prices-refresh", force);
+  },
+  cancelPrices(): void {
+    ipcRenderer.send("prices-cancel");
+  },
+  setCurrency(iso: string): Promise<PriceStatus> {
+    return ipcRenderer.invoke("set-currency", iso);
+  },
+  onPricesProgress(cb: (p: PriceProgress) => void): () => void {
+    const listener = (_e: unknown, p: PriceProgress): void => cb(p);
+    ipcRenderer.on("prices-progress", listener);
+    return () => ipcRenderer.removeListener("prices-progress", listener);
   },
 };
 

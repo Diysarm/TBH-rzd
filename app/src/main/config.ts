@@ -1,7 +1,7 @@
 // Loads companion settings, reusing the existing config.json shape.
 
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { app } from "electron";
 import { DEFAULT_PASSWORD } from "../core/es3";
 
@@ -13,6 +13,7 @@ export interface Config {
   trackCubeExp: boolean;
   startTopmost: boolean;
   logHistoryCsv: boolean;
+  currency: string; // ISO code for Steam Market prices (see core/steamPrice)
 }
 
 const DEFAULT_SAVE = join(
@@ -32,6 +33,7 @@ const DEFAULTS: Config = {
   trackCubeExp: false,
   startTopmost: true,
   logHistoryCsv: true,
+  currency: "USD",
 };
 
 // Expand %VAR% (Windows) and ~ in a path.
@@ -68,4 +70,25 @@ export function loadConfig(): Config {
     }
   }
   return { ...DEFAULTS };
+}
+
+// Persist the live config to the user-writable location (userData/config.json),
+// merging over whatever is on disk. Used by runtime settings like currency.
+export function saveConfig(config: Config): void {
+  let target: string;
+  try {
+    target = join(app.getPath("userData"), "config.json");
+  } catch {
+    target = join(process.cwd(), "config.json");
+  }
+  let existing: Partial<Config> = {};
+  if (existsSync(target)) {
+    try {
+      existing = JSON.parse(readFileSync(target, "utf-8")) as Partial<Config>;
+    } catch {
+      existing = {};
+    }
+  }
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, JSON.stringify({ ...existing, ...config }, null, 2));
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Live } from "./tabs/Live";
+import { Market } from "./tabs/Market";
 
 type TabId = "live" | "inventory" | "market";
 
@@ -31,7 +32,7 @@ export function App() {
       <main className="content">
         {tab === "live" && <Live />}
         {tab === "inventory" && <Placeholder title="Inventory" note="Owned items + composition (Phase 4)." />}
-        {tab === "market" && <Placeholder title="Market" note="Steam Market valuation (Phase 5)." />}
+        {tab === "market" && <Market />}
       </main>
     </div>
   );

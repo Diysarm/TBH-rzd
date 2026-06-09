@@ -1,18 +1,20 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { join } from "node:path";
-import { loadConfig, expandPath, type Config } from "./config";
+import { loadConfig, saveConfig, expandPath, type Config } from "./config";
 import { SaveWatcher } from "./saveWatcher";
 import { buildStats } from "./stats";
 import { makeHistoryLogger } from "./historyLog";
 import { GameDataProvider } from "./gameDataProvider";
+import { SteamMarketProvider } from "./steamMarketProvider";
 import { XpTracker } from "../core/tracker";
-import type { SaveSnapshot } from "../../shared/types";
+import type { SaveSnapshot, PriceProgress } from "../../shared/types";
 
 const isDev = !!process.env.ELECTRON_RENDERER_URL;
 
 let config: Config;
 let tracker: XpTracker;
 const gameData = new GameDataProvider();
+let market: SteamMarketProvider;
 let watcher: SaveWatcher | null = null;
 let lastSnap: SaveSnapshot | null = null;
 let lastError: string | null = null;
@@ -37,6 +39,7 @@ function pushStats(): void {
 
 function startTracking(): void {
   config = loadConfig();
+  market = new SteamMarketProvider(config.currency);
   tracker = new XpTracker(config.rollingWindowMinutes * 60, config.trackCubeExp);
   if (config.logHistoryCsv) {
     tracker.onHistory = makeHistoryLogger();
@@ -90,6 +93,26 @@ function registerIpc(): void {
   ipcMain.handle("gamedata-refresh", async () => {
     const result = await gameData.refresh();
     return { ...result, status: gameData.status() };
+  });
+
+  ipcMain.handle("prices-status", () => market.status());
+  ipcMain.handle("prices-refresh", async (_e, force?: boolean) => {
+    const result = await market.refresh(undefined, {
+      force: Boolean(force),
+      onProgress: (p: PriceProgress) => {
+        for (const win of BrowserWindow.getAllWindows()) {
+          if (!win.isDestroyed()) win.webContents.send("prices-progress", p);
+        }
+      },
+    });
+    return { ...result, status: market.status() };
+  });
+  ipcMain.on("prices-cancel", () => market.cancel());
+  ipcMain.handle("set-currency", (_e, iso: string) => {
+    config.currency = iso;
+    saveConfig(config);
+    market.setCurrency(iso);
+    return market.status();
   });
 }
 

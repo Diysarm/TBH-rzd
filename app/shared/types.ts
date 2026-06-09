@@ -69,6 +69,31 @@ export interface GameDataRefreshResult {
   status: GameDataStatus;
 }
 
+export interface PriceStatus {
+  currency: string;
+  count: number;
+  fetchedUtc: string | null;
+  running: boolean;
+}
+
+export interface PriceProgress {
+  done: number;
+  total: number;
+  current: string;
+  priced: number;
+  failed: number;
+}
+
+export interface PriceRefreshResult {
+  ok: boolean;
+  priced: number;
+  skipped: number;
+  failed: number;
+  stopped: "completed" | "cancelled" | "rate-limited";
+  currency: string;
+  error?: string;
+}
+
 // API surface exposed on `window.tbh` by the preload via contextBridge.
 export interface TbhApi {
   onStats(cb: (stats: Stats) => void): () => void;
@@ -79,4 +104,9 @@ export interface TbhApi {
   closeOverlay(): void;
   gameDataStatus(): Promise<GameDataStatus>;
   refreshGameData(): Promise<GameDataRefreshResult>;
+  pricesStatus(): Promise<PriceStatus>;
+  refreshPrices(force?: boolean): Promise<PriceRefreshResult & { status: PriceStatus }>;
+  cancelPrices(): void;
+  setCurrency(iso: string): Promise<PriceStatus>;
+  onPricesProgress(cb: (p: PriceProgress) => void): () => void;
 }

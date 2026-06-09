@@ -53,6 +53,9 @@ npm run dist     # Windows NSIS installer into release/
 | `trackCubeExp` | Also count Hero-dric Cube XP | `false` |
 | `startTopmost` | Start pinned on top | `true` |
 | `logHistoryCsv` | Append every XP change to `logs/xp_history.csv` | `true` |
+| `currency` | ISO code for Steam Market prices (`USD`, `EUR`, `BRL`, ...) | `USD` |
+
+Currency is also selectable from the Market tab (it persists to `config.json`).
 
 If decryption stops working after a game update, the developer may have rotated
 the ES3 password; update `es3Password` and restart. See `docs/SAVE_FORMAT.md`.
