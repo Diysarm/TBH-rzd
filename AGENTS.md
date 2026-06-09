@@ -122,6 +122,6 @@ Four layers — respect these when adding features (see `docs/ARCHITECTURE.md`):
 - `docs/BACKLOG.md` - future-release ideas we want to remember.
 - `docs/findings/` - research outputs (Steam Market probe, item mapping).
 - `docs/reviews/` - playtest bugs, feature ideas, community research.
-- `docs/plans/refactor-plan.md` - phased maintainability refactor.
+- `docs/plans/refactor-plan.md` - phased refactor (Phases 1–4 done; 5–9 react + best-practices roadmap).
 - `docs/business/monetization.md` - donations, legal, store options.
 - `docs/design/branding.md` - naming, visual direction, icon concepts.
