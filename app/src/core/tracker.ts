@@ -68,8 +68,7 @@ export class XpTracker {
   goldGained!: number;
   heroes!: HeroSnapshot[];
   history!: HistoryEntry[];
-  lastUpdate!: number | null;
-  lastGainTime!: number | null;
+  private lastGainMtime!: number | null;
 
   private prevHero!: Map<string, number>;
   private heroMeters!: Map<string, RateMeter>;
@@ -107,8 +106,7 @@ export class XpTracker {
     this.firstMtime = null;
     this.lastChangeMtime = null;
     this.currentTotalXp = 0;
-    this.lastUpdate = null;
-    this.lastGainTime = null;
+    this.lastGainMtime = null;
     this.heroes = [];
     this.rollingRateValue = 0;
     this.sessionRateValue = 0;
@@ -148,7 +146,6 @@ export class XpTracker {
       this.goldFirstMtime = mtime;
       this.goldLastChangeMtime = mtime;
       this.goldSamples.push([mtime, 0]);
-      this.lastUpdate = now;
       return 0;
     }
 
@@ -175,7 +172,7 @@ export class XpTracker {
 
     if (gain > 0) {
       this.cumulativeGained += gain;
-      this.lastGainTime = now;
+      this.lastGainMtime = mtime;
       this.lastChangeMtime = mtime;
       this.samples.push([mtime, this.cumulativeGained]);
       this.prune(mtime);
@@ -200,7 +197,6 @@ export class XpTracker {
       }
     }
 
-    this.lastUpdate = now;
     return gain;
   }
 
@@ -274,13 +270,9 @@ export class XpTracker {
     return this.goldSessionRateValue;
   }
 
+  /** Seconds since the save file mtime when XP last changed (not every read). */
   get secondsSinceGain(): number | null {
-    if (this.lastGainTime === null) return null;
-    return nowSeconds() - this.lastGainTime;
-  }
-
-  get secondsSinceRead(): number | null {
-    if (this.lastUpdate === null) return null;
-    return nowSeconds() - this.lastUpdate;
+    if (this.lastGainMtime === null) return null;
+    return nowSeconds() - this.lastGainMtime;
   }
 }

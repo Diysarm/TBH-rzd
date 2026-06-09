@@ -86,4 +86,17 @@ describe("XpTracker", () => {
     expect(t.history).toHaveLength(0);
     expect(t.update(snap(2000, 999))).toBe(0); // re-inits
   });
+
+  it("secondsSinceGain uses save mtime and ignores reads without XP change", () => {
+    const t = new XpTracker(300, false);
+    t.update(snap(1000, 0));
+    expect(t.secondsSinceGain).toBeNull();
+
+    const baseNow = Date.now() / 1000;
+    t.update(snap(baseNow - 30, 600)); // XP gain at mtime 30s ago
+    expect(t.secondsSinceGain).toBeCloseTo(30, 0);
+
+    t.update(snap(baseNow - 5, 600)); // save wrote 5s ago, XP unchanged
+    expect(t.secondsSinceGain).toBeCloseTo(30, 0); // still anchored to last gain mtime
+  });
 });

@@ -8,6 +8,7 @@ import type {
   PriceStatus,
   PriceProgress,
   PriceRefreshResult,
+  AppConfig,
 } from "../../shared/types";
 
 // Narrow, typed bridge. The renderer never touches Node/Electron directly.
@@ -62,6 +63,12 @@ const api: TbhApi = {
     const listener = (_e: unknown, p: PriceProgress): void => cb(p);
     ipcRenderer.on("prices-progress", listener);
     return () => ipcRenderer.removeListener("prices-progress", listener);
+  },
+  getConfig(): Promise<AppConfig> {
+    return ipcRenderer.invoke("get-config");
+  },
+  saveConfig(patch: Partial<AppConfig>): Promise<AppConfig> {
+    return ipcRenderer.invoke("save-config", patch);
   },
 };
 

@@ -58,8 +58,8 @@ export class SaveWatcher {
       if (this.opts.onInventory) {
         try {
           this.opts.onInventory(parseInventory(text, mtime));
-        } catch {
-          // inventory parse failures shouldn't break XP tracking
+        } catch (err) {
+          console.error("inventory parse failed:", err);
         }
       }
     } catch (e) {
