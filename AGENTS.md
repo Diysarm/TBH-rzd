@@ -99,8 +99,7 @@ coding** — enforced by `.cursor/rules/project-skills.mdc` (`alwaysApply: true`
 | **react-best-practices** | `.cursor/skills/react-best-practices/SKILL.md` | Renderer / React UI changes |
 | **best-practices** | `.cursor/skills/best-practices/SKILL.md` | Main, preload, IPC, CSP, network, security |
 
-Do not skip skills for “small” diffs. Refactor phases map skills in
-`docs/plans/refactor-plan.md`.
+Do not skip skills for “small” diffs. Match skill to layer: renderer → **react-best-practices**; main/preload/security → **best-practices**.
 - **Always commit.** When you finish a task (bugfix, feature, refactor, or docs),
   create a git commit before treating the work as done. Do not leave completed
   changes uncommitted in the working tree.
@@ -124,7 +123,7 @@ Four layers — respect these when adding features (see `docs/ARCHITECTURE.md`):
 
 **Adding features:** read **coding-guidelines** + **tbh-qa** first; add **react-best-practices** or **best-practices** when touching renderer or main/preload. New IPC → `shared/ipc.ts` + `main/ipc/registerIpc.ts` + preload + `test/ipc/channels.test.ts`. New save fields → parse in `core/`, read bytes in `main/` only.
 
-**Refactor:** move without behavior change first; tests travel with code. No duplicate types (`AppConfig` lives in `shared/types.ts`). No new globals in `main/index.ts` — use `app/appState.ts` or services. Read **coding-guidelines** and phase-mapped skills in `docs/plans/refactor-plan.md`; **cleanup dead code only in an explicit cleanup phase** (see refactor plan Phase 10).
+**Refactor:** move without behavior change first; tests travel with code. No duplicate types (`AppConfig` lives in `shared/types.ts`). No new globals in `main/index.ts` — use `app/appState.ts` or services. Read **coding-guidelines** plus the layer skills above; keep diffs surgical (no drive-by rewrites).
 
 **Testing:** all new `core/` logic needs Vitest; new IPC/config handlers need tests in `test/main/` or `test/ipc/`. Optional local integration: `test/integration/realSave.test.ts`.
 
@@ -136,4 +135,3 @@ Four layers — respect these when adding features (see `docs/ARCHITECTURE.md`):
 - `docs/SAVE_FORMAT.md` - ES3 decryption scheme + save JSON layout.
 - `docs/DECISIONS.md` - short ADR log of why the stack is what it is.
 - `docs/findings/` - research outputs (Steam Market probe, item mapping).
-- `docs/plans/refactor-plan.md` - completed maintainability refactor (historical; Phases 1–10 done).

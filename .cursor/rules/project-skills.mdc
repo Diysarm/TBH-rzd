@@ -18,6 +18,6 @@ Apply the skills during the work, not only at the end. No drive-by refactors out
 
 **Layer rules** (with skills): `AGENTS.md` architecture table + `docs/ARCHITECTURE.md`.
 
-**Refactors:** follow `docs/plans/refactor-plan.md` skill mapping; cleanup dead code only in an explicit cleanup phase.
+**Refactors:** follow **coding-guidelines** and layer skills; keep diffs surgical — no drive-by rewrites outside the task.
 
 **Done means:** tbh-qa passed and required skills were followed — not just green tests.
