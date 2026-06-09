@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { loadConfig, expandPath, type Config } from "./config";
 import { SaveWatcher } from "./saveWatcher";
 import { buildStats } from "./stats";
+import { makeHistoryLogger } from "./historyLog";
 import { XpTracker } from "../core/tracker";
 import type { SaveSnapshot } from "../../shared/types";
 
@@ -25,6 +26,9 @@ function pushStats(): void {
 function startTracking(): void {
   config = loadConfig();
   tracker = new XpTracker(config.rollingWindowMinutes * 60, config.trackCubeExp);
+  if (config.logHistoryCsv) {
+    tracker.onHistory = makeHistoryLogger();
+  }
 
   watcher = new SaveWatcher({
     path: expandPath(config.savePath),

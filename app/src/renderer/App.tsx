@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Live } from "./tabs/Live";
 
 type TabId = "live" | "inventory" | "market";
 
@@ -25,7 +26,7 @@ export function App() {
         ))}
       </nav>
       <main className="content">
-        {tab === "live" && <Placeholder title="Live" note="XP/hour, gold/hour, per-hero rates, history (Phase 2)." />}
+        {tab === "live" && <Live />}
         {tab === "inventory" && <Placeholder title="Inventory" note="Owned items + composition (Phase 4)." />}
         {tab === "market" && <Placeholder title="Market" note="Steam Market valuation (Phase 5)." />}
       </main>
