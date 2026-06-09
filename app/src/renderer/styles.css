@@ -1,0 +1,78 @@
+:root {
+  --bg: #0f1117;
+  --panel: #171a23;
+  --card: #1d212c;
+  --border: #2a2f3d;
+  --fg: #e8eaf0;
+  --muted: #8b93a7;
+  --accent: #5ad17a;
+  --gold: #e8c45a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  user-select: none;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 8px 0;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 8px 14px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.tab:hover {
+  color: var(--fg);
+}
+
+.tab.active {
+  color: var(--fg);
+  background: var(--card);
+}
+
+.content {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+.placeholder h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.placeholder p {
+  color: var(--muted);
+  margin: 0;
+}
