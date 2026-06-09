@@ -1,0 +1,9 @@
+{
+  "savePath": "%USERPROFILE%\\AppData\\LocalLow\\TesseractStudio\\TaskbarHero\\SaveFile_Live.es3",
+  "es3Password": "emuMqG3bLYJ938ZDCfieWJ",
+  "pollIntervalSeconds": 5,
+  "rollingWindowMinutes": 5,
+  "trackCubeExp": false,
+  "startTopmost": true,
+  "logHistoryCsv": true
+}

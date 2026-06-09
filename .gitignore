@@ -1,0 +1,23 @@
+# Python (legacy reference tool)
+.venv/
+__pycache__/
+*.pyc
+
+# Node / Electron (companion app)
+node_modules/
+app/dist/
+app/out/
+app/release/
+*.log
+
+# Runtime output
+logs/
+
+# Personal save dumps - never commit your own save data
+sample/
+*.es3
+*.decrypted.json
+
+# OS / editor
+Thumbs.db
+.DS_Store
