@@ -17,13 +17,15 @@ Market. It never modifies the save and never talks to the game servers.
   - `app/src/main/` - Electron main process (Node): file watching, decryption,
     tracking, IPC. Owns all file/network access.
   - `app/src/preload/` - `contextBridge` exposing a typed `window.tbh` API.
-  - `app/src/core/` - framework-free, unit-tested logic ported from Python
-    (`es3`, `saveReader`, `tracker`, `stages`, `heroes`, `gamedata`).
+  - `app/src/core/` - framework-free, unit-tested logic (`es3`, `saveReader`,
+    `tracker`, `stages`, `heroes`, `gamedata`, `inventory`, `steamPrice`).
   - `app/src/renderer/` - React UI (tabs + mini overlay). Pure UI, no Node APIs.
   - `app/shared/types.ts` - types shared across processes.
-- `tbh_xp/` - the original Python tool. **Reference only**, kept until the TS
-  core reaches parity, then removed. Do not add features here.
+- `data/` - bundled catalogs (`gamedata.json`, `steam_market_catalog.json`).
 - `docs/` - the knowledge base (see below).
+
+The original Python prototype (`tbh_xp/`) has been removed now that the TS core
+reached parity; see `docs/DECISIONS.md` for the history.
 - `config.json` - user settings, reused by the app.
 
 ## Build / run / test
@@ -77,13 +79,6 @@ The app has two windows sharing one bundle: the full tabbed companion (`#main`)
 and a frameless always-on-top mini overlay (`#overlay`). Toggle from the "Mini"
 button in the tab bar; restore from the overlay's expand button.
 
-The legacy Python tool (for parity checks only):
-
-```
-.venv/Scripts/python.exe -m tbh_xp           # run overlay
-.venv/Scripts/python.exe -m tbh_xp.selftest  # headless decrypt + dump
-```
-
 ## Conventions
 
 - TypeScript everywhere in `app/`. Keep `core/` free of Electron/React imports
@@ -98,4 +93,5 @@ The legacy Python tool (for parity checks only):
 - `docs/ARCHITECTURE.md` - processes, IPC boundary, windows, data flow.
 - `docs/SAVE_FORMAT.md` - ES3 decryption scheme + save JSON layout.
 - `docs/DECISIONS.md` - short ADR log of why the stack is what it is.
+- `docs/BACKLOG.md` - future-release ideas we want to remember.
 - `docs/findings/` - research outputs (Steam Market probe, item mapping).
