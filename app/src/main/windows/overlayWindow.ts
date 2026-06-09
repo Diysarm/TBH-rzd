@@ -1,5 +1,5 @@
 import { BrowserWindow } from "electron";
-import { join } from "node:path";
+import { PRELOAD_SCRIPT } from "../paths";
 import { loadRenderer } from "./loadRenderer";
 
 export function createOverlayWindow(
@@ -23,7 +23,7 @@ export function createOverlayWindow(
     skipTaskbar: true,
     backgroundColor: "#0f1117",
     webPreferences: {
-      preload: join(__dirname, "../../preload/index.js"),
+      preload: PRELOAD_SCRIPT,
       sandbox: false,
     },
   });

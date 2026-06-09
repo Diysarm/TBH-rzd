@@ -1,11 +1,11 @@
-import { join } from "node:path";
+import { RENDERER_HTML } from "../paths";
 
 const isDev = !!process.env.ELECTRON_RENDERER_URL;
 
 export function rendererTarget(hash: string): { url?: string; file: string; hash: string } {
   return {
     url: isDev ? `${process.env.ELECTRON_RENDERER_URL}#${hash}` : undefined,
-    file: join(__dirname, "../../renderer/index.html"),
+    file: RENDERER_HTML,
     hash,
   };
 }
