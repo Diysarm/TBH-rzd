@@ -86,6 +86,21 @@ button in the tab bar; restore from the overlay's expand button.
 
 - TypeScript everywhere in `app/`. Keep `core/` free of Electron/React imports
   so it stays unit-testable.
+
+## Project skills (required for features & refactors)
+
+Cursor skills live in `.cursor/skills/`. **Read the relevant `SKILL.md` before
+coding** — enforced by `.cursor/rules/project-skills.mdc` (`alwaysApply: true`).
+
+| Skill | Path | When |
+|-------|------|------|
+| **coding-guidelines** | `.cursor/skills/coding-guidelines/SKILL.md` | Every feature, bugfix, refactor |
+| **tbh-qa** | `.cursor/skills/tbh-qa/SKILL.md` | Before marking any `app/` work done |
+| **react-best-practices** | `.cursor/skills/react-best-practices/SKILL.md` | Renderer / React UI changes |
+| **best-practices** | `.cursor/skills/best-practices/SKILL.md` | Main, preload, IPC, CSP, network, security |
+
+Do not skip skills for “small” diffs. Refactor phases map skills in
+`docs/plans/refactor-plan.md`.
 - **Always commit.** When you finish a task (bugfix, feature, refactor, or docs),
   create a git commit before treating the work as done. Do not leave completed
   changes uncommitted in the working tree.
@@ -107,9 +122,9 @@ Four layers — respect these when adding features (see `docs/ARCHITECTURE.md`):
 | **preload** | `app/src/preload/` | Thin `contextBridge` only; import channels from `shared/ipc.ts`. |
 | **renderer** | `app/src/renderer/` | React UI via `window.tbh`. Filter/sort in `renderer/lib/` or `core/` pure helpers. |
 
-**Adding features:** new IPC → `shared/ipc.ts` + `main/ipc/registerIpc.ts` + preload + `test/ipc/channels.test.ts`. New save fields → parse in `core/`, read bytes in `main/` only.
+**Adding features:** read **coding-guidelines** + **tbh-qa** first; add **react-best-practices** or **best-practices** when touching renderer or main/preload. New IPC → `shared/ipc.ts` + `main/ipc/registerIpc.ts` + preload + `test/ipc/channels.test.ts`. New save fields → parse in `core/`, read bytes in `main/` only.
 
-**Refactor:** move without behavior change first; tests travel with code. No duplicate types (`AppConfig` lives in `shared/types.ts`). No new globals in `main/index.ts` — use `app/appState.ts` or services. Follow `coding-guidelines` during phases; **cleanup dead code only in Phase 10** of `docs/plans/refactor-plan.md`.
+**Refactor:** move without behavior change first; tests travel with code. No duplicate types (`AppConfig` lives in `shared/types.ts`). No new globals in `main/index.ts` — use `app/appState.ts` or services. Read **coding-guidelines** and phase-mapped skills in `docs/plans/refactor-plan.md`; **cleanup dead code only in an explicit cleanup phase** (see refactor plan Phase 10).
 
 **Testing:** all new `core/` logic needs Vitest; new IPC/config handlers need tests in `test/main/` or `test/ipc/`. Optional local integration: `test/realSave.test.ts`.
 
@@ -123,6 +138,6 @@ Four layers — respect these when adding features (see `docs/ARCHITECTURE.md`):
 - `docs/BACKLOG.md` - future-release ideas we want to remember.
 - `docs/findings/` - research outputs (Steam Market probe, item mapping).
 - `docs/reviews/` - playtest bugs, feature ideas, community research.
-- `docs/plans/refactor-plan.md` - phased refactor (1–4 done; 5–10 roadmap: react, best-practices, coding-guidelines, cleanup last).
+- `docs/plans/refactor-plan.md` - phased refactor; skills per phase (coding-guidelines, react, best-practices, tbh-qa).
 - `docs/business/monetization.md` - donations, legal, store options.
 - `docs/design/branding.md` - naming, visual direction, icon concepts.
