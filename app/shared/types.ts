@@ -106,17 +106,19 @@ export interface ResolvedInventoryRow {
   chaoticCount: number;
   known: boolean;
   priceRaw: string | null;
-  priceLowest: number | null;
+  unitPrice: number | null;
+  priceSource: "median" | "lowest" | null;
   value: number | null;
-  priceEstimate: boolean;
   inventoryCount: number;
   stashCount: number;
   tradingCount: number;
 }
 
 export interface InventoryPriceInfo {
+  median: number | null;
   lowest: number | null;
-  raw: string | null;
+  rawMedian: string | null;
+  rawLowest: string | null;
 }
 
 export interface InventoryComposition {

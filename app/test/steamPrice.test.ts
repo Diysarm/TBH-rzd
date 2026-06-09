@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseMoney, currencyCode, currencyByIso, currencyPrefix, formatMoney } from "../src/core/steamPrice";
+import { parseMoney, currencyCode, currencyByIso, currencyPrefix, formatMoney, pickMarketUnit } from "../src/core/steamPrice";
 
 describe("parseMoney", () => {
   it("parses US-format prices", () => {
@@ -45,5 +45,30 @@ describe("currency map", () => {
     expect(formatMoney(0.04, "USD")).toBe("$0.04");
     expect(formatMoney(0.04, "BRL")).toBe("R$ 0,04");
     expect(formatMoney(120, "JPY")).toBe("¥120");
+  });
+});
+
+describe("pickMarketUnit", () => {
+  it("prefers median over lowest", () => {
+    const picked = pickMarketUnit({
+      median: 0.05,
+      lowest: 0.04,
+      rawMedian: "$0.05",
+      rawLowest: "$0.04",
+    });
+    expect(picked.unit).toBeCloseTo(0.05);
+    expect(picked.source).toBe("median");
+    expect(picked.raw).toBe("$0.05");
+  });
+
+  it("falls back to lowest when median is missing", () => {
+    const picked = pickMarketUnit({
+      median: null,
+      lowest: 0.04,
+      rawMedian: null,
+      rawLowest: "$0.04",
+    });
+    expect(picked.unit).toBeCloseTo(0.04);
+    expect(picked.source).toBe("lowest");
   });
 });

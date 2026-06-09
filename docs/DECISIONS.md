@@ -50,11 +50,11 @@ tbh.city/items omits hero-bound `ItemKey`s in the `9xxxxx` range. We ship
 `data/hero_items.json` merged into the catalog at load time (names only; not on
 Steam). Refreshing game data from tbh.city does not remove these entries.
 
-## 2026-06 - Gear Steam mapping with grade fallback
+## 2026-06 - Gear Steam mapping (exact match only)
 
-Gear prices use `<name> (<Grade>) A` when exact; if the catalog grade has no
-Steam listing, we pick the nearest market grade and mark the row as an estimate
-(`priceEstimate`). Materials map 1:1 by name. Gear below Legendary is not priced.
+Gear prices use `<name> (<Grade>) A`; materials map 1:1 by name. Gear below
+Legendary is not priced. No bundled Steam catalog — `priceoverview` confirms listings.
+Valuation uses `median_price` (recent sale median) when available, otherwise `lowest_price`.
 
 ## 2026-06 - Inventory location from slot refs (lossless UniqueId)
 

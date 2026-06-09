@@ -53,7 +53,6 @@ const catalog: Record<number, GameItem> = {
   },
 };
 const lookup = (key: number): GameItem | undefined => catalog[key];
-const steam = new Set(["Iron Ingot", "Knight Sword (Legendary) A"]);
 
 describe("parseInventory", () => {
   it("reads owned items and held chests, skipping junk", () => {
@@ -79,8 +78,10 @@ describe("resolveInventory", () => {
   it("groups by ItemKey, tracks in-use, and values priced rows", () => {
     const snap = parseInventory(wrapPlayer(playerInner), 0);
     const priceLookup = (name: string) =>
-      name === "Iron Ingot" ? { lowest: 0.04, raw: "$0.04" } : undefined;
-    const res = resolveInventory(snap, lookup, true, priceLookup, steam);
+      name === "Iron Ingot"
+        ? { median: 0.05, lowest: 0.04, rawMedian: "$0.05", rawLowest: "$0.04" }
+        : undefined;
+    const res = resolveInventory(snap, lookup, true, priceLookup);
 
     const staff = res.rows.find((r) => r.itemKey === 322111)!;
     expect(staff.name).toBe("Void Staff");
@@ -92,8 +93,9 @@ describe("resolveInventory", () => {
     const ingot = res.rows.find((r) => r.itemKey === 141002)!;
     expect(ingot.marketHashName).toBe("Iron Ingot");
     expect(ingot.inventoryCount).toBe(1);
-    expect(ingot.priceRaw).toBe("$0.04");
-    expect(ingot.value).toBeCloseTo(0.04);
+    expect(ingot.priceRaw).toBe("$0.05");
+    expect(ingot.priceSource).toBe("median");
+    expect(ingot.value).toBeCloseTo(0.05);
 
     const sword = res.rows.find((r) => r.itemKey === 303071)!;
     expect(sword.marketHashName).toBe("Knight Sword (Legendary) A");
@@ -101,6 +103,6 @@ describe("resolveInventory", () => {
 
     expect(res.composition.inUseCount).toBe(1);
     expect(res.composition.priceableCount).toBe(2);
-    expect(res.composition.valuedTotal).toBeCloseTo(0.04);
+    expect(res.composition.valuedTotal).toBeCloseTo(0.05);
   });
 });

@@ -82,19 +82,16 @@ app release:
    rejected and the previous snapshot is kept, so a layout change on tbh.city
    can't wipe the catalog.
 
-## Mapping rule (validated against the live catalog)
+## Mapping rule
 
-Build `market_hash_name` from datamine fields, then validate against the 648
-real names in `data/steam_market_catalog.json`:
+Build `market_hash_name` from gamedata fields; `priceoverview` confirms the listing:
 
-- **Materials / resources / soulstones** (97 plain names): `market_hash_name ==
-  <name>` exactly (e.g. `Iron Ingot`, `Soulstone - Torment`).
-- **Gear** (551 names): `market_hash_name == "<Name> (<Rarity>) <Variant>"`,
-  e.g. `Tempest Staff (Legendary) A`. Only Legendary+ rarities are marketable;
-  lower-rarity gear is never on the market.
+- **Materials / resources / soulstones**: `market_hash_name == <name>` exactly.
+- **Gear** (Legendary+ tradable only): `"<Name> (<Rarity>) A"` (variant letter
+  from save not yet decoded; default `A`).
 
-Anything that doesn't resolve to a catalog entry is treated as **not
-marketable** (value 0).
+If Steam returns no price for that hash, the row shows no value (exact grade only,
+no cross-grade fallback).
 
 ## Catalog coverage gap (observed in a live save)
 
@@ -111,7 +108,7 @@ revisit if hero-bound item valuation matters.
 
 ## Gotcha: JSON files must be BOM-free
 
-`data/gamedata.json` and `data/steam_market_catalog.json` were first written via
+`data/gamedata.json` and bundled JSON catalogs were first written via
 PowerShell `Set-Content -Encoding UTF8`, which prepends a UTF-8 **BOM** that
 breaks `JSON.parse` ("Unexpected token '\uFEFF'"). Both were rewritten BOM-free,
 and the providers now strip a leading BOM defensively. When regenerating these,

@@ -2,12 +2,6 @@ import { describe, it, expect } from "vitest";
 import { isPriceableItem, marketHashName, marketHashMatch } from "../src/core/marketName";
 import type { GameItem } from "../src/core/gamedata";
 
-const steam = new Set([
-  "Iron Ingot",
-  "Knight Sword (Legendary) A",
-  "Void Staff (Rare) A",
-]);
-
 const mat: GameItem = {
   id: 141002,
   name: "Iron Ingot",
@@ -57,19 +51,31 @@ describe("isPriceableItem", () => {
 
 describe("marketHashName", () => {
   it("maps materials by display name", () => {
-    expect(marketHashName(mat, steam)).toBe("Iron Ingot");
+    expect(marketHashName(mat)).toBe("Iron Ingot");
   });
 
   it("maps Legendary gear to (<Grade>) A", () => {
-    expect(marketHashName(gearLeg, steam)).toBe("Knight Sword (Legendary) A");
+    expect(marketHashName(gearLeg)).toBe("Knight Sword (Legendary) A");
   });
 
-  it("returns null for Rare gear even if steam has a listing", () => {
-    expect(marketHashName(gearRare, steam)).toBeNull();
+  it("returns null for Rare gear", () => {
+    expect(marketHashName(gearRare)).toBeNull();
   });
 
-  it("falls back to nearest market grade when catalog grade is missing", () => {
-    const steam2 = new Set(["Mystic Boots (Arcana) A", "Mystic Boots (Immortal) A"]);
+  it("builds hash from name and grade", () => {
+    const dusk: GameItem = {
+      id: 314071,
+      name: "Dusk Bow",
+      grade: "IMMORTAL",
+      type: "GEAR",
+      icon: "",
+      gearId: "314071",
+      marketTradable: true,
+    };
+    expect(marketHashName(dusk)).toBe("Dusk Bow (Immortal) A");
+  });
+
+  it("uses exact grade (no cross-grade fallback)", () => {
     const boots: GameItem = {
       id: 533111,
       name: "Mystic Boots",
@@ -79,8 +85,6 @@ describe("marketHashName", () => {
       gearId: "533111",
       marketTradable: true,
     };
-    const m = marketHashMatch(boots, steam2);
-    expect(m?.estimate).toBe(true);
-    expect(m?.name).toBe("Mystic Boots (Immortal) A");
+    expect(marketHashMatch(boots)?.name).toBe("Mystic Boots (Legendary) A");
   });
 });

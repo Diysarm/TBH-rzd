@@ -54,7 +54,9 @@ export interface PriceEntry {
 
   volume: number;
 
-  raw: string | null;
+  rawLowest: string | null;
+
+  rawMedian: string | null;
 
   fetchedUtc: string;
 
@@ -230,40 +232,6 @@ export class SteamMarketProvider {
 
 
 
-  catalogNames(): string[] {
-
-    const candidates = [
-
-      join(process.resourcesPath ?? "", "data", "steam_market_catalog.json"),
-
-      join(process.cwd(), "..", "data", "steam_market_catalog.json"),
-
-      join(process.cwd(), "data", "steam_market_catalog.json"),
-
-    ];
-
-    const path = candidates.find((p) => existsSync(p));
-
-    if (!path) return [];
-
-    try {
-
-      const raw = readFileSync(path, "utf-8").replace(/^\uFEFF/, "");
-
-      const j = JSON.parse(raw) as { items: { market_hash_name: string }[] };
-
-      return [...new Set(j.items.map((i) => i.market_hash_name))];
-
-    } catch {
-
-      return [];
-
-    }
-
-  }
-
-
-
   private async fetchOne(name: string): Promise<{ ok: boolean; status: number; entry?: PriceEntry }> {
 
     const url =
@@ -304,7 +272,9 @@ export class SteamMarketProvider {
 
         volume: data.volume ? Number(data.volume.replace(/[^0-9]/g, "")) : 0,
 
-        raw: data.lowest_price ?? data.median_price ?? null,
+        rawLowest: data.lowest_price ?? null,
+
+        rawMedian: data.median_price ?? null,
 
         fetchedUtc: new Date().toISOString(),
 
@@ -358,9 +328,18 @@ export class SteamMarketProvider {
 
     this.cancelled = false;
 
-
-
-    const allTargets = (names && names.length ? names : this.catalogNames()).slice();
+    const allTargets = (names && names.length ? names : []).slice();
+    if (allTargets.length === 0) {
+      this.running = false;
+      return {
+        ok: true,
+        priced: 0,
+        skipped: 0,
+        failed: 0,
+        stopped: "completed",
+        currency: this.currency,
+      };
+    }
 
     const now = Date.now();
 

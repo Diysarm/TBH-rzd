@@ -6,7 +6,8 @@
 
 import { unwrapEs3Entry } from "./saveReader";
 import type { GameItem } from "./gamedata";
-import { marketHashMatch, steamMarketNames } from "./marketName";
+import { marketHashMatch } from "./marketName";
+import { pickMarketUnit } from "./steamPrice";
 import type {
   InventoryItemInstance,
   ItemLocation,
@@ -156,7 +157,6 @@ export function resolveInventory(
   lookup: (itemKey: number) => GameItem | undefined,
   gameDataLoaded: boolean,
   priceLookup?: PriceLookup,
-  steamNames = steamMarketNames(),
 ): ResolvedInventory {
   const byKey = new Map<number, ResolvedInventoryRow>();
 
@@ -164,9 +164,10 @@ export function resolveInventory(
     let row = byKey.get(inst.itemKey);
     if (!row) {
       const g = lookup(inst.itemKey);
-      const match = g ? marketHashMatch(g, steamNames) : null;
+      const match = g ? marketHashMatch(g) : null;
       const hash = match?.name ?? null;
       const price = hash && priceLookup ? priceLookup(hash) : undefined;
+      const unit = price ? pickMarketUnit(price) : { unit: null, raw: null, source: null };
       row = {
         itemKey: inst.itemKey,
         name: g?.name ?? `Unknown #${inst.itemKey}`,
@@ -181,10 +182,10 @@ export function resolveInventory(
         tradingCount: 0,
         chaoticCount: 0,
         known: Boolean(g),
-        priceRaw: price?.raw ?? null,
-        priceLowest: price?.lowest ?? null,
+        priceRaw: unit.raw,
+        unitPrice: unit.unit,
+        priceSource: unit.source,
         value: null,
-        priceEstimate: match?.estimate ?? false,
       };
       byKey.set(inst.itemKey, row);
     }
@@ -205,15 +206,15 @@ export function resolveInventory(
     inUseCount += r.inUseCount;
     if (r.marketHashName) {
       priceableCount += r.count;
-      if (r.priceLowest !== null) {
-        r.value = r.priceLowest * r.count;
+      if (r.unitPrice !== null) {
+        r.value = r.unitPrice * r.count;
         valuedTotal += r.value;
       }
     } else {
       r.priceRaw = null;
-      r.priceLowest = null;
+      r.unitPrice = null;
+      r.priceSource = null;
       r.value = null;
-      r.priceEstimate = false;
     }
   }
 
@@ -266,7 +267,6 @@ function parseChests(player: Record<string, unknown> | undefined): ChestHolding[
 export function ownedMarketNames(
   snapshot: InventorySnapshot,
   lookup: (itemKey: number) => GameItem | undefined,
-  steamNames = steamMarketNames(),
 ): string[] {
   const names = new Set<string>();
   const seen = new Set<number>();
@@ -275,7 +275,7 @@ export function ownedMarketNames(
     seen.add(inst.itemKey);
     const g = lookup(inst.itemKey);
     if (!g) continue;
-    const hash = marketHashMatch(g, steamNames)?.name;
+    const hash = marketHashMatch(g)?.name;
     if (hash) names.add(hash);
   }
   return [...names];

@@ -5,6 +5,30 @@
 // value for summing. The currency param of priceoverview is honored (unlike
 // search/render) - see docs/findings/steam-market.md.
 
+import type { InventoryPriceInfo } from "../../shared/types";
+
+export const TBH_STEAM_APP_ID = 3678970;
+
+/** Link to a Steam Community Market listing for this hash name. */
+export function steamMarketListingUrl(marketHashName: string, appId = TBH_STEAM_APP_ID): string {
+  return `https://steamcommunity.com/market/listings/${appId}/${encodeURIComponent(marketHashName)}`;
+}
+
+/** Prefer median (recent sales) over lowest listing for the same market_hash_name. */
+export function pickMarketUnit(price: InventoryPriceInfo): {
+  unit: number | null;
+  raw: string | null;
+  source: "median" | "lowest" | null;
+} {
+  if (price.median != null) {
+    return { unit: price.median, raw: price.rawMedian, source: "median" };
+  }
+  if (price.lowest != null) {
+    return { unit: price.lowest, raw: price.rawLowest, source: "lowest" };
+  }
+  return { unit: null, raw: null, source: null };
+}
+
 export interface SteamCurrency {
   code: number; // Steam's numeric currency id
   iso: string; // ISO 4217-ish code we expose in config/UI

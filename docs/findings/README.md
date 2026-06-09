@@ -16,6 +16,4 @@ Related data artifacts (repo root `data/`):
 - `data/gamedata.json` - bundled item catalog snapshot (5,875 items: id, name,
   grade, type, icon, gearId, marketTradable) scraped from tbh.city. Bundled
   fallback for offline/first-run; overridden by the user cache after a refresh.
-- `data/steam_market_catalog.json` - snapshot of the 648 marketable item
-  names/types/colors/icons (no prices). Seeds the mapping + lets us detect
-  non-marketable items offline.
+- `data/hero_items.json` - supplement for hero-bound ItemKeys missing from tbh.city.

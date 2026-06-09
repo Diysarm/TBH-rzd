@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, shell } from "electron";
 
 import { join } from "node:path";
 
@@ -17,8 +17,6 @@ import { SteamMarketProvider } from "./steamMarketProvider";
 import { XpTracker } from "../core/tracker";
 
 import { resolveInventory, ownedMarketNames } from "../core/inventory";
-
-import { steamMarketNames } from "../core/marketName";
 
 import type {
   SaveSnapshot,
@@ -99,8 +97,12 @@ function priceLookup(name: string): InventoryPriceInfo | undefined {
 
   if (!e) return undefined;
 
-  return { lowest: e.lowest, raw: e.raw };
-
+  return {
+    median: e.median,
+    lowest: e.lowest,
+    rawMedian: e.rawMedian ?? null,
+    rawLowest: e.rawLowest ?? (e as { raw?: string | null }).raw ?? null,
+  };
 }
 
 
@@ -115,7 +117,6 @@ function resolveAndPushInventory(): void {
       (key) => gameData.get(key),
       status.loaded,
       priceLookup,
-      steamMarketNames(process.resourcesPath ?? ""),
     );
     lastInventory.currency = currency;
     lastInventory.composition.currency = currency;
@@ -168,13 +169,8 @@ async function ensureOwnedPrices(force = false): Promise<void> {
   }
 
   const names = ownedMarketNames(
-
     lastInventoryRaw,
-
     (key) => gameData.get(key),
-
-    steamMarketNames(process.resourcesPath ?? ""),
-
   );
 
   const pending = market.pendingNames(names, force);
@@ -316,17 +312,7 @@ function registerIpc(): void {
     const result = await market.refresh(
 
       lastInventoryRaw
-
-        ? ownedMarketNames(
-
-            lastInventoryRaw,
-
-            (key) => gameData.get(key),
-
-            steamMarketNames(process.resourcesPath ?? ""),
-
-          )
-
+        ? ownedMarketNames(lastInventoryRaw, (key) => gameData.get(key))
         : undefined,
 
       {
@@ -515,6 +501,24 @@ function createOverlayWindow(): void {
   loadInto(overlayWindow, "overlay");
 
 }
+
+
+
+/** Open http(s) links in the system browser, not a blank Electron tab. */
+function attachExternalLinkHandlers(contents: Electron.WebContents): void {
+  contents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("http:") || url.startsWith("https:")) {
+      void shell.openExternal(url);
+    }
+    return { action: "deny" };
+  });
+}
+
+
+
+app.on("web-contents-created", (_event, contents) => {
+  attachExternalLinkHandlers(contents);
+});
 
 
 
