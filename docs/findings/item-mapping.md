@@ -30,8 +30,8 @@ row with its own enchants), not stacked-with-count.
 > Materials appear in both `itemSaveDatas` (instances) and, for stack counts,
 > `aggregateSaveDatas` Type `0` rows when SubKey maps to a catalog ItemKey (see
 > `core/inventory/aggregates.ts`). Many SubKeys (e.g. `10021`) are still undecoded.
-> Gear is per-instance in `itemSaveDatas`; location comes from slot refs + a
-> fallback for `9xxxxx` ItemKeys outside slot arrays (see **Stage boxes** below).
+> Gear is per-instance in `itemSaveDatas`; location comes from slot refs only
+> (`equippedItemIds`, inventory/stash/trading slots).
 
 ## Source for ItemKey -> name/rarity/type/level
 
@@ -101,10 +101,8 @@ Confirmed mapping (59 entries, [taskbarhero.wiki/stage-boxes](https://taskbarher
 Bundled in `data/stage_boxes.json` (`app/src/core/stageBoxes.ts`). Merged into
 the lookup index at load; **excluded from the Inventory tab** (not gear/materials
 to value). Unopened chest counts stay in `BoxData` (`BoxTypes` / `BoxQuantity`).
-
-Location parsing still treats `9xxxxx` rows outside bag/stash/trading slots as
-`equipped` (`isHeroBoundItemKey` in `parse.ts`) — a location heuristic, not a
-claim that the item is worn gear.
+Stage-box rows in `itemSaveDatas` that are not in a slot array have location
+`unknown` in parse — they never appear in the inventory grid.
 
 ## Mapping rule
 

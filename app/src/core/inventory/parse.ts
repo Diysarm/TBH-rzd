@@ -4,11 +4,6 @@ import { unwrapEs3Entry } from "../save/snapshot";
 import { materialStacksFromAggregates, parseAggregateEntries } from "./aggregates";
 import type { InventoryItemInstance, ChestHolding, InventorySnapshot, ItemLocation } from "../../../shared/types";
 
-/** ItemKeys in 900000–999999 (stage boxes in saves) outside slot arrays → equipped. */
-export function isHeroBoundItemKey(itemKey: number): boolean {
-  return itemKey >= 900_000 && itemKey < 1_000_000;
-}
-
 function toNum(v: unknown, fallback = 0): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
@@ -68,7 +63,6 @@ const ITEM_TRIPLE_RE =
 
 function resolveLocation(
   uniqueId: string,
-  itemKey: number,
   equipped: Set<string>,
   inventory: Set<string>,
   stash: Set<string>,
@@ -78,7 +72,6 @@ function resolveLocation(
   if (inventory.has(uniqueId)) return "inventory";
   if (stash.has(uniqueId)) return "stash";
   if (trading.has(uniqueId)) return "trading";
-  if (isHeroBoundItemKey(itemKey)) return "equipped";
   return "unknown";
 }
 
@@ -93,11 +86,11 @@ function parseItemsFromPlayerString(playerStr: string): InventoryItemInstance[] 
     const itemKey = Math.trunc(Number(m[1]));
     if (itemKey <= 0) continue;
     const uniqueId = m[2];
-    const location = resolveLocation(uniqueId, itemKey, equipped, inventory, stash, trading);
+    const location = resolveLocation(uniqueId, equipped, inventory, stash, trading);
     items.push({
       itemKey,
       isChaotic: m[3] === "true",
-      inUse: equipped.has(uniqueId) || location === "equipped",
+      inUse: equipped.has(uniqueId),
       location,
     });
   }

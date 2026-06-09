@@ -67,7 +67,7 @@ describe("parseInventory", () => {
     const snap = parseInventory(wrapPlayer(playerInner), 123, isMaterial);
     expect(snap.items).toHaveLength(6);
     expect(snap.items.filter((i) => i.isChaotic)).toHaveLength(1);
-    expect(snap.items.filter((i) => i.inUse)).toHaveLength(2);
+    expect(snap.items.filter((i) => i.inUse)).toHaveLength(1);
     expect(snap.chests).toEqual([
       { type: 0, quantity: 4 },
       { type: 9, quantity: 3 },
@@ -75,11 +75,11 @@ describe("parseInventory", () => {
     expect(snap.saveMtime).toBe(123);
   });
 
-  it("classifies 9xxxxx stage-box keys outside slots as equipped (location heuristic)", () => {
+  it("leaves stage-box ItemKeys outside slots as unknown location", () => {
     const snap = parseInventory(wrapPlayer(playerInner), 0);
-    const hero = snap.items.find((i) => i.itemKey === 910151);
-    expect(hero?.location).toBe("equipped");
-    expect(hero?.inUse).toBe(true);
+    const box = snap.items.find((i) => i.itemKey === 910151);
+    expect(box?.location).toBe("unknown");
+    expect(box?.inUse).toBe(false);
   });
 
   it("parses material stacks from aggregateSaveDatas when mapped", () => {
@@ -125,7 +125,7 @@ describe("resolveInventory", () => {
     expect(sword.marketHashName).toBe("Knight Sword (Legendary) A");
     expect(sword.stashCount).toBe(1);
 
-    expect(res.composition.inUseCount).toBe(2);
+    expect(res.composition.inUseCount).toBe(1);
     expect(res.composition.priceableCount).toBe(7);
     expect(res.composition.valuedTotal).toBeCloseTo(0.05);
   });

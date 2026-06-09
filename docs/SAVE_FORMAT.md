@@ -108,8 +108,8 @@ PlayerSaveData.value (nested JSON string) ->
 - **`aggregateSaveDatas`** are lifetime counters `{ Type, SubKey, Value }`.
   Type `0` rows with mappable SubKeys supplement **material stack counts** (see
   `core/inventory/aggregates.ts`). Many SubKeys (e.g. `10021`) are still undecoded.
-- **`9xxxxx` ItemKeys** in `itemSaveDatas` are **stage boxes** (STAGEBOX), not
-  hero soul gear. When absent from bag/stash/trading slots the app labels them
-  `equipped` as a location fallback (`core/inventory/parse.ts`).
+- **`9xxxxx` ItemKeys** in `itemSaveDatas` are **stage boxes** (STAGEBOX). They
+  are named via `data/stage_boxes.json`, omitted from the inventory tab, and show
+  location `unknown` when not referenced by a slot array.
 - Steam pricing uses `ItemKey -> market_hash_name` rules in `core/marketName.ts`
   (gear probes variant letters `A`–`E`). See `docs/findings/item-mapping.md`.

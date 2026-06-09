@@ -13,9 +13,6 @@ stage boxes from the Inventory tab** (unopened counts remain in `BoxData`).
 
 ## 2026-06-09 - Phase 9 inventory improvements
 
-- **`9xxxxx` location heuristic:** ItemKeys in `900000–999999` outside
-  bag/stash/trading slot arrays are labeled `equipped` in parse (covers stage-box
-  instances in `itemSaveDatas`; not a soul-gear claim).
 - **Gear Steam variants:** pricing probes hash suffixes `A`–`E` and uses the
   first variant with a cached Steam price (save letter not decoded yet).
 - **Material stacks:** `aggregateSaveDatas` Type `0` rows merge when SubKey
@@ -94,8 +91,7 @@ Legendary is not priced. Valuation uses `median_price` when available, otherwise
 
 Bag/stash/trading counts come from slot `ItemUniqueId`s matched against
 `itemSaveDatas` via string parsing (big-int safe). Equipped gear uses
-`equippedItemIds`. ItemKeys in `900000–999999` outside slot arrays are labeled
-`equipped` as a location heuristic (mostly opened **stage boxes** in saves).
+`equippedItemIds` only.
 
 The in-game Records tab (per-stage clear times, chest-drop log) is NOT written
 to the save — only progress (`maxCompletedStage`), current chest holdings

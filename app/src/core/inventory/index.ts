@@ -1,4 +1,4 @@
-export { parseInventory, isHeroBoundItemKey } from "./parse";
+export { parseInventory } from "./parse";
 export {
   parseAggregateEntries,
   aggregateSubKeyToItemKey,
