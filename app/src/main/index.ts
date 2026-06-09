@@ -15,6 +15,16 @@ let watcher: SaveWatcher | null = null;
 let lastSnap: SaveSnapshot | null = null;
 let lastError: string | null = null;
 let tickTimer: NodeJS.Timeout | null = null;
+let mainWindow: BrowserWindow | null = null;
+let overlayWindow: BrowserWindow | null = null;
+
+function rendererTarget(hash: string): { url?: string; file: string; hash: string } {
+  return {
+    url: isDev ? `${process.env.ELECTRON_RENDERER_URL}#${hash}` : undefined,
+    file: join(__dirname, "../renderer/index.html"),
+    hash,
+  };
+}
 
 function pushStats(): void {
   const stats = buildStats(tracker, lastSnap, lastError);
@@ -58,10 +68,33 @@ function registerIpc(): void {
     tracker.reset();
     pushStats();
   });
+  ipcMain.on("open-overlay", () => {
+    createOverlayWindow();
+    mainWindow?.hide();
+  });
+  ipcMain.on("show-main", () => {
+    createMainWindow();
+    mainWindow?.show();
+    overlayWindow?.close();
+  });
+  ipcMain.on("close-overlay", () => overlayWindow?.close());
+}
+
+function loadInto(win: BrowserWindow, hash: string): void {
+  const t = rendererTarget(hash);
+  if (t.url) {
+    win.loadURL(t.url);
+  } else {
+    win.loadFile(t.file, { hash: t.hash });
+  }
 }
 
 function createMainWindow(): void {
-  const win = new BrowserWindow({
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    return;
+  }
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 640,
     minWidth: 420,
@@ -74,14 +107,39 @@ function createMainWindow(): void {
       sandbox: false,
     },
   });
+  mainWindow.on("ready-to-show", () => mainWindow?.show());
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
+  loadInto(mainWindow, "main");
+}
 
-  win.on("ready-to-show", () => win.show());
-
-  if (isDev) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL as string);
-  } else {
-    win.loadFile(join(__dirname, "../renderer/index.html"));
+function createOverlayWindow(): void {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.show();
+    overlayWindow.focus();
+    return;
   }
+  overlayWindow = new BrowserWindow({
+    width: 280,
+    height: 170,
+    show: false,
+    frame: false,
+    resizable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    backgroundColor: "#0f1117",
+    webPreferences: {
+      preload: join(__dirname, "../preload/index.js"),
+      sandbox: false,
+    },
+  });
+  overlayWindow.setAlwaysOnTop(true, "screen-saver");
+  overlayWindow.on("ready-to-show", () => overlayWindow?.show());
+  overlayWindow.on("closed", () => {
+    overlayWindow = null;
+  });
+  loadInto(overlayWindow, "overlay");
 }
 
 app.whenReady().then(() => {

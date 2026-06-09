@@ -59,4 +59,7 @@ export interface TbhApi {
   onStats(cb: (stats: Stats) => void): () => void;
   reset(): void;
   getStats(): Promise<Stats | null>;
+  openOverlay(): void;
+  showMain(): void;
+  closeOverlay(): void;
 }

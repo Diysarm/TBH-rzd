@@ -274,3 +274,96 @@ body {
 .status.warn {
   color: #e0a64a;
 }
+
+.overlay-toggle {
+  margin-left: auto;
+}
+
+/* --- Mini overlay window --- */
+.overlay {
+  -webkit-app-region: drag;
+  height: 100vh;
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.overlay-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.overlay-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.overlay-actions button {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.overlay-actions button:hover {
+  color: var(--fg);
+  background: var(--card);
+}
+
+.overlay-rate {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.overlay-num {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.overlay-unit {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.overlay-gold {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.overlay-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.overlay-foot .warn {
+  color: #e0a64a;
+}
+
+.overlay-msg {
+  margin: 8px 0 0;
+}

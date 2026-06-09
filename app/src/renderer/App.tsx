@@ -24,6 +24,9 @@ export function App() {
             {t.label}
           </button>
         ))}
+        <button className="tab overlay-toggle" title="Open mini overlay" onClick={() => window.tbh.openOverlay()}>
+          {"\u25a3"} Mini
+        </button>
       </nav>
       <main className="content">
         {tab === "live" && <Live />}

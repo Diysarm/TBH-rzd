@@ -14,6 +14,15 @@ const api: TbhApi = {
   getStats(): Promise<Stats | null> {
     return ipcRenderer.invoke("get-stats");
   },
+  openOverlay(): void {
+    ipcRenderer.send("open-overlay");
+  },
+  showMain(): void {
+    ipcRenderer.send("show-main");
+  },
+  closeOverlay(): void {
+    ipcRenderer.send("close-overlay");
+  },
 };
 
 contextBridge.exposeInMainWorld("tbh", api);
