@@ -15,9 +15,14 @@ export class TrackingService {
   private lastError: string | null = null;
   private config!: AppConfig;
   private readonly onInventory: (snap: InventorySnapshot) => void;
+  private readonly parseInventorySnapshot?: (text: string, mtime: number) => InventorySnapshot;
 
-  constructor(onInventory: (snap: InventorySnapshot) => void) {
+  constructor(
+    onInventory: (snap: InventorySnapshot) => void,
+    parseInventorySnapshot?: (text: string, mtime: number) => InventorySnapshot,
+  ) {
     this.onInventory = onInventory;
+    this.parseInventorySnapshot = parseInventorySnapshot;
   }
 
   start(config: AppConfig): void {
@@ -85,6 +90,7 @@ export class TrackingService {
         this.pushStats();
       },
       onInventory: this.onInventory,
+      parseInventorySnapshot: this.parseInventorySnapshot,
     });
   }
 }

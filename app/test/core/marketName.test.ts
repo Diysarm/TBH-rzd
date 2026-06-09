@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { isPriceableItem, marketHashName, marketHashMatch } from "../src/core/marketName";
-import type { GameItem } from "../src/core/gamedata";
+import { isPriceableItem, marketHashName, marketHashMatch, marketHashCandidates } from "../../src/core/marketName";
+import type { GameItem } from "../../src/core/gamedata";
 
 const mat: GameItem = {
   id: 141002,
@@ -86,5 +86,16 @@ describe("marketHashName", () => {
       marketTradable: true,
     };
     expect(marketHashMatch(boots)?.name).toBe("Mystic Boots (Legendary) A");
+  });
+
+  it("lists gear variant letters A–E for Steam probing", () => {
+    expect(marketHashCandidates(gearLeg)).toEqual([
+      "Knight Sword (Legendary) A",
+      "Knight Sword (Legendary) B",
+      "Knight Sword (Legendary) C",
+      "Knight Sword (Legendary) D",
+      "Knight Sword (Legendary) E",
+    ]);
+    expect(marketHashCandidates(mat)).toEqual(["Iron Ingot"]);
   });
 });

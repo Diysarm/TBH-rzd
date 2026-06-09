@@ -1,7 +1,13 @@
 // Parse owned items and chests from decrypted save JSON.
 
 import { unwrapEs3Entry } from "../save/snapshot";
+import { materialStacksFromAggregates, parseAggregateEntries } from "./aggregates";
 import type { InventoryItemInstance, ChestHolding, InventorySnapshot, ItemLocation } from "../../../shared/types";
+
+/** Hero-bound soul gear (9xxxxx) is worn outside bag/stash/trading slot arrays. */
+export function isHeroBoundItemKey(itemKey: number): boolean {
+  return itemKey >= 900_000 && itemKey < 1_000_000;
+}
 
 function toNum(v: unknown, fallback = 0): number {
   const n = Number(v);
@@ -62,6 +68,7 @@ const ITEM_TRIPLE_RE =
 
 function resolveLocation(
   uniqueId: string,
+  itemKey: number,
   equipped: Set<string>,
   inventory: Set<string>,
   stash: Set<string>,
@@ -71,6 +78,7 @@ function resolveLocation(
   if (inventory.has(uniqueId)) return "inventory";
   if (stash.has(uniqueId)) return "stash";
   if (trading.has(uniqueId)) return "trading";
+  if (isHeroBoundItemKey(itemKey)) return "equipped";
   return "unknown";
 }
 
@@ -85,11 +93,11 @@ function parseItemsFromPlayerString(playerStr: string): InventoryItemInstance[] 
     const itemKey = Math.trunc(Number(m[1]));
     if (itemKey <= 0) continue;
     const uniqueId = m[2];
-    const location = resolveLocation(uniqueId, equipped, inventory, stash, trading);
+    const location = resolveLocation(uniqueId, itemKey, equipped, inventory, stash, trading);
     items.push({
       itemKey,
       isChaotic: m[3] === "true",
-      inUse: equipped.has(uniqueId),
+      inUse: equipped.has(uniqueId) || location === "equipped",
       location,
     });
   }
@@ -130,7 +138,11 @@ function parseChests(player: Record<string, unknown> | undefined): ChestHolding[
   return chests;
 }
 
-export function parseInventory(decryptedText: string, saveMtime = 0): InventorySnapshot {
+export function parseInventory(
+  decryptedText: string,
+  saveMtime = 0,
+  isMaterialItemKey?: (itemKey: number) => boolean,
+): InventorySnapshot {
   const root = JSON.parse(decryptedText) as Record<string, unknown>;
   const playerEntry = root?.PlayerSaveData as { value?: unknown } | undefined;
   const playerStr = typeof playerEntry?.value === "string" ? playerEntry.value : null;
@@ -144,5 +156,10 @@ export function parseInventory(decryptedText: string, saveMtime = 0): InventoryS
   }
 
   const chests = parseChests(player);
-  return { items, chests, saveMtime };
+  let materialStacks: Map<number, number> | undefined;
+  if (isMaterialItemKey) {
+    materialStacks = materialStacksFromAggregates(parseAggregateEntries(player), isMaterialItemKey);
+  }
+
+  return { items, chests, saveMtime, materialStacks };
 }

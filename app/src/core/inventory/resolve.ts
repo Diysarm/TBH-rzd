@@ -1,5 +1,5 @@
 import type { GameItem } from "../gamedata";
-import { marketHashMatch } from "../marketName";
+import { marketHashCandidates } from "../marketName";
 import { pickMarketUnit } from "../steamPrice";
 import type {
   InventorySnapshot,
@@ -13,6 +13,37 @@ export interface PriceLookup {
   (marketHashName: string): InventoryPriceInfo | undefined;
 }
 
+function resolveMarketHashAndPrice(
+  item: GameItem,
+  priceLookup?: PriceLookup,
+): {
+  hash: string | null;
+  price: InventoryPriceInfo | undefined;
+  unit: ReturnType<typeof pickMarketUnit>;
+} {
+  const candidates = marketHashCandidates(item);
+  if (candidates.length === 0) {
+    return {
+      hash: null,
+      price: undefined,
+      unit: { unit: null, raw: null, source: null },
+    };
+  }
+
+  if (priceLookup) {
+    for (const hash of candidates) {
+      const price = priceLookup(hash);
+      const unit = price ? pickMarketUnit(price) : { unit: null, raw: null, source: null };
+      if (unit.unit != null) return { hash, price, unit };
+    }
+  }
+
+  const hash = candidates[0];
+  const price = priceLookup?.(hash);
+  const unit = price ? pickMarketUnit(price) : { unit: null, raw: null, source: null };
+  return { hash, price, unit };
+}
+
 export function resolveInventory(
   snapshot: InventorySnapshot,
   lookup: (itemKey: number) => GameItem | undefined,
@@ -20,15 +51,18 @@ export function resolveInventory(
   priceLookup?: PriceLookup,
 ): ResolvedInventory {
   const byKey = new Map<number, ResolvedInventoryRow>();
+  const materialStacks = snapshot.materialStacks;
 
   for (const inst of snapshot.items) {
     let row = byKey.get(inst.itemKey);
     if (!row) {
       const g = lookup(inst.itemKey);
-      const match = g ? marketHashMatch(g) : null;
-      const hash = match?.name ?? null;
-      const price = hash && priceLookup ? priceLookup(hash) : undefined;
-      const unit = price ? pickMarketUnit(price) : { unit: null, raw: null, source: null };
+      const { hash, unit } = g
+        ? resolveMarketHashAndPrice(g, priceLookup)
+        : {
+            hash: null as string | null,
+            unit: { unit: null, raw: null, source: null },
+          };
       row = {
         itemKey: inst.itemKey,
         name: g?.name ?? `Unknown #${inst.itemKey}`,
@@ -56,6 +90,41 @@ export function resolveInventory(
     if (inst.location === "inventory") row.inventoryCount++;
     else if (inst.location === "stash") row.stashCount++;
     else if (inst.location === "trading") row.tradingCount++;
+  }
+
+  // Material stacks from aggregateSaveDatas (when mapped) can exceed instance rows.
+  if (materialStacks) {
+    for (const [itemKey, stackQty] of materialStacks) {
+      let row = byKey.get(itemKey);
+      const g = lookup(itemKey);
+      if (!row && g) {
+        const { hash, unit } = resolveMarketHashAndPrice(g, priceLookup);
+        row = {
+          itemKey,
+          name: g.name,
+          grade: g.grade,
+          type: g.type,
+          marketTradable: g.marketTradable,
+          marketHashName: hash,
+          count: 0,
+          inUseCount: 0,
+          inventoryCount: 0,
+          stashCount: 0,
+          tradingCount: 0,
+          chaoticCount: 0,
+          known: true,
+          priceRaw: unit.raw,
+          unitPrice: unit.unit,
+          priceSource: unit.source,
+          value: null,
+        };
+        byKey.set(itemKey, row);
+      }
+      if (row && row.type === "MATERIAL" && stackQty > row.count) {
+        row.count = stackQty;
+        row.inventoryCount = stackQty;
+      }
+    }
   }
 
   const rows = [...byKey.values()];
@@ -121,8 +190,7 @@ export function ownedMarketNames(
     seen.add(inst.itemKey);
     const g = lookup(inst.itemKey);
     if (!g) continue;
-    const hash = marketHashMatch(g)?.name;
-    if (hash) names.add(hash);
+    for (const hash of marketHashCandidates(g)) names.add(hash);
   }
   return [...names];
 }

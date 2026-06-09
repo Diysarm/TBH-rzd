@@ -1,6 +1,6 @@
 import { GameDataProvider } from "../gameDataProvider";
 import { SteamMarketProvider } from "../steamMarketProvider";
-import { resolveInventory, ownedMarketNames } from "../../core/inventory";
+import { resolveInventory, ownedMarketNames, parseInventory } from "../../core/inventory";
 import type {
   InventorySnapshot,
   ResolvedInventory,
@@ -34,6 +34,10 @@ export class InventoryService {
     this.lastInventoryRaw = snap;
     this.resolveAndPushInventory();
     void this.ensureOwnedPrices();
+  }
+
+  parseFromSave(text: string, mtime: number): InventorySnapshot {
+    return parseInventory(text, mtime, (key) => this.gameData.get(key)?.type === "MATERIAL");
   }
 
   getInventory(): ResolvedInventory | null {

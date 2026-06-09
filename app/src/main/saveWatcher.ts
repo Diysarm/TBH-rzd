@@ -15,6 +15,7 @@ export interface SaveWatcherOptions {
   onSnapshot: (snap: SaveSnapshot) => void;
   onError: (message: string) => void;
   onInventory?: (inv: InventorySnapshot) => void;
+  parseInventorySnapshot?: (text: string, mtime: number) => InventorySnapshot;
 }
 
 export class SaveWatcher {
@@ -58,7 +59,8 @@ export class SaveWatcher {
       this.opts.onSnapshot(snap);
       if (this.opts.onInventory) {
         try {
-          this.opts.onInventory(parseInventory(text, mtime));
+          const parse = this.opts.parseInventorySnapshot ?? parseInventory;
+          this.opts.onInventory(parse(text, mtime));
         } catch (err) {
           console.error("inventory parse failed:", err);
         }

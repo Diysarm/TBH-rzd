@@ -9,7 +9,10 @@ import { createOverlayWindow as buildOverlayWindow } from "../windows/overlayWin
 
 let config: AppConfig;
 const inventory = new InventoryService();
-const tracking = new TrackingService((snap) => inventory.onInventory(snap));
+const tracking = new TrackingService(
+  (snap) => inventory.onInventory(snap),
+  (text, mtime) => inventory.parseFromSave(text, mtime),
+);
 
 let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
