@@ -5,6 +5,7 @@ import { Market } from "./tabs/Market";
 import { Settings } from "./tabs/Settings";
 import { useStats } from "./lib/useStats";
 import { fmtAgo } from "./lib/format";
+import { ErrorBoundary } from "./lib/ErrorBoundary";
 
 const IDLE_THRESHOLD = 120;
 
@@ -38,10 +39,12 @@ export function App() {
       </nav>
       <SaveStatusBar />
       <main className="content">
-        {tab === "live" && <Live />}
-        {tab === "inventory" && <Inventory />}
-        {tab === "market" && <Market />}
-        {tab === "settings" && <Settings />}
+        <ErrorBoundary title={`${tab} tab crashed`}>
+          {tab === "live" && <Live />}
+          {tab === "inventory" && <Inventory />}
+          {tab === "market" && <Market />}
+          {tab === "settings" && <Settings />}
+        </ErrorBoundary>
       </main>
     </div>
   );

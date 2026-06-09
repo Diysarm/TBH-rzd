@@ -6,14 +6,37 @@ export function Settings() {
   const [cfg, setCfg] = useState<AppConfig | null>(null);
   const [draft, setDraft] = useState<AppConfig | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    void window.tbh.getConfig().then((c) => {
-      setCfg(c);
-      setDraft(c);
-    });
+    if (typeof window.tbh?.getConfig !== "function") {
+      setLoadError(
+        "Settings API is not loaded. Quit the app completely and start it again (after git pull, restart npm run dev too).",
+      );
+      return;
+    }
+    void window.tbh
+      .getConfig()
+      .then((c) => {
+        setCfg(c);
+        setDraft(c);
+        setLoadError(null);
+      })
+      .catch((err: unknown) => {
+        const text = err instanceof Error ? err.message : "Could not load settings.";
+        setLoadError(text);
+      });
   }, []);
+
+  if (loadError) {
+    return (
+      <div className="placeholder">
+        <h1>Settings</h1>
+        <p className="muted">{loadError}</p>
+      </div>
+    );
+  }
 
   if (!draft) {
     return (
