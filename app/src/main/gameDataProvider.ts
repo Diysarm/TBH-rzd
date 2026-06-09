@@ -9,6 +9,7 @@
 import { app } from "electron";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import type { GameDataStatus } from "../../shared/types";
 import {
   extractItemsFromHtml,
   indexById,
@@ -16,16 +17,10 @@ import {
   type GameItem,
 } from "../core/gamedata";
 
+export type { GameDataStatus };
+
 const SOURCE_URL = "https://tbh.city/items";
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000; // a week
-
-export interface GameDataStatus {
-  loaded: boolean;
-  count: number;
-  fetchedUtc: string | null;
-  source: "cache" | "bundled" | "none";
-  stale: boolean;
-}
 
 export class GameDataProvider {
   private data: GameData | null = null;

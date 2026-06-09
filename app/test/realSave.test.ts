@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { readSnapshot, readAndDecrypt } from "../src/core/saveReader";
+import { readSnapshot, readAndDecrypt } from "../src/main/io/saveFile";
 import { parseInventory, resolveInventory } from "../src/core/inventory";
 import { indexById, type GameData } from "../src/core/gamedata";
 

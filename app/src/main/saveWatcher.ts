@@ -3,8 +3,9 @@
 // robust to the game's atomic rewrites on Windows.
 
 import { statSync } from "node:fs";
-import { readAndDecrypt, parseSnapshot, SaveReadError } from "../core/saveReader";
-import { parseInventory } from "../core/inventory";
+import { readAndDecrypt } from "./io/saveFile";
+import { parseSnapshot, SaveReadError } from "../core/save/snapshot";
+import { parseInventory } from "../core/inventory/parse";
 import type { SaveSnapshot, InventorySnapshot } from "../../shared/types";
 
 export interface SaveWatcherOptions {
