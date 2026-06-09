@@ -31,8 +31,7 @@ const catalog: Record<number, GameItem> = {
     name: "Void Staff",
     grade: "RARE",
     type: "GEAR",
-    icon: "",
-    gearId: "322111",
+    level: 50,
     marketTradable: true,
   },
   141002: {
@@ -40,8 +39,7 @@ const catalog: Record<number, GameItem> = {
     name: "Iron Ingot",
     grade: "UNCOMMON",
     type: "MATERIAL",
-    icon: "",
-    gearId: "",
+    level: null,
     marketTradable: true,
   },
   140002: {
@@ -49,8 +47,7 @@ const catalog: Record<number, GameItem> = {
     name: "Stone",
     grade: "COMMON",
     type: "MATERIAL",
-    icon: "",
-    gearId: "",
+    level: null,
     marketTradable: true,
   },
   303071: {
@@ -58,8 +55,7 @@ const catalog: Record<number, GameItem> = {
     name: "Knight Sword",
     grade: "LEGENDARY",
     type: "GEAR",
-    icon: "",
-    gearId: "303071",
+    level: 30,
     marketTradable: true,
   },
 };
@@ -71,7 +67,7 @@ describe("parseInventory", () => {
     const snap = parseInventory(wrapPlayer(playerInner), 123, isMaterial);
     expect(snap.items).toHaveLength(6);
     expect(snap.items.filter((i) => i.isChaotic)).toHaveLength(1);
-    expect(snap.items.filter((i) => i.inUse)).toHaveLength(2);
+    expect(snap.items.filter((i) => i.inUse)).toHaveLength(1);
     expect(snap.chests).toEqual([
       { type: 0, quantity: 4 },
       { type: 9, quantity: 3 },
@@ -79,11 +75,11 @@ describe("parseInventory", () => {
     expect(snap.saveMtime).toBe(123);
   });
 
-  it("classifies hero-bound items as equipped (not unknown)", () => {
+  it("leaves stage-box ItemKeys outside slots as unknown location", () => {
     const snap = parseInventory(wrapPlayer(playerInner), 0);
-    const hero = snap.items.find((i) => i.itemKey === 910151);
-    expect(hero?.location).toBe("equipped");
-    expect(hero?.inUse).toBe(true);
+    const box = snap.items.find((i) => i.itemKey === 910151);
+    expect(box?.location).toBe("unknown");
+    expect(box?.inUse).toBe(false);
   });
 
   it("parses material stacks from aggregateSaveDatas when mapped", () => {
@@ -112,6 +108,7 @@ describe("resolveInventory", () => {
 
     const staff = res.rows.find((r) => r.itemKey === 322111)!;
     expect(staff.name).toBe("Void Staff");
+    expect(staff.level).toBe(50);
     expect(staff.count).toBe(2);
     expect(staff.inUseCount).toBe(1);
     expect(staff.marketHashName).toBeNull();
@@ -128,9 +125,31 @@ describe("resolveInventory", () => {
     expect(sword.marketHashName).toBe("Knight Sword (Legendary) A");
     expect(sword.stashCount).toBe(1);
 
-    expect(res.composition.inUseCount).toBe(2);
+    expect(res.composition.inUseCount).toBe(1);
     expect(res.composition.priceableCount).toBe(7);
     expect(res.composition.valuedTotal).toBeCloseTo(0.05);
+  });
+
+  it("excludes stage boxes from rows and composition when requested", () => {
+    const snap = parseInventory(wrapPlayer(playerInner), 0, isMaterial);
+    const stageBoxCatalog: Record<number, GameItem> = {
+      ...catalog,
+      910151: {
+        id: 910151,
+        name: "Normal Monster Box Lv15",
+        grade: "COMMON",
+        type: "STAGEBOX",
+        level: 15,
+        marketTradable: false,
+      },
+    };
+    const withBox = (key: number) => stageBoxCatalog[key];
+    const res = resolveInventory(snap, withBox, true, undefined, {
+      excludeItemKey: (key) => key === 910151,
+    });
+    expect(res.rows.find((r) => r.itemKey === 910151)).toBeUndefined();
+    expect(res.composition.inUseCount).toBe(1);
+    expect(res.composition.total).toBe(10);
   });
 
   it("picks the gear variant letter that has a Steam price", () => {

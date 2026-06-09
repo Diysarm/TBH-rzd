@@ -13,6 +13,11 @@ export interface PriceLookup {
   (marketHashName: string): InventoryPriceInfo | undefined;
 }
 
+export interface ResolveInventoryOptions {
+  /** Omit rows from the inventory table and composition (e.g. stage boxes). */
+  excludeItemKey?: (itemKey: number) => boolean;
+}
+
 function resolveMarketHashAndPrice(
   item: GameItem,
   priceLookup?: PriceLookup,
@@ -49,11 +54,14 @@ export function resolveInventory(
   lookup: (itemKey: number) => GameItem | undefined,
   gameDataLoaded: boolean,
   priceLookup?: PriceLookup,
+  options?: ResolveInventoryOptions,
 ): ResolvedInventory {
+  const exclude = options?.excludeItemKey;
   const byKey = new Map<number, ResolvedInventoryRow>();
   const materialStacks = snapshot.materialStacks;
 
   for (const inst of snapshot.items) {
+    if (exclude?.(inst.itemKey)) continue;
     let row = byKey.get(inst.itemKey);
     if (!row) {
       const g = lookup(inst.itemKey);
@@ -68,6 +76,7 @@ export function resolveInventory(
         name: g?.name ?? `Unknown #${inst.itemKey}`,
         grade: g?.grade ?? "UNKNOWN",
         type: g?.type ?? "UNKNOWN",
+        level: g?.level ?? null,
         marketTradable: g?.marketTradable ?? false,
         marketHashName: hash,
         count: 0,
@@ -95,6 +104,7 @@ export function resolveInventory(
   // Material stacks from aggregateSaveDatas (when mapped) can exceed instance rows.
   if (materialStacks) {
     for (const [itemKey, stackQty] of materialStacks) {
+      if (exclude?.(itemKey)) continue;
       let row = byKey.get(itemKey);
       const g = lookup(itemKey);
       if (!row && g) {
@@ -104,6 +114,7 @@ export function resolveInventory(
           name: g.name,
           grade: g.grade,
           type: g.type,
+          level: g.level,
           marketTradable: g.marketTradable,
           marketHashName: hash,
           count: 0,
@@ -182,10 +193,12 @@ export function resolveInventory(
 export function ownedMarketNames(
   snapshot: InventorySnapshot,
   lookup: (itemKey: number) => GameItem | undefined,
+  excludeItemKey?: (itemKey: number) => boolean,
 ): string[] {
   const names = new Set<string>();
   const seen = new Set<number>();
   for (const inst of snapshot.items) {
+    if (excludeItemKey?.(inst.itemKey)) continue;
     if (seen.has(inst.itemKey)) continue;
     seen.add(inst.itemKey);
     const g = lookup(inst.itemKey);
