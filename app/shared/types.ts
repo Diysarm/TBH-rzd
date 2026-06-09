@@ -180,6 +180,52 @@ export interface AppConfig {
   startTopmost: boolean;
   logHistoryCsv: boolean;
   currency: string;
+  /** Manual +N common chest slots when rune decode/catalog is incomplete. */
+  extraCommonBoxSlots: number;
+}
+
+// --- Chests (BoxData holdings) ---
+
+export interface ResolvedChestRow {
+  boxType: number;
+  label: string;
+  category: string;
+  quantity: number;
+}
+
+export interface CommonBoxStatus {
+  quantity: number;
+  capacity: number;
+  isFull: boolean;
+  slotsRemaining: number;
+}
+
+export interface ChestState {
+  rows: ResolvedChestRow[];
+  common: CommonBoxStatus;
+  totalHeld: number;
+  saveMtime: number;
+  runeBonusSlots: number;
+}
+
+// --- Box tracker (manual rare boss box timers) ---
+
+export interface BoxTimerRow {
+  boxId: number;
+  name: string;
+  level: number | null;
+  idealStageKey: number;
+  idealStageLabel: string;
+  cooldownSeconds: number;
+  active: boolean;
+  remainingSeconds: number;
+  progress: number;
+}
+
+export interface BoxTimerState {
+  rows: BoxTimerRow[];
+  currentStageKey: number;
+  disclaimer?: string;
 }
 
 // API surface exposed on `window.tbh` by the preload via contextBridge.
@@ -201,4 +247,12 @@ export interface TbhApi {
   onPricesProgress(cb: (p: PriceProgress) => void): () => void;
   getConfig(): Promise<AppConfig>;
   saveConfig(patch: Partial<AppConfig>): Promise<AppConfig>;
+  getChests(): Promise<ChestState | null>;
+  onChests(cb: (state: ChestState) => void): () => void;
+  openBoxTracker(): void;
+  closeBoxTracker(): void;
+  getBoxTimers(): Promise<BoxTimerState>;
+  onBoxTimers(cb: (state: BoxTimerState) => void): () => void;
+  markBoxDropped(boxId: number): Promise<BoxTimerState>;
+  clearBoxTimer(boxId: number): Promise<BoxTimerState>;
 }

@@ -1,0 +1,10 @@
+{
+  "baseCapacity": 5,
+  "bonusPerLevel": 1,
+  "runeKeys": [
+    11, 12, 13, 14, 15, 16,
+    1801, 1802, 1803, 1804, 1805, 1806, 1807, 1808,
+    1901, 1902, 1903, 1904, 1905, 1906, 1907, 1908
+  ],
+  "note": "North-East Rune of Expansion chain — +1 common chest slot per level (taskbarhero.org rune tree)"
+}

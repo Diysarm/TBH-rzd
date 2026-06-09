@@ -1,0 +1,7 @@
+{
+  "types": [
+    { "boxType": 0, "label": "Common (gray)", "category": "common", "color": "gray" },
+    { "boxType": 5, "label": "Stage boss (blue)", "category": "rare", "color": "blue" },
+    { "boxType": 9, "label": "Act boss (red)", "category": "act", "color": "red" }
+  ]
+}

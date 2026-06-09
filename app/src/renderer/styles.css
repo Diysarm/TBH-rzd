@@ -702,3 +702,204 @@ body {
   font-size: 11px;
   color: var(--muted);
 }
+
+.linkish {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* --- Chests tab --- */
+.chests-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+}
+
+.chests-header h1 {
+  margin: 0 0 6px;
+}
+
+.chest-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.chest-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.chest-section-head h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.badge.full {
+  background: #c94a4a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.chest-cap-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.chest-cap-label {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.progress-bar {
+  height: 10px;
+  background: var(--panel);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar.compact {
+  height: 6px;
+  margin: 6px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.gray {
+  background: #9aa3b5;
+}
+
+.progress-fill.blue {
+  background: #5a9fd1;
+}
+
+.chest-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.chest-table th,
+.chest-table td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chest-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.settings-advanced {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.settings-advanced summary {
+  cursor: pointer;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+/* --- Box tracker overlay --- */
+.box-tracker {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 8px;
+  gap: 8px;
+}
+
+.box-tracker-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+.box-tracker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.box-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.box-row.active {
+  border-color: #5a9fd1;
+}
+
+.box-row-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.box-name {
+  font-weight: 600;
+}
+
+.box-lv {
+  color: var(--muted);
+}
+
+.box-route {
+  margin: 4px 0;
+}
+
+.route-ok {
+  color: var(--accent);
+}
+
+.box-row-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.timer-label {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #5a9fd1;
+}
+
+.dropped-btn {
+  margin-top: 6px;
+  width: 100%;
+}
+

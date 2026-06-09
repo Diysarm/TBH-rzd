@@ -26,6 +26,7 @@ const DEFAULTS: AppConfig = {
   startTopmost: true,
   logHistoryCsv: true,
   currency: "USD",
+  extraCommonBoxSlots: 0,
 };
 
 // Expand %VAR% (Windows) and ~ in a path.
