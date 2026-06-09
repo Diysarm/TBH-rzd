@@ -48,14 +48,31 @@ export function Settings() {
   }
 
   async function onSave() {
-    if (!draft) return;
+    if (!draft || !cfg) return;
+
+    const resetsSession =
+      draft.rollingWindowMinutes !== cfg.rollingWindowMinutes ||
+      draft.trackCubeExp !== cfg.trackCubeExp;
+    if (
+      resetsSession &&
+      !window.confirm(
+        "Changing the rolling window or Cube XP setting resets your current session stats and history. Continue?",
+      )
+    ) {
+      return;
+    }
+
     setBusy(true);
     setMessage(null);
     try {
       const saved = await window.tbh.saveConfig(draft);
       setCfg(saved);
       setDraft(saved);
-      setMessage("Saved. Save-path or poll changes take effect immediately.");
+      setMessage(
+        resetsSession
+          ? "Saved. Session stats were reset for the new tracking settings."
+          : "Saved. Save-path or poll changes take effect immediately.",
+      );
     } catch {
       setMessage("Failed to save settings.");
     } finally {
@@ -112,6 +129,7 @@ export function Settings() {
               setDraft({ ...draft, rollingWindowMinutes: Math.max(1, Number(e.target.value) || 1) })
             }
           />
+          <span className="muted small">Changing this resets the current session.</span>
         </label>
 
         <label className="field">
@@ -134,7 +152,7 @@ export function Settings() {
             checked={draft.trackCubeExp}
             onChange={(e) => setDraft({ ...draft, trackCubeExp: e.target.checked })}
           />
-          <span>Include Hero-dric Cube XP in totals</span>
+          <span>Include Hero-dric Cube XP in totals (resets session when toggled)</span>
         </label>
 
         <label className="field checkbox">

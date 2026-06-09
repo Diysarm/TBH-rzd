@@ -1,64 +1,26 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useInventory } from "../lib/useInventory";
-import { GRADE_ORDER, GRADE_RANK } from "../../core/grades";
 import { gradeLabel, typeLabel } from "../../core/labels";
-import { formatMoney, steamMarketListingUrl } from "../../core/steamPrice";
+import { formatMoney } from "../../core/steamPrice";
+import { rowMatchesAnyLocation, unassignedCount } from "../../core/inventory/location";
 import {
-  unassignedCount,
-  rowMatchesLocation,
-  rowMatchesAnyLocation,
-} from "../../core/inventory/location";
-import type { ItemLocation, ResolvedInventoryRow } from "../../../shared/types";
+  filterAndSortRows,
+  gradeOptionsFromInventory,
+  typeOptionsFromInventory,
+  defaultSortDir,
+  type SortKey,
+  type LocationFilter,
+} from "../lib/inventoryFilters";
+import { GradeBars, gradeColor } from "../components/inventory/GradeBars";
+import { MarketListingLink } from "../components/inventory/MarketListingLink";
+import type { ResolvedInventoryRow } from "../../../shared/types";
 import type { PriceProgress, PriceStatus } from "../../../shared/types";
-
-const GRADE_COLORS: Record<string, string> = {
-  COMMON: "#9aa3b2",
-  UNCOMMON: "#5ad17a",
-  RARE: "#4aa3ff",
-  LEGENDARY: "#e8c45a",
-  IMMORTAL: "#ff6b6b",
-  ARCANA: "#c46bff",
-  BEYOND: "#ff8c42",
-  CELESTIAL: "#4ad7d1",
-  DIVINE: "#ffd9f0",
-  COSMIC: "#a0f0ff",
-  UNKNOWN: "#6b7280",
-};
-
-function gradeColor(grade: string): string {
-  return GRADE_COLORS[grade] ?? GRADE_COLORS.UNKNOWN;
-}
 
 function priceSourceTitle(source: ResolvedInventoryRow["priceSource"]): string | undefined {
   if (source === "median") return "Recent sale median on Steam Market";
   if (source === "lowest") return "Lowest listing (no recent sales on Steam)";
   return undefined;
 }
-
-function MarketListingLink({
-  hash,
-  children,
-  title,
-}: {
-  hash: string;
-  children: ReactNode;
-  title?: string;
-}) {
-  return (
-    <a
-      href={steamMarketListingUrl(hash)}
-      className="market-link"
-      target="_blank"
-      rel="noopener noreferrer"
-      title={title ?? "Open on Steam Market"}
-    >
-      {children}
-    </a>
-  );
-}
-
-type SortKey = "name" | "grade" | "type" | "count" | "inUse" | "price" | "value";
-type LocationFilter = "ALL" | ItemLocation;
 
 export function Inventory() {
   const inv = useInventory();
@@ -82,7 +44,6 @@ export function Inventory() {
     return off;
   }, []);
 
-  // Drop stale filter values when inventory changes (e.g. Unknown location cleared).
   useEffect(() => {
     if (!inv) return;
     if (gradeFilter !== "ALL" && !inv.rows.some((r) => r.grade === gradeFilter)) {
@@ -96,48 +57,21 @@ export function Inventory() {
     }
   }, [inv, gradeFilter, typeFilter, locationFilter]);
 
-  const gradeOptions = useMemo(() => {
-    if (!inv) return [];
-    const present = new Set(inv.rows.map((r) => r.grade));
-    const ordered = GRADE_ORDER.filter((g) => present.has(g));
-    const extras = [...present].filter((g) => GRADE_RANK[g] === undefined).sort();
-    return [...ordered, ...extras.filter((g) => !(ordered as readonly string[]).includes(g))];
-  }, [inv]);
-
-  const typeOptions = useMemo(() => {
-    if (!inv) return [];
-    return [...new Set(inv.rows.map((r) => r.type))].sort();
-  }, [inv]);
+  const gradeOptions = useMemo(() => (inv ? gradeOptionsFromInventory(inv) : []), [inv]);
+  const typeOptions = useMemo(() => (inv ? typeOptionsFromInventory(inv) : []), [inv]);
 
   const rows = useMemo(() => {
     if (!inv) return [];
-    const q = query.trim().toLowerCase();
-    let r = inv.rows.filter((row) => {
-      const inUse = row.inUseCount ?? 0;
-      if (tradableOnly && !row.marketTradable) return false;
-      if (inUseOnly && inUse <= 0) return false;
-      if (gradeFilter !== "ALL" && row.grade !== gradeFilter) return false;
-      if (typeFilter !== "ALL" && row.type !== typeFilter) return false;
-      if (locationFilter !== "ALL") {
-        if (!rowMatchesLocation(row, locationFilter)) return false;
-      }
-      if (q && !row.name.toLowerCase().includes(q)) return false;
-      return true;
+    return filterAndSortRows(inv, {
+      query,
+      tradableOnly,
+      inUseOnly,
+      gradeFilter,
+      typeFilter,
+      locationFilter,
+      sortKey,
+      sortDir,
     });
-    const dir = sortDir === "asc" ? 1 : -1;
-    r = [...r].sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === "name") cmp = a.name.localeCompare(b.name);
-      else if (sortKey === "type") cmp = a.type.localeCompare(b.type);
-      else if (sortKey === "count") cmp = a.count - b.count;
-      else if (sortKey === "inUse") cmp = (a.inUseCount ?? 0) - (b.inUseCount ?? 0);
-      else if (sortKey === "price") cmp = (a.unitPrice ?? -1) - (b.unitPrice ?? -1);
-      else if (sortKey === "value") cmp = (a.value ?? -1) - (b.value ?? -1);
-      else cmp = (GRADE_RANK[a.grade] ?? -1) - (GRADE_RANK[b.grade] ?? -1);
-      if (cmp === 0) cmp = b.count - a.count;
-      return cmp * dir;
-    });
-    return r;
   }, [inv, query, tradableOnly, inUseOnly, gradeFilter, typeFilter, locationFilter, sortKey, sortDir]);
 
   if (!inv) {
@@ -159,7 +93,7 @@ export function Inventory() {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
-      setSortDir(key === "name" || key === "type" ? "asc" : "desc");
+      setSortDir(defaultSortDir(key));
     }
   }
 
@@ -214,17 +148,7 @@ export function Inventory() {
         </div>
       )}
 
-      <div className="grade-bars">
-        {GRADE_ORDER.filter((g) => c.byGrade[g]).map((g) => (
-          <div key={g} className="grade-bar" title={`${g}: ${c.byGrade[g]}`}>
-            <span className="grade-dot" style={{ background: gradeColor(g) }} />
-            <span className="grade-name" style={{ color: gradeColor(g) }}>
-              {gradeLabel(g)}
-            </span>
-            <span className="grade-count">{c.byGrade[g]}</span>
-          </div>
-        ))}
-      </div>
+      <GradeBars composition={c} />
 
       {(c.unknownCount ?? 0) > 0 && (
         <div className="inv-hint">
@@ -331,80 +255,80 @@ export function Inventory() {
               </tr>
             ) : (
               rows.map((row: ResolvedInventoryRow) => {
-              const inUse = row.inUseCount ?? 0;
-              return (
-                <tr key={row.itemKey} className={row.known ? "" : "unknown-row"}>
-                  <td>
-                    <span className="grade-dot" style={{ background: gradeColor(row.grade) }} />
-                    {row.name}
-                    {row.chaoticCount > 0 && (
-                      <span className="chaotic" title="Chaotic">
-                        {" "}
-                        &#9670;
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ color: gradeColor(row.grade) }}>{gradeLabel(row.grade)}</td>
-                  <td className="muted">{typeLabel(row.type)}</td>
-                  <td className="num">{row.count}</td>
-                  <td className="num loc-cell">
-                    {(row.inventoryCount ?? 0) > 0 && <span title="Inventory">Inv {row.inventoryCount}</span>}
-                    {(row.stashCount ?? 0) > 0 && <span title="Stash">St {row.stashCount}</span>}
-                    {(row.tradingCount ?? 0) > 0 && <span title="Trading">Tr {row.tradingCount}</span>}
-                    {inUse > 0 && <span title="Equipped">Eq {inUse}</span>}
-                    {unassignedCount(row) > 0 && <span title="Unassigned">?</span>}
-                  </td>
-                  <td className="num">
-                    {inUse > 0 ? (
-                      <span className="in-use">
-                        {inUse}
-                        {inUse < row.count ? `/${row.count}` : ""}
-                      </span>
-                    ) : (
-                      <span className="muted">-</span>
-                    )}
-                  </td>
-                  <td className="num">
-                    {row.marketHashName ? (
-                      row.priceRaw ? (
+                const inUse = row.inUseCount ?? 0;
+                return (
+                  <tr key={row.itemKey} className={row.known ? "" : "unknown-row"}>
+                    <td>
+                      <span className="grade-dot" style={{ background: gradeColor(row.grade) }} />
+                      {row.name}
+                      {row.chaoticCount > 0 && (
+                        <span className="chaotic" title="Chaotic">
+                          {" "}
+                          &#9670;
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ color: gradeColor(row.grade) }}>{gradeLabel(row.grade)}</td>
+                    <td className="muted">{typeLabel(row.type)}</td>
+                    <td className="num">{row.count}</td>
+                    <td className="num loc-cell">
+                      {(row.inventoryCount ?? 0) > 0 && <span title="Inventory">Inv {row.inventoryCount}</span>}
+                      {(row.stashCount ?? 0) > 0 && <span title="Stash">St {row.stashCount}</span>}
+                      {(row.tradingCount ?? 0) > 0 && <span title="Trading">Tr {row.tradingCount}</span>}
+                      {inUse > 0 && <span title="Equipped">Eq {inUse}</span>}
+                      {unassignedCount(row) > 0 && <span title="Unassigned">?</span>}
+                    </td>
+                    <td className="num">
+                      {inUse > 0 ? (
+                        <span className="in-use">
+                          {inUse}
+                          {inUse < row.count ? `/${row.count}` : ""}
+                        </span>
+                      ) : (
+                        <span className="muted">-</span>
+                      )}
+                    </td>
+                    <td className="num">
+                      {row.marketHashName ? (
+                        row.priceRaw ? (
+                          <MarketListingLink
+                            hash={row.marketHashName}
+                            title={priceSourceTitle(row.priceSource)}
+                          >
+                            {row.priceRaw}
+                          </MarketListingLink>
+                        ) : (
+                          <MarketListingLink hash={row.marketHashName} title="Open on Steam Market">
+                            <span className="muted">pending</span>
+                          </MarketListingLink>
+                        )
+                      ) : (
+                        <span className="muted" title="Not priced (non-tradable or below Legendary gear)">
+                          -
+                        </span>
+                      )}
+                    </td>
+                    <td className="num">
+                      {row.marketHashName ? (
                         <MarketListingLink
                           hash={row.marketHashName}
-                          title={priceSourceTitle(row.priceSource)}
+                          title={
+                            row.value != null && Number.isFinite(row.value)
+                              ? `${priceSourceTitle(row.priceSource) ?? "Steam Market"} · stack value`
+                              : "Open on Steam Market"
+                          }
                         >
-                          {row.priceRaw}
+                          {row.value != null && Number.isFinite(row.value)
+                            ? formatMoney(row.value, currency)
+                            : "-"}
                         </MarketListingLink>
                       ) : (
-                        <MarketListingLink hash={row.marketHashName} title="Open on Steam Market">
-                          <span className="muted">pending</span>
-                        </MarketListingLink>
-                      )
-                    ) : (
-                      <span className="muted" title="Not priced (non-tradable or below Legendary gear)">
-                        -
-                      </span>
-                    )}
-                  </td>
-                  <td className="num">
-                    {row.marketHashName ? (
-                      <MarketListingLink
-                        hash={row.marketHashName}
-                        title={
-                          row.value != null && Number.isFinite(row.value)
-                            ? `${priceSourceTitle(row.priceSource) ?? "Steam Market"} · stack value`
-                            : "Open on Steam Market"
-                        }
-                      >
-                        {row.value != null && Number.isFinite(row.value)
-                          ? formatMoney(row.value, currency)
-                          : "-"}
-                      </MarketListingLink>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                </tr>
-              );
-            })
+                        "-"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

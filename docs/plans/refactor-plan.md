@@ -1,54 +1,47 @@
 # Refactor plan
 
-Working app today; goal is maintainability, testability, and room to grow. **Phase 1 started overnight (uncommitted).**
+Goal: maintainability, testability, and room to grow. **All phases complete on `refactor/maintainability`.**
 
-## Pain points
+## Pain points (addressed)
 
-- `main/index.ts` ~550 lines: bootstrap, globals, IPC, windows, inventory/pricing orchestration
-- IPC channel strings duplicated in main + preload
-- `core/saveReader.ts` uses `node:fs` (violates “pure core” intent)
-- Duplicate types (`Config` vs `AppConfig`, local `GameDataStatus`)
-- Renderer filter logic in `Inventory.tsx` untested
+- ~~`main/index.ts` ~550 lines~~ → ~25 lines bootstrap
+- ~~IPC channel strings duplicated~~ → `shared/ipc.ts`
+- ~~`core/saveReader.ts` uses `node:fs`~~ → `main/io/saveFile.ts` + `core/save/snapshot.ts`
+- ~~Duplicate types (`Config` vs `AppConfig`)~~ → unified `AppConfig` in `shared/types.ts`
+- ~~Renderer filter logic untested~~ → `renderer/lib/inventoryFilters.ts` + tests
 
 ## Target structure
 
 See `AGENTS.md` → **Architecture & refactor conventions**.
 
-```
-app/shared/     types.ts, ipc.ts (channel constants)
-app/src/core/   pure logic only — no fs, electron, fetch
-app/src/main/   io/, services/, ipc/handlers/, windows/, app/
-app/src/renderer/  tabs thin; lib/ + components/ for logic/UI split
-app/test/       core/, main/, ipc/, fixtures/
-```
-
 ## Phases
 
 | Phase | Scope | Status |
 |-------|--------|--------|
-| **1** | `shared/ipc.ts`, extract windows + lifecycle + `registerIpc`, slim `index.ts` | Done (uncommitted) |
-| **2** | `AppState`, `TrackingService`, `InventoryService`, split IPC handlers | Planned |
-| **3** | Move fs out of core; split `inventory.ts`; unified config type | Planned |
-| **4** | Extract Inventory UI helpers + components; slim `SteamMarketProvider` | Planned |
+| **1** | `shared/ipc.ts`, extract windows + lifecycle + `registerIpc`, slim `index.ts` | Done |
+| **2** | `TrackingService`, `InventoryService`, split IPC handlers | Done |
+| **3** | Move fs out of core; split `inventory.ts`; unified config type | Done |
+| **4** | Extract Inventory UI helpers + components; slim `SteamMarketProvider` | Done |
 
-## Testing targets
+## Exit criteria
 
-| Domain | Must cover |
-|--------|------------|
-| Inventory | parse, resolve, ownedMarketNames, location math |
-| Pricing | parseMoney, pickMarketUnit, 429 backoff, cache TTL |
-| Save | parseSnapshot, watcher mtime, read retry |
-| IPC | channel parity main ↔ preload ↔ `TbhApi` |
-| Config | patch side effects (watcher restart, currency refresh, CSV toggle) |
+| Criterion | Status |
+|-----------|--------|
+| `index.ts` < 80 lines | ✓ (~25) |
+| No `node:fs` under `core/` | ✓ |
+| All IPC channels in `shared/ipc.ts` | ✓ |
+| Config/currency/CSV bugs covered by tests | ✓ |
+| `npm test` + `typecheck` + `build` green | ✓ (57 tests) |
 
-Extend `realSave.test.ts` when save present: inventory resolve smoke test.
+## Bug fixes included (confident)
 
-## Exit criteria (whole refactor)
+- **#1** Settings currency → `ensureOwnedPrices(true)` (`configPatch.ts`)
+- **#3** CSV logging toggle without tracker recreate (`configPatch.ts`)
+- **#4** Confirm dialog + inline hint before session-resetting settings (`Settings.tsx`)
 
-- `index.ts` < 80 lines
-- No `node:fs` under `core/`
-- All IPC channels in `shared/ipc.ts`
-- Config/currency/CSV bugs covered by tests
-- `npm test` + `typecheck` + `build` green
+Deferred for discussion: materials (`aggregateSaveDatas`), gear variant ` A`, unknown locations.
 
-**Do not merge until reviewed** — overnight work is uncommitted per request.
+## Next (post-merge)
+
+- Phase 5 (optional): DI container for services, extract `InventoryTable` component further
+- Wire chosen app icon from `docs/design/icons/` into electron-builder
