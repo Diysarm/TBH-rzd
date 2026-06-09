@@ -23,3 +23,9 @@ sample/
 Thumbs.db
 .DS_Store
 .agents/
+
+# Draft docs — intentionally untracked until reviewed
+docs/reviews/
+docs/business/
+docs/design/branding.md
+docs/design/icons/concept-sidehero-512.png
