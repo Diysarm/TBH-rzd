@@ -36,6 +36,19 @@ jobs:
           npm version "${VERSION}" --no-git-tag-version --allow-same-version
           npm install
 
+      - name: Verify CHANGELOG entry
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [ ! -f CHANGELOG.md ]; then
+            echo "::error::CHANGELOG.md is missing. Add a ## [${VERSION}] section with user-facing bullets before releasing."
+            exit 1
+          fi
+          if ! grep -qF "## [${VERSION}]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no ## [${VERSION}] section. Move items from [Unreleased] and add a date before Release prepare."
+            exit 1
+          fi
+
       - name: Commit, tag, and push
         shell: bash
         run: |

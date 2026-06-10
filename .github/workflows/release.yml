@@ -100,7 +100,7 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
         run: |
-          bash .github/scripts/write-release-notes.sh "${{ env.RELEASE_VERSION }}" "${{ env.RELEASE_TAG }}" release_body.md
+          bash .github/scripts/write-release-notes.sh "${{ env.RELEASE_VERSION }}" "${{ env.RELEASE_TAG }}" release_body.md "${{ github.repository }}"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
