@@ -11,35 +11,30 @@ function capacityParts(breakdown: ChestCapacityBreakdown): string[] {
   return parts;
 }
 
-function ChestCategorySection({
+function ChestCategoryCard({
   title,
   slot,
   breakdown,
   fillClass,
-  remainingLabel,
 }: {
   title: string;
   slot: BoxSlotStatus;
   breakdown: ChestCapacityBreakdown;
   fillClass: "gray" | "blue" | "red";
-  remainingLabel: string;
 }) {
   const pct = slot.capacity > 0 ? Math.min(100, (slot.quantity / slot.capacity) * 100) : 0;
 
   return (
-    <section className="chest-section">
-      <div className="chest-section-head">
+    <article className="chest-card">
+      <div className="chest-card-head">
         <h2>{title}</h2>
         {slot.isFull && <span className="badge full">Full</span>}
       </div>
-      <div className="chest-cap-row">
-        <span className="chest-cap-label">
-          {slot.quantity} / {slot.capacity}
-        </span>
-      </div>
-      <p className="muted small">Capacity from save: {capacityParts(breakdown).join(", ")}</p>
+      <p className="chest-card-count">
+        {slot.quantity} / {slot.capacity}
+      </p>
       <div
-        className="progress-bar"
+        className="progress-bar compact"
         role="progressbar"
         aria-valuenow={slot.quantity}
         aria-valuemin={0}
@@ -48,11 +43,13 @@ function ChestCategorySection({
         <div className={`progress-fill ${fillClass}`} style={{ width: `${pct}%` }} />
       </div>
       {!slot.isFull && (
-        <p className="muted small">
-          {slot.slotsRemaining} slot(s) remaining before {remainingLabel}
-        </p>
+        <p className="muted small chest-card-remaining">{slot.slotsRemaining} slot(s) left</p>
       )}
-    </section>
+      <details className="chest-card-details">
+        <summary className="muted small">Capacity details</summary>
+        <p className="muted small">{capacityParts(breakdown).join(", ")}</p>
+      </details>
+    </article>
   );
 }
 
@@ -68,54 +65,39 @@ export function Chests() {
     );
   }
 
-  const { common, stageBoss, actBoss, totalHeld, capacity } = chests;
+  const { common, stageBoss, actBoss, totalHeld } = chests;
 
   return (
     <div className="chests-tab">
       <header className="chests-header">
         <h1>Chests</h1>
         <p className="muted">
-          Unopened chest slots from your save ({totalHeld.toLocaleString()} held across all types).
-          Common and stage boss chests share an open cooldown — many players stockpile commons until
-          full.
+          {totalHeld.toLocaleString()} unopened chest slots from your save. Common and stage boss
+          chests share an open cooldown. Stage boss chest drops use a 12-minute window — open the
+          Stage chest tracker below.
         </p>
-        <p className="muted small">
-          {capacity.totalRunePurchases} rune node(s) purchased in RuneSaveData.
-        </p>
+        <div className="chests-header-actions">
+          <button type="button" className="btn primary" onClick={() => window.tbh.openBoxTracker()}>
+            Open Stage chest tracker
+          </button>
+        </div>
       </header>
 
-      <ChestCategorySection
-        title="Common (gray)"
-        slot={common}
-        breakdown={capacity.common}
-        fillClass="gray"
-        remainingLabel="common cap"
-      />
-
-      <ChestCategorySection
-        title="Stage boss (blue)"
-        slot={stageBoss}
-        breakdown={capacity.stageBoss}
-        fillClass="blue"
-        remainingLabel="stage boss cap"
-      />
-
-      <ChestCategorySection
-        title="Act boss (red)"
-        slot={actBoss}
-        breakdown={capacity.actBoss}
-        fillClass="red"
-        remainingLabel="act boss cap"
-      />
-
-      <section className="chest-actions">
-        <button type="button" className="btn primary" onClick={() => window.tbh.openBoxTracker()}>
-          Open box tracker overlay
-        </button>
-        <p className="muted small">
-          Track rare boss box drops with 12-minute timers and community ideal-stage routes.
-        </p>
-      </section>
+      <div className="chest-grid">
+        <ChestCategoryCard
+          title="Common"
+          slot={common}
+          breakdown={chests.capacity.common}
+          fillClass="gray"
+        />
+        <ChestCategoryCard
+          title="Stage boss"
+          slot={stageBoss}
+          breakdown={chests.capacity.stageBoss}
+          fillClass="blue"
+        />
+        <ChestCategoryCard title="Act boss" slot={actBoss} breakdown={chests.capacity.actBoss} fillClass="red" />
+      </div>
     </div>
   );
 }

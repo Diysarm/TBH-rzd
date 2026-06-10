@@ -101,7 +101,7 @@ export function BoxTracker() {
   return (
     <div className="box-tracker">
       <div className="overlay-bar box-tracker-bar">
-        <span className="overlay-title drag-handle">Box tracker</span>
+        <span className="overlay-title drag-handle">Stage chest tracker</span>
         <div className="overlay-actions no-drag">
           <button type="button" className="icon-btn" title="Open full window" onClick={() => window.tbh.showMain()}>
             {"\u2922"}
@@ -189,7 +189,6 @@ export function BoxTracker() {
         </div>
       )}
 
-      {state.disclaimer && <p className="muted small box-tracker-foot no-drag">{state.disclaimer}</p>}
     </div>
   );
 }

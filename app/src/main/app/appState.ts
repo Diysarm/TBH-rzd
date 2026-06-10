@@ -126,7 +126,9 @@ export function getAppServices() {
       mainWindow?.show();
       overlayWindow?.close();
     },
-    closeOverlay: () => overlayWindow?.close(),
+    closeOverlay: () => {
+      overlayWindow?.close();
+    },
   };
 }
 

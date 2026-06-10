@@ -1,12 +1,12 @@
 import { useStats } from "../lib/useStats";
-import { fmtCompact, fmtDuration, fmtAgo, fmtClock } from "../lib/format";
+import { fmtCompact, fmtDuration, fmtXpUpdated, fmtClock } from "../lib/format";
 import { stageName } from "../../core/stages";
 
 const IDLE_THRESHOLD = 120;
 
 const RATE_TIP =
-  "XP/hour updates only when the game writes new XP to the save (about every " +
-  "1-2 minutes). It holds steady between writes instead of decaying.";
+  "XP/hour updates only when the game writes new XP to the save (often up to " +
+  "3 minutes apart, sometimes longer). It holds steady between writes instead of decaying.";
 const GOLD_TIP =
   "Gold earned per hour. Counts gold gained only; spending (upgrades, Cube, " +
   "runes) is ignored, so it's accurate while farming.";
@@ -16,44 +16,60 @@ export function Live() {
 
   if (!stats) {
     return (
-      <div className="live">
+      <div className="placeholder">
+        <h1>Live stats</h1>
         <p className="muted">Connecting to the save file...</p>
       </div>
     );
   }
 
   const idle = stats.secondsSinceGain !== null && stats.secondsSinceGain > IDLE_THRESHOLD;
+  const showStatus = stats.status !== "Tracking";
 
   return (
     <div className="live">
-      <section className="rate-card">
-        <div className="rate-main" title={RATE_TIP}>
-          <span className="rate-num">{fmtCompact(stats.rollingRate)}</span>
-          <span className="rate-unit">XP / hour</span>
-        </div>
-        <div className="rate-gold" title={GOLD_TIP}>
-          {fmtCompact(stats.goldRate)} gold / hr
-        </div>
-      </section>
+      <h1>Live stats</h1>
+      <p className="muted">
+        Reads your save on a timer. XP and gold rates update when the game writes new progress—often
+        up to three minutes apart, sometimes longer.
+      </p>
 
-      <div className="lastupdated">
-        <span>
-          XP updated: <b>{fmtAgo(stats.secondsSinceGain)}</b>
-        </span>
-        <button className="reset" onClick={() => window.tbh.reset()}>
+      <section className="rate-card">
+        <div className="rate-primary" title={RATE_TIP}>
+          <span className="rate-num">{fmtCompact(stats.rollingRate)}</span>
+          <span className="rate-unit">XP / hr</span>
+        </div>
+
+        <div className="rate-side">
+          <div className="rate-gold" title={GOLD_TIP}>
+            {fmtCompact(stats.goldRate)} gold / hr
+          </div>
+          <div className="rate-meta">
+            <span>
+              Map <b>{stageName(stats.stageKey, stats.stageWave)}</b>
+            </span>
+            <span
+              title={
+                stats.secondsSinceGain === null
+                  ? "Connected and reading your save. Rates update when the game writes progress."
+                  : "When XP last changed in your save"
+              }
+            >
+              <b>{fmtXpUpdated(stats.secondsSinceGain)}</b>
+            </span>
+          </div>
+        </div>
+
+        <button type="button" className="reset" title="Reset session stats" onClick={() => window.tbh.reset()}>
           {"\u21bb"} Reset
         </button>
-      </div>
+      </section>
 
       <section className="totals">
         <Stat label="Session XP" value={fmtCompact(stats.cumulativeGained)} />
         <Stat label="Session gold" value={fmtCompact(stats.goldGained)} />
         <Stat label="Elapsed" value={fmtDuration(stats.elapsed)} />
         <Stat label="Session XP/hr" value={fmtCompact(stats.sessionRate)} />
-      </section>
-
-      <section className="map">
-        Map: <b>{stageName(stats.stageKey, stats.stageWave)}</b>
       </section>
 
       <section className="panel">
@@ -93,7 +109,9 @@ export function Live() {
         )}
       </section>
 
-      <footer className={idle ? "status warn" : "status"}>{stats.status}</footer>
+      {showStatus && (
+        <footer className={idle ? "status warn" : "status"}>{stats.status}</footer>
+      )}
     </div>
   );
 }

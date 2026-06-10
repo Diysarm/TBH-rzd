@@ -61,6 +61,54 @@ body {
   background: var(--card);
 }
 
+.app-chrome {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 8px 0;
+}
+
+.app-chrome .tabs {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border-bottom: none;
+  padding: 0;
+}
+
+.overlay-toolbar {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.toolbar-btn:hover {
+  color: var(--fg);
+  border-color: var(--accent);
+}
+
+.toolbar-icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
 .content {
   flex: 1;
   overflow: auto;
@@ -89,18 +137,75 @@ body {
   gap: 14px;
 }
 
+.live h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.tab-tips {
+  margin: 0 0 4px;
+  padding-left: 18px;
+}
+
+.tab-tips li {
+  margin-bottom: 4px;
+}
+
+.empty-hint {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
 .rate-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px 18px;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px 18px;
+  padding: 12px 14px;
 }
 
-.rate-main {
+.rate-primary {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
   cursor: help;
+}
+
+.rate-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rate-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.rate-meta b {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .rate-card {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+  }
+
+  .rate-primary {
+    grid-column: 1 / -1;
+  }
 }
 
 .rate-num {
@@ -117,23 +222,11 @@ body {
 }
 
 .rate-gold {
-  margin-top: 6px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--gold);
   cursor: help;
-}
-
-.lastupdated {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.lastupdated b {
-  color: var(--fg);
+  line-height: 1.2;
 }
 
 .reset {
@@ -177,15 +270,6 @@ body {
 .stat-value {
   font-size: 18px;
   font-weight: 600;
-}
-
-.map {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.map b {
-  color: var(--fg);
 }
 
 .panel h2 {
@@ -276,20 +360,19 @@ body {
   color: #e0a64a;
 }
 
-.overlay-toggle {
-  margin-left: auto;
-}
-
 /* --- Mini overlay window --- */
 .overlay {
   -webkit-app-region: drag;
-  height: 100vh;
-  padding: 8px 12px 10px;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  padding: 6px 10px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   background: var(--bg);
   border: 1px solid var(--border);
+  overflow: hidden;
 }
 
 .no-drag {
@@ -303,10 +386,11 @@ body {
 }
 
 .overlay-title {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--muted);
-  letter-spacing: 1px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .overlay-actions {
@@ -329,45 +413,75 @@ body {
   background: var(--card);
 }
 
-.overlay-rate {
+.overlay-readout {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.overlay-num {
-  font-size: 30px;
-  font-weight: 700;
-  color: var(--accent);
+.overlay-metrics {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.overlay-metric {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  cursor: help;
+}
+
+.overlay-metric-val {
+  font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
-.overlay-unit {
-  font-size: 11px;
-  color: var(--muted);
+.overlay-metric--xp .overlay-metric-val {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
 }
 
-.overlay-gold {
-  font-size: 14px;
+.overlay-metric--gold {
+  text-align: right;
+}
+
+.overlay-metric--gold .overlay-metric-val {
+  font-size: 16px;
   font-weight: 600;
   color: var(--gold);
 }
 
-.overlay-inv {
-  font-size: 12px;
+.overlay-metric-unit {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: var(--muted);
+  flex-shrink: 0;
 }
 
-.overlay-foot {
-  margin-top: auto;
+.overlay-detail {
+  margin: 0;
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 5px;
   font-size: 11px;
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.overlay-foot .warn {
-  color: #e0a64a;
+.overlay-sep {
+  opacity: 0.55;
+}
+
+.overlay-detail .warn {
+  color: var(--gold);
 }
 
 .overlay-msg {
@@ -658,6 +772,18 @@ body {
   gap: 14px;
   max-width: 640px;
 }
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-section h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
 .settings h1 {
   margin: 0;
   font-size: 18px;
@@ -717,12 +843,68 @@ body {
 .chests-tab {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-width: 720px;
+  gap: 14px;
 }
 
 .chests-header h1 {
   margin: 0 0 6px;
+}
+
+.chests-header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  margin-top: 10px;
+}
+
+.chest-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .chest-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chest-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.chest-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.chest-card-head h2 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.chest-card-count {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.chest-card-remaining {
+  margin: 6px 0 0;
+}
+
+.chest-card-details {
+  margin-top: 8px;
+}
+
+.chest-card-details summary {
+  cursor: pointer;
 }
 
 .chest-section {

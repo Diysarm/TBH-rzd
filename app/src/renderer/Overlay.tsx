@@ -1,11 +1,16 @@
 import { useStats } from "./lib/useStats";
 import { useInventory } from "./lib/useInventory";
 import { usePriceStatus } from "./lib/usePrices";
-import { fmtCompact, fmtAgo } from "./lib/format";
+import { fmtCompact } from "./lib/format";
 import { formatMoney } from "../core/steamPrice";
 import { stageName } from "../core/stages";
 
-const IDLE_THRESHOLD = 120;
+const RATE_TIP =
+  "XP/hour updates only when the game writes new XP to the save (often up to " +
+  "3 minutes apart, sometimes longer). It holds steady between writes instead of decaying.";
+const GOLD_TIP =
+  "Gold earned per hour. Counts gold gained only; spending (upgrades, Cube, " +
+  "runes) is ignored, so it's accurate while farming.";
 
 export function Overlay() {
   const stats = useStats();
@@ -19,15 +24,19 @@ export function Overlay() {
   return (
     <div className="overlay">
       <div className="overlay-bar">
-        <span className="overlay-title">TBH</span>
+        <span className="overlay-title">TBH Companion</span>
         <div className="overlay-actions no-drag">
-          <button type="button" title="Reset" onClick={() => window.tbh.reset()}>
+          <button type="button" title="Reset session stats" onClick={() => window.tbh.reset()}>
             {"\u21bb"}
           </button>
           <button type="button" title="Open full window" onClick={() => window.tbh.showMain()}>
             {"\u2922"}
           </button>
-          <button type="button" title="Close overlay" onClick={() => window.tbh.closeOverlay()}>
+          <button
+            type="button"
+            title="Close mini overlay (app keeps running in the tray)"
+            onClick={() => window.tbh.closeOverlay()}
+          >
             {"\u2715"}
           </button>
         </div>
@@ -36,31 +45,33 @@ export function Overlay() {
       {!stats ? (
         <p className="muted overlay-msg">Connecting...</p>
       ) : (
-        <>
-          <div className="overlay-rate">
-            <span className="overlay-num">{fmtCompact(stats.rollingRate)}</span>
-            <span className="overlay-unit">XP / hr</span>
+        <div className="overlay-readout">
+          <div className="overlay-metrics">
+            <p className="overlay-metric overlay-metric--xp" title={RATE_TIP}>
+              <span className="overlay-metric-val">{fmtCompact(stats.rollingRate)}</span>
+              <span className="overlay-metric-unit">XP/hr</span>
+            </p>
+            <p className="overlay-metric overlay-metric--gold" title={GOLD_TIP}>
+              <span className="overlay-metric-val">{fmtCompact(stats.goldRate)}</span>
+              <span className="overlay-metric-unit">gold/hr</span>
+            </p>
           </div>
-          <div className="overlay-gold">{fmtCompact(stats.goldRate)} gold / hr</div>
-          {inv && (
-            <div className="overlay-inv">
-              Inv: {invValue !== null ? formatMoney(invValue, currency) : "-"}
-              {pricing && <span className="muted"> (pricing…)</span>}
-            </div>
-          )}
-          <div className="overlay-foot">
+
+          <p className="overlay-detail">
             <span>{stageName(stats.stageKey, stats.stageWave)}</span>
-            <span
-              className={
-                stats.secondsSinceGain !== null && stats.secondsSinceGain > IDLE_THRESHOLD
-                  ? "warn"
-                  : ""
-              }
-            >
-              {fmtAgo(stats.secondsSinceGain)}
-            </span>
-          </div>
-        </>
+            {inv && (
+              <>
+                <span className="overlay-sep" aria-hidden>
+                  ·
+                </span>
+                <span>
+                  Inv {invValue !== null ? formatMoney(invValue, currency) : "—"}
+                  {pricing && <span className="muted"> (pricing…)</span>}
+                </span>
+              </>
+            )}
+          </p>
+        </div>
       )}
     </div>
   );
