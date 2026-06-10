@@ -10,9 +10,9 @@ export function TabHeader({
   children?: ReactNode;
 }) {
   return (
-    <header className="tab-header">
-      <h1>{title}</h1>
-      {intro ? <p className="muted">{intro}</p> : null}
+    <header className="flex flex-col gap-1">
+      <h1 className="m-0 text-lg font-semibold">{title}</h1>
+      {intro ? <p className="m-0 text-[13px] leading-snug text-muted">{intro}</p> : null}
       {children}
     </header>
   );
