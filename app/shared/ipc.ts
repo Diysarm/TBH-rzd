@@ -6,6 +6,7 @@ export const IPC = {
   CHESTS: "chests",
   BOX_TIMERS: "box-timers",
   PRICES_PROGRESS: "prices-progress",
+  UPDATE_STATUS: "update-status",
 
   // Invoke (renderer → main)
   GET_STATS: "get-stats",
@@ -26,6 +27,10 @@ export const IPC = {
   CLEAR_APP_DATA: "clear-app-data",
   CLEAR_DIAGNOSTIC_LOGS: "clear-diagnostic-logs",
   LOG_RENDERER_ERROR: "log-renderer-error",
+  GET_UPDATE_STATUS: "get-update-status",
+  UPDATE_CHECK: "update-check",
+  UPDATE_DOWNLOAD: "update-download",
+  UPDATE_QUIT_AND_INSTALL: "update-quit-and-install",
 
   // Send (renderer → main, no response)
   RESET: "reset",
@@ -59,6 +64,10 @@ export const IPC_INVOKE_CHANNELS = [
   IPC.CLEAR_APP_DATA,
   IPC.CLEAR_DIAGNOSTIC_LOGS,
   IPC.LOG_RENDERER_ERROR,
+  IPC.GET_UPDATE_STATUS,
+  IPC.UPDATE_CHECK,
+  IPC.UPDATE_DOWNLOAD,
+  IPC.UPDATE_QUIT_AND_INSTALL,
 ] as const;
 
 export const IPC_SEND_CHANNELS = [
@@ -77,4 +86,5 @@ export const IPC_PUSH_CHANNELS = [
   IPC.CHESTS,
   IPC.BOX_TIMERS,
   IPC.PRICES_PROGRESS,
+  IPC.UPDATE_STATUS,
 ] as const;

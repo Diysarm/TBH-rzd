@@ -50,6 +50,8 @@ The release tag **must match** `app/package.json` exactly (package `1.0.2` → t
 
 **Rebuild an existing tag:** Actions → **Release** → Run workflow → enter the tag (e.g. `v1.0.1`).
 
+CI uploads the NSIS installer plus `latest.yml` and `.blockmap` so the installed app can update itself from GitHub Releases (see **About** tab). Builds are unsigned — Windows SmartScreen may prompt **Run anyway** on install and after an update.
+
 ## Features
 
 - **Live tab** - big XP/hour (held steady between the game's periodic saves,

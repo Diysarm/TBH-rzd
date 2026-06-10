@@ -9,10 +9,11 @@ const Inventory = lazy(() => import("./tabs/Inventory").then((m) => ({ default: 
 const Chests = lazy(() => import("./tabs/Chests").then((m) => ({ default: m.Chests })));
 const Market = lazy(() => import("./tabs/Market").then((m) => ({ default: m.Market })));
 const Settings = lazy(() => import("./tabs/Settings").then((m) => ({ default: m.Settings })));
+const About = lazy(() => import("./tabs/About").then((m) => ({ default: m.About })));
 
 const IDLE_THRESHOLD = 120;
 
-type TabId = "live" | "inventory" | "chests" | "market" | "settings";
+type TabId = "live" | "inventory" | "chests" | "market" | "settings" | "about";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "live", label: "Live" },
@@ -20,6 +21,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "chests", label: "Chests" },
   { id: "market", label: "Market" },
   { id: "settings", label: "Settings" },
+  { id: "about", label: "About" },
 ];
 
 function TabFallback() {
@@ -61,6 +63,7 @@ export function App() {
             {tab === "chests" && <Chests />}
             {tab === "market" && <Market />}
             {tab === "settings" && <Settings />}
+            {tab === "about" && <About />}
           </Suspense>
         </ErrorBoundary>
       </main>

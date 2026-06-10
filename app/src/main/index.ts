@@ -30,6 +30,7 @@ app.whenReady().then(() => {
   const sessionUi = startTracking();
   const services = getAppServices();
   registerIpc(services);
+  services.startUpdates();
   createTray(services);
   restoreSessionWindows(sessionUi);
 
@@ -41,7 +42,9 @@ app.whenReady().then(() => {
 app.on("before-quit", () => {
   createLogger("app").info("App quitting");
   setAppQuitting(true);
-  getAppServices().flushSession();
+  const services = getAppServices();
+  services.stopUpdates();
+  services.flushSession();
   destroyTray();
 });
 

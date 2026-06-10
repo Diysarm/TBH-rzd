@@ -23,9 +23,15 @@
     "dist": "electron-vite build && electron-builder"
   },
   "build": {
+    "appId": "com.electron.tbh-companion",
     "productName": "TBH Companion",
     "directories": {
       "output": "release"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "lucasfevi",
+      "repo": "tbh-companion"
     },
     "files": [
       "out/**/*",
@@ -73,6 +79,7 @@
   },
   "dependencies": {
     "electron-log": "^5.4.4",
+    "electron-updater": "^6.6.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   }

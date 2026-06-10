@@ -17,6 +17,7 @@ import type {
   ClearAppDataResult,
   ClearDiagnosticLogResult,
   RendererLogPayload,
+  UpdateStatus,
 } from "../../shared/types";
 
 const api: TbhApi = {
@@ -119,6 +120,23 @@ const api: TbhApi = {
   },
   logRendererError(payload: RendererLogPayload): Promise<void> {
     return ipcRenderer.invoke(IPC.LOG_RENDERER_ERROR, payload);
+  },
+  getUpdateStatus(): Promise<UpdateStatus> {
+    return ipcRenderer.invoke(IPC.GET_UPDATE_STATUS);
+  },
+  checkForUpdates(): Promise<UpdateStatus> {
+    return ipcRenderer.invoke(IPC.UPDATE_CHECK);
+  },
+  downloadUpdate(): Promise<UpdateStatus> {
+    return ipcRenderer.invoke(IPC.UPDATE_DOWNLOAD);
+  },
+  quitAndInstall(): Promise<void> {
+    return ipcRenderer.invoke(IPC.UPDATE_QUIT_AND_INSTALL);
+  },
+  onUpdateStatus(cb: (status: UpdateStatus) => void): () => void {
+    const listener = (_e: unknown, status: UpdateStatus): void => cb(status);
+    ipcRenderer.on(IPC.UPDATE_STATUS, listener);
+    return () => ipcRenderer.removeListener(IPC.UPDATE_STATUS, listener);
   },
 };
 
