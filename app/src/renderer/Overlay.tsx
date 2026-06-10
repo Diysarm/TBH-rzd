@@ -45,35 +45,34 @@ export function Overlay() {
       {!stats ? (
         <p className="muted overlay-msg">Connecting...</p>
       ) : (
-        <>
-          <section className="overlay-rate-card">
-            <div className="overlay-rate-primary" title={RATE_TIP}>
-              <span className="overlay-num">{fmtCompact(stats.rollingRate)}</span>
-              <span className="overlay-unit">XP / hr</span>
-            </div>
+        <div className="overlay-readout">
+          <div className="overlay-metrics">
+            <p className="overlay-metric overlay-metric--xp" title={RATE_TIP}>
+              <span className="overlay-metric-val">{fmtCompact(stats.rollingRate)}</span>
+              <span className="overlay-metric-unit">XP/hr</span>
+            </p>
+            <p className="overlay-metric overlay-metric--gold" title={GOLD_TIP}>
+              <span className="overlay-metric-val">{fmtCompact(stats.goldRate)}</span>
+              <span className="overlay-metric-unit">gold/hr</span>
+            </p>
+          </div>
 
-            <div className="overlay-rate-side">
-              <div className="overlay-gold" title={GOLD_TIP}>
-                {fmtCompact(stats.goldRate)} gold / hr
-              </div>
-              <div className="overlay-meta">
-                <span>
-                  Map <b>{stageName(stats.stageKey, stats.stageWave)}</b>
-                </span>
-                <span className={idle ? "warn" : undefined}>
-                  XP + <b>{fmtAgo(stats.secondsSinceGain)}</b>
-                </span>
-              </div>
-            </div>
-          </section>
+          <p className="overlay-detail">
+            <span>{stageName(stats.stageKey, stats.stageWave)}</span>
+            <span className="overlay-sep" aria-hidden>
+              ·
+            </span>
+            <span className={idle ? "warn" : undefined}>XP + {fmtAgo(stats.secondsSinceGain)}</span>
+          </p>
 
           {inv && (
-            <div className="overlay-inv">
-              Inv: {invValue !== null ? formatMoney(invValue, currency) : "-"}
+            <p className="overlay-detail">
+              Inv{" "}
+              {invValue !== null ? formatMoney(invValue, currency) : "—"}
               {pricing && <span className="muted"> (pricing…)</span>}
-            </div>
+            </p>
           )}
-        </>
+        </div>
       )}
     </div>
   );

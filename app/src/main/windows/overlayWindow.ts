@@ -15,8 +15,8 @@ export function createOverlayWindow(
   }
 
   const win = new BrowserWindow({
-    width: 280,
-    height: 200,
+    width: 288,
+    height: 118,
     show: false,
     frame: false,
     resizable: false,

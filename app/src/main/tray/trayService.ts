@@ -47,7 +47,7 @@ export function createTray(services: AppServices): Tray {
       },
     },
     {
-      label: "Box tracker",
+      label: "Stage chest tracker",
       click: () => {
         services.openBoxTracker();
       },

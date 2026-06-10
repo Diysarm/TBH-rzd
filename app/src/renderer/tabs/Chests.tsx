@@ -73,12 +73,12 @@ export function Chests() {
         <h1>Chests</h1>
         <p className="muted">
           {totalHeld.toLocaleString()} unopened chest slots from your save. Common and stage boss
-          chests share an open cooldown. Stage boss chest drops use a 12-minute window — track them
-          with timers and ideal-stage routes below.
+          chests share an open cooldown. Stage boss chest drops use a 12-minute window — open the
+          Stage chest tracker below.
         </p>
         <div className="chests-header-actions">
           <button type="button" className="btn primary" onClick={() => window.tbh.openBoxTracker()}>
-            Open box tracker overlay
+            Open Stage chest tracker
           </button>
         </div>
       </header>

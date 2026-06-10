@@ -37,11 +37,11 @@ export function AppToolbar() {
       <button
         type="button"
         className="toolbar-btn"
-        title="Open box tracker overlay"
+        title="Open Stage chest tracker"
         onClick={() => window.tbh.openBoxTracker()}
       >
         <BoxTrackerIcon />
-        Boxes
+        Stage chests
       </button>
     </div>
   );
