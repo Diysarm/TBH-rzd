@@ -61,6 +61,10 @@ for (const file of requiredDataFiles) {
 }
 
 const pkg = JSON.parse(readFileSync(join(appRoot, "package.json"), "utf8"));
+if (!/^\d+\.\d+\.\d+/.test(pkg.version ?? "")) {
+  console.error(`FAIL: app/package.json version must be semver (got ${pkg.version ?? "missing"})`);
+  process.exit(1);
+}
 const extraResources = pkg.build?.extraResources ?? [];
 const shipsDataDir = extraResources.some(
   (entry) =>

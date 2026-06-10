@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   qa:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: app
@@ -51,6 +51,9 @@ jobs:
     needs: qa
     if: github.event_name == 'pull_request'
     runs-on: windows-latest
+    permissions:
+      contents: write
+      pull-requests: write
     defaults:
       run:
         working-directory: app
@@ -90,13 +93,34 @@ jobs:
             }
           }
 
-      - name: Upload Windows release preview
+      - name: Publish PR preview pre-release (.exe direct download)
+        id: preview_release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $exe = Get-ChildItem release/*.exe | Select-Object -First 1
+          if (-not $exe) { throw "No installer .exe found under app/release" }
+
+          $tag = "preview-pr-${{ github.event.pull_request.number }}"
+          gh release delete $tag --yes 2>$null
+          gh release create $tag $exe.FullName `
+            --prerelease `
+            --title "PR #${{ github.event.pull_request.number }} preview" `
+            --notes "Automated preview build from commit ${{ github.sha }}. Replaced on each CI run for this PR."
+
+          $downloadUrl = gh release view $tag --json assets -q '.assets[] | select(.name | endswith(".exe")) | .browser_download_url'
+          if (-not $downloadUrl) { throw "Failed to resolve pre-release download URL" }
+
+          "download_url=$downloadUrl" >> $env:GITHUB_OUTPUT
+          "exe_name=$($exe.Name)" >> $env:GITHUB_OUTPUT
+          "release_tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Upload unpacked tree for debugging
         uses: actions/upload-artifact@v5
         with:
-          name: tbh-companion-windows-pr-${{ github.event.pull_request.number }}
-          path: |
-            app/release/*.exe
-            app/release/win-unpacked/**
+          name: tbh-companion-unpacked-pr-${{ github.event.pull_request.number }}
+          path: app/release/win-unpacked/**
           if-no-files-found: error
           retention-days: 14
 
@@ -104,25 +128,25 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $artifact = "tbh-companion-windows-pr-${{ github.event.pull_request.number }}"
-          $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           @"
           ## Windows release preview
 
           | | |
           |---|---|
-          | Artifact | ``$artifact`` |
-          | Download | [Open workflow run artifacts]($runUrl) |
+          | Installer | [**${{ steps.preview_release.outputs.exe_name }}**](${{ steps.preview_release.outputs.download_url }}) |
+          | Pre-release tag | ``${{ steps.preview_release.outputs.release_tag }}`` |
+          | Unpacked app | Download the \`tbh-companion-unpacked-pr-*\` artifact (zip) from this run |
 
-          Scroll to **Artifacts** at the bottom of the run page to download the NSIS installer and `win-unpacked/` tree.
+          The installer link downloads the \`.exe\` directly. Workflow artifacts are always served as zip archives by GitHub.
           "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
 
       - name: Post release preview link on PR
         if: success()
-        uses: peter-evans/create-or-update-comment@v4
+        uses: peter-evans/create-or-update-comment@v5
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-identifier: release-preview-windows
+          edit-mode: replace
           body: |
             ## Windows release preview
 
@@ -130,9 +154,10 @@ jobs:
 
             | | |
             |---|---|
-            | **Download** | [**Workflow run → Artifacts**](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
-            | **Artifact name** | `tbh-companion-windows-pr-${{ github.event.pull_request.number }}` |
+            | **Installer (.exe)** | [**${{ steps.preview_release.outputs.exe_name }}**](${{ steps.preview_release.outputs.download_url }}) |
+            | Pre-release | [`${{ steps.preview_release.outputs.release_tag }}`](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.preview_release.outputs.release_tag }}) |
+            | Unpacked tree | [Workflow artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) (`tbh-companion-unpacked-pr-${{ github.event.pull_request.number }}`, zip) |
 
-            On the run page, scroll to **Artifacts** at the bottom to download the NSIS `.exe` and the unpacked `win-unpacked/` folder.
+            The installer link downloads the `.exe` file directly. GitHub workflow artifacts are always zipped — use the pre-release link above for one-click installer testing.
 
-            _Updated by CI run [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})._
+            _Updated from [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})._
