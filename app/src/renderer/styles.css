@@ -822,6 +822,46 @@ body {
   color: var(--accent);
 }
 
+.cache-path code {
+  word-break: break-all;
+}
+
+.cache-actions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cache-action-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.cache-action-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cache-action-copy strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cache-action-row .btn {
+  flex-shrink: 0;
+}
+
 .loc-cell span {
   display: inline-block;
   margin-right: 6px;

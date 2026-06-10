@@ -184,6 +184,33 @@ export interface AppConfig {
   currency: string;
 }
 
+/** Scoped targets for Settings → Data & cache clear actions. */
+export type AppDataClearTarget =
+  | "catalog"
+  | "prices"
+  | "box-timers"
+  | "session"
+  | "all-except-config";
+
+export interface AppDataPathEntry {
+  id: AppDataClearTarget | "config";
+  label: string;
+  files: string[];
+  exists: boolean;
+}
+
+export interface AppDataPaths {
+  userDataDir: string;
+  configPath: string;
+  entries: AppDataPathEntry[];
+}
+
+export interface ClearAppDataResult {
+  ok: boolean;
+  cleared: string[];
+  error?: string;
+}
+
 // --- Chests (BoxData holdings) ---
 
 export interface ResolvedChestRow {
@@ -283,6 +310,8 @@ export interface TbhApi {
   onPricesProgress(cb: (p: PriceProgress) => void): () => void;
   getConfig(): Promise<AppConfig>;
   saveConfig(patch: Partial<AppConfig>): Promise<AppConfig>;
+  getDataPaths(): Promise<AppDataPaths>;
+  clearAppData(target: AppDataClearTarget): Promise<ClearAppDataResult>;
   getChests(): Promise<ChestState | null>;
   onChests(cb: (state: ChestState) => void): () => void;
   openBoxTracker(): void;

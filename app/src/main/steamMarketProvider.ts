@@ -45,6 +45,11 @@ export class SteamMarketProvider {
     this.cache = loadPriceCache(next);
   }
 
+  /** Reload in-memory cache after price files were deleted from disk. */
+  reloadFromDisk(): void {
+    this.cache = loadPriceCache(this.currency);
+  }
+
   get(name: string): PriceEntry | undefined {
     return this.cache.prices[name];
   }

@@ -118,6 +118,14 @@ export class GameDataProvider {
     this.loadStageBoxes();
   }
 
+  /** Reload after catalog cache files were deleted. */
+  reload(): void {
+    this.data = null;
+    this.index = new Map();
+    this.source = "none";
+    this.load();
+  }
+
   overlayMissingLevelsFromBundled(): boolean {
     if (catalogHasGearLevels(this.index.values())) return false;
     return this.tryLoadBundledLevelsOverlay(this.bundledDataPath("gamedata.json"));

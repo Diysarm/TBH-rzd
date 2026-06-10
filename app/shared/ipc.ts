@@ -22,6 +22,8 @@ export const IPC = {
   PRICES_STATUS: "prices-status",
   PRICES_REFRESH: "prices-refresh",
   SET_CURRENCY: "set-currency",
+  GET_DATA_PATHS: "get-data-paths",
+  CLEAR_APP_DATA: "clear-app-data",
 
   // Send (renderer → main, no response)
   RESET: "reset",
@@ -51,6 +53,8 @@ export const IPC_INVOKE_CHANNELS = [
   IPC.PRICES_STATUS,
   IPC.PRICES_REFRESH,
   IPC.SET_CURRENCY,
+  IPC.GET_DATA_PATHS,
+  IPC.CLEAR_APP_DATA,
 ] as const;
 
 export const IPC_SEND_CHANNELS = [
