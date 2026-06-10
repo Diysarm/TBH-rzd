@@ -1,139 +1,138 @@
-name: CI
-
-on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "app/**"
-      - ".github/workflows/**"
-      - "data/**"
-  push:
-    branches: [main]
-    paths:
-      - "app/**"
-      - ".github/workflows/**"
-      - "data/**"
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-  pull-requests: write
-
-jobs:
-  qa:
-    runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: app
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Automated QA gate
-        run: npm run qa
-
-      - name: npm audit (high severity)
-        run: npm audit --audit-level=high
-        continue-on-error: true
-
-  release-preview:
-    needs: qa
-    if: github.event_name == 'pull_request'
-    runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: app
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Windows installer (release layout)
-        run: npm run dist
-
-      - name: Verify bundled data ships in packaged resources
-        shell: pwsh
-        run: |
-          $resourcesData = Join-Path $PWD "release/win-unpacked/resources/data"
-          if (-not (Test-Path $resourcesData)) {
-            throw "Expected bundled data at release/win-unpacked/resources/data"
-          }
-          $required = @(
-            "box_types.json",
-            "rune_box_cap.json",
-            "rare_box_routes.json",
-            "gamedata.json",
-            "stage_boxes.json"
-          )
-          foreach ($file in $required) {
-            $path = Join-Path $resourcesData $file
-            if (-not (Test-Path $path)) {
-              throw "Missing bundled data file: $path"
-            }
-          }
-
-      - name: Upload Windows release preview
-        id: upload
-        uses: actions/upload-artifact@v5
-        with:
-          name: tbh-companion-windows-pr-${{ github.event.pull_request.number }}
-          path: |
-            app/release/*.exe
-            app/release/win-unpacked/**
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Write job summary
-        if: success()
-        shell: pwsh
-        run: |
-          $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          @"
-          ## Windows release preview
-
-          | | |
-          |---|---|
-          | Artifact | ``${{ steps.upload.outputs.artifact-url != '' && steps.upload.outputs.name || format('tbh-companion-windows-pr-{0}', github.event.pull_request.number) }}`` |
-          | Download | [Open workflow run artifacts]($runUrl) |
-
-          Scroll to **Artifacts** at the bottom of the run page to download the NSIS installer and `win-unpacked/` tree.
-          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
-
-      - name: Post release preview link on PR
-        if: success()
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-identifier: release-preview-windows
-          body: |
-            ## Windows release preview
-
-            CI built a release-style Windows installer for this PR.
-
-            | | |
-            |---|---|
-            | **Download** | [**Workflow run → Artifacts**](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
-            | **Artifact name** | `tbh-companion-windows-pr-${{ github.event.pull_request.number }}` |
-
-            On the run page, scroll to **Artifacts** at the bottom to download the NSIS `.exe` and the unpacked `win-unpacked/` folder.
-
-            _Updated by CI run [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})._
-
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/**"
+      - "data/**"
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/**"
+      - "data/**"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  qa:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Automated QA gate
+        run: npm run qa
+
+      - name: npm audit (high severity)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  release-preview:
+    needs: qa
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows installer (release layout)
+        run: npm run dist
+
+      - name: Verify bundled data ships in packaged resources
+        shell: pwsh
+        run: |
+          $resourcesData = Join-Path $PWD "release/win-unpacked/resources/data"
+          if (-not (Test-Path $resourcesData)) {
+            throw "Expected bundled data at release/win-unpacked/resources/data"
+          }
+          $required = @(
+            "box_types.json",
+            "rune_box_cap.json",
+            "rare_box_routes.json",
+            "gamedata.json",
+            "stage_boxes.json"
+          )
+          foreach ($file in $required) {
+            $path = Join-Path $resourcesData $file
+            if (-not (Test-Path $path)) {
+              throw "Missing bundled data file: $path"
+            }
+          }
+
+      - name: Upload Windows release preview
+        uses: actions/upload-artifact@v5
+        with:
+          name: tbh-companion-windows-pr-${{ github.event.pull_request.number }}
+          path: |
+            app/release/*.exe
+            app/release/win-unpacked/**
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Write job summary
+        if: success()
+        shell: pwsh
+        run: |
+          $artifact = "tbh-companion-windows-pr-${{ github.event.pull_request.number }}"
+          $runUrl = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          @"
+          ## Windows release preview
+
+          | | |
+          |---|---|
+          | Artifact | ``$artifact`` |
+          | Download | [Open workflow run artifacts]($runUrl) |
+
+          Scroll to **Artifacts** at the bottom of the run page to download the NSIS installer and `win-unpacked/` tree.
+          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+
+      - name: Post release preview link on PR
+        if: success()
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-identifier: release-preview-windows
+          body: |
+            ## Windows release preview
+
+            CI built a release-style Windows installer for this PR.
+
+            | | |
+            |---|---|
+            | **Download** | [**Workflow run → Artifacts**](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
+            | **Artifact name** | `tbh-companion-windows-pr-${{ github.event.pull_request.number }}` |
+
+            On the run page, scroll to **Artifacts** at the bottom to download the NSIS `.exe` and the unpacked `win-unpacked/` folder.
+
+            _Updated by CI run [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})._
