@@ -103,14 +103,24 @@ jobs:
           if (-not $exe) { throw "No installer .exe found under app/release" }
 
           $tag = "preview-pr-${{ github.event.pull_request.number }}"
-          gh release delete $tag --yes 2>$null
+          $repo = "${{ github.repository }}"
+
+          gh release delete $tag --repo $repo --yes 2>$null
           gh release create $tag $exe.FullName `
+            --repo $repo `
             --prerelease `
             --title "PR #${{ github.event.pull_request.number }} preview" `
             --notes "Automated preview build from commit ${{ github.sha }}. Replaced on each CI run for this PR."
 
-          $downloadUrl = gh release view $tag --json assets -q '.assets[] | select(.name | endswith(".exe")) | .browser_download_url'
-          if (-not $downloadUrl) { throw "Failed to resolve pre-release download URL" }
+          $release = gh release view $tag --repo $repo --json assets | ConvertFrom-Json
+          $asset = $release.assets | Where-Object { $_.name -like "*.exe" } | Select-Object -First 1
+          if (-not $asset) {
+            $names = ($release.assets | ForEach-Object { $_.name }) -join ", "
+            throw "No .exe asset on release ${tag}. Found: ${names}"
+          }
+
+          $downloadUrl = $asset.browser_download_url
+          if (-not $downloadUrl) { throw "Release asset has no browser_download_url" }
 
           "download_url=$downloadUrl" >> $env:GITHUB_OUTPUT
           "exe_name=$($exe.Name)" >> $env:GITHUB_OUTPUT
