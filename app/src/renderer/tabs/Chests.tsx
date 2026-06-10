@@ -73,7 +73,7 @@ export function Chests() {
         <h1>Chests</h1>
         <p className="muted">
           {totalHeld.toLocaleString()} unopened chest slots from your save. Common and stage boss
-          chests share an open cooldown. Rare boss boxes use a 12-minute drop window — track them
+          chests share an open cooldown. Stage boss chest drops use a 12-minute window — track them
           with timers and ideal-stage routes below.
         </p>
         <div className="chests-header-actions">
