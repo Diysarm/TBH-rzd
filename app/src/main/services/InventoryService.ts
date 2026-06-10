@@ -32,6 +32,17 @@ export class InventoryService {
     this.gameData.refreshIfStale(() => this.resolveAndPushInventory());
   }
 
+  reloadGameData(): void {
+    this.gameData.reload();
+    this.gameData.overlayMissingLevelsFromBundled();
+    this.resolveAndPushInventory();
+  }
+
+  reloadPriceCache(): void {
+    this.market?.reloadFromDisk();
+    this.resolveAndPushInventory();
+  }
+
   onInventory(snap: InventorySnapshot): void {
     this.lastInventoryRaw = snap;
     this.resolveAndPushInventory();

@@ -1,14 +1,68 @@
 import { useEffect, useState } from "react";
 import { STEAM_CURRENCIES } from "../../core/steamPrice";
-import type { AppConfig } from "../../../shared/types";
+import type { AppConfig, AppDataClearTarget, AppDataPaths } from "../../../shared/types";
 import { reportIpcError } from "../lib/reportError";
+
+const CLEAR_ACTIONS: {
+  target: AppDataClearTarget;
+  label: string;
+  detail: string;
+  confirm: string;
+}[] = [
+  {
+    target: "catalog",
+    label: "Clear item catalog cache",
+    detail: "gamedata.json, gear_levels.json",
+    confirm:
+      "Remove the downloaded item catalog and gear-level cache? The app will use bundled catalog data until you refresh again.",
+  },
+  {
+    target: "prices",
+    label: "Clear Steam Market prices",
+    detail: "prices.*.json",
+    confirm:
+      "Remove all cached Steam Market prices? Inventory values will need to be fetched again from the Market tab.",
+  },
+  {
+    target: "box-timers",
+    label: "Reset stage chest tracker",
+    detail: "box_timers.json",
+    confirm:
+      "Reset stage chest tracker timers and enabled routes to defaults? Active cooldowns will be cleared.",
+  },
+  {
+    target: "session",
+    label: "Clear session snapshot",
+    detail: "session_state.json",
+    confirm:
+      "Clear the saved session snapshot and reset live stats? Your current session totals and history will start fresh.",
+  },
+  {
+    target: "all-except-config",
+    label: "Clear all except settings",
+    detail: "All caches above; config.json is kept",
+    confirm:
+      "Clear all cached data except config.json? Catalog, prices, box timers, and live session stats will reset.",
+  },
+];
 
 export function Settings() {
   const [cfg, setCfg] = useState<AppConfig | null>(null);
   const [draft, setDraft] = useState<AppConfig | null>(null);
+  const [dataPaths, setDataPaths] = useState<AppDataPaths | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [clearBusy, setClearBusy] = useState<AppDataClearTarget | null>(null);
+
+  async function refreshDataPaths(): Promise<void> {
+    if (typeof window.tbh?.getDataPaths !== "function") return;
+    try {
+      setDataPaths(await window.tbh.getDataPaths());
+    } catch (err) {
+      reportIpcError(err);
+    }
+  }
 
   useEffect(() => {
     if (typeof window.tbh?.getConfig !== "function") {
@@ -29,6 +83,7 @@ export function Settings() {
         const text = err instanceof Error ? err.message : "Could not load settings.";
         setLoadError(text);
       });
+    void refreshDataPaths();
   }, []);
 
   if (loadError) {
@@ -86,6 +141,47 @@ export function Settings() {
   function onReset() {
     if (cfg) setDraft({ ...cfg });
     setMessage(null);
+  }
+
+  async function onClearCache(target: AppDataClearTarget, confirmText: string) {
+    if (typeof window.tbh?.clearAppData !== "function") {
+      setMessage("Clear-cache API is not loaded. Restart the app and try again.");
+      return;
+    }
+    if (!window.confirm(confirmText)) return;
+
+    setClearBusy(target);
+    setMessage(null);
+    try {
+      const result = await window.tbh.clearAppData(target);
+      if (!result.ok) {
+        setMessage(result.error ?? "Could not clear cache.");
+        return;
+      }
+      await refreshDataPaths();
+      const count = result.cleared.length;
+      setMessage(
+        count > 0
+          ? `Cleared ${count} file${count === 1 ? "" : "s"}.`
+          : "Nothing to clear — those files were already missing.",
+      );
+    } catch (err) {
+      reportIpcError(err);
+      setMessage("Could not clear cache.");
+    } finally {
+      setClearBusy(null);
+    }
+  }
+
+  function pathEntryExists(target: AppDataClearTarget): boolean {
+    if (!dataPaths) return false;
+    if (target === "session" || target === "all-except-config") return true;
+    return dataPaths.entries.find((e) => e.id === target)?.exists ?? false;
+  }
+
+  function showMissingHint(target: AppDataClearTarget): boolean {
+    if (!dataPaths || target === "session" || target === "all-except-config") return false;
+    return !pathEntryExists(target);
   }
 
   return (
@@ -195,9 +291,43 @@ export function Settings() {
       <section className="settings-section">
         <h2>Data &amp; cache</h2>
         <p className="muted small">
-          Catalog, price, and timer caches also live in your user-data folder. Clear-cache controls
-          will appear here in a future update.
+          Cached catalog, prices, and tracker data live in your app user-data folder.{" "}
+          <code>config.json</code> is never removed by these actions.
         </p>
+        {dataPaths ? (
+          <p className="muted small cache-path">
+            <span>Folder:</span> <code>{dataPaths.userDataDir}</code>
+          </p>
+        ) : (
+          <p className="muted small">Loading cache paths…</p>
+        )}
+
+        <ul className="cache-actions">
+          {CLEAR_ACTIONS.map((action) => {
+            const hasData = pathEntryExists(action.target);
+            const isBusy = clearBusy === action.target;
+            const isDanger = action.target === "all-except-config";
+            return (
+              <li key={action.target} className="cache-action-row">
+                <div className="cache-action-copy">
+                  <strong>{action.label}</strong>
+                  <span className="muted small">{action.detail}</span>
+                  {!showMissingHint(action.target) ? null : (
+                    <span className="muted small">Nothing cached yet.</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className={isDanger ? "btn danger" : "btn"}
+                  disabled={Boolean(clearBusy) || !hasData}
+                  onClick={() => void onClearCache(action.target, action.confirm)}
+                >
+                  {isBusy ? "Clearing…" : "Clear"}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section className="settings-section">

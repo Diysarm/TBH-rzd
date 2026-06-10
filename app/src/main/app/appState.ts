@@ -6,6 +6,8 @@ import { InventoryService } from "../services/InventoryService";
 import { ChestService } from "../services/ChestService";
 import { BoxTimerService } from "../services/BoxTimerService";
 import { applyConfigPatch } from "../ipc/configPatch";
+import { clearAppDataFiles, getAppDataPaths } from "../services/appData";
+import type { AppDataClearTarget } from "../../../shared/types";
 import { createMainWindow as buildMainWindow } from "../windows/mainWindow";
 import { createOverlayWindow as buildOverlayWindow } from "../windows/overlayWindow";
 import { createBoxTrackerWindow as buildBoxTrackerWindow } from "../windows/boxTrackerWindow";
@@ -113,6 +115,24 @@ export function getAppServices() {
         },
         patch,
       ),
+    getDataPaths: () => getAppDataPaths(),
+    clearAppData: (target: AppDataClearTarget) => {
+      const result = clearAppDataFiles(target);
+      if (!result.ok) return result;
+
+      const reloadCatalog =
+        target === "catalog" || target === "all-except-config";
+      const reloadPrices = target === "prices" || target === "all-except-config";
+      const reloadTimers = target === "box-timers" || target === "all-except-config";
+      const reloadSession = target === "session" || target === "all-except-config";
+
+      if (reloadCatalog) inventory.reloadGameData();
+      if (reloadPrices) inventory.reloadPriceCache();
+      if (reloadTimers) boxTimers.resetStorage();
+      if (reloadSession) tracking.reset();
+
+      return result;
+    },
     openOverlay: () => {
       openOverlayWindow();
       mainWindow?.hide();

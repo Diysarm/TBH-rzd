@@ -85,6 +85,16 @@ export class BoxTimerService {
     return this.commitState();
   }
 
+  /** Reset timers and enabled routes after box_timers.json was deleted. */
+  resetStorage(): BoxTimerState {
+    this.timers.clear();
+    this.enabledBoxIds.clear();
+    for (const id of this.defaultEnabledIds()) this.enabledBoxIds.add(id);
+    const state = this.buildState();
+    broadcast(IPC.BOX_TIMERS, state);
+    return state;
+  }
+
   private commitState(): BoxTimerState {
     this.persist();
     const state = this.buildState();

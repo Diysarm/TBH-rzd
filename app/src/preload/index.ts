@@ -12,6 +12,9 @@ import type {
   PriceProgress,
   PriceRefreshResult,
   AppConfig,
+  AppDataClearTarget,
+  AppDataPaths,
+  ClearAppDataResult,
 } from "../../shared/types";
 
 const api: TbhApi = {
@@ -102,6 +105,12 @@ const api: TbhApi = {
   },
   saveConfig(patch: Partial<AppConfig>): Promise<AppConfig> {
     return ipcRenderer.invoke(IPC.SAVE_CONFIG, patch);
+  },
+  getDataPaths(): Promise<AppDataPaths> {
+    return ipcRenderer.invoke(IPC.GET_DATA_PATHS);
+  },
+  clearAppData(target: AppDataClearTarget): Promise<ClearAppDataResult> {
+    return ipcRenderer.invoke(IPC.CLEAR_APP_DATA, target);
   },
 };
 

@@ -17,15 +17,20 @@ describe("IPC channel registry", () => {
     expect(preload).toContain("IPC.SET_BOX_TRACKER_BOXES");
     expect(preload).toContain("IPC.SAVE_CONFIG");
     expect(preload).toContain("IPC.PRICES_REFRESH");
+    expect(preload).toContain("IPC.GET_DATA_PATHS");
+    expect(preload).toContain("IPC.CLEAR_APP_DATA");
   });
 
   it("IPC handlers wire invoke and send channels", () => {
     const stats = readHandler("stats");
     const market = readHandler("market");
     const config = readHandler("config");
+    const data = readHandler("data");
     expect(stats).toContain("IPC.GET_STATS");
     expect(config).toContain("IPC.SAVE_CONFIG");
     expect(market).toContain("IPC.PRICES_REFRESH");
+    expect(data).toContain("IPC.GET_DATA_PATHS");
+    expect(data).toContain("IPC.CLEAR_APP_DATA");
   });
 
   it("services broadcast on IPC push constants", () => {
