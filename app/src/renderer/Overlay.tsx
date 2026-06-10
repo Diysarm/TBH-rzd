@@ -28,7 +28,7 @@ export function Overlay() {
   return (
     <div className="overlay">
       <div className="overlay-bar">
-        <span className="overlay-title">TBH</span>
+        <span className="overlay-title">TBH Companion</span>
         <div className="overlay-actions no-drag">
           <button type="button" title="Reset session stats" onClick={() => window.tbh.reset()}>
             {"\u21bb"}
@@ -62,7 +62,9 @@ export function Overlay() {
             <span className="overlay-sep" aria-hidden>
               ·
             </span>
-            <span className={idle ? "warn" : undefined}>XP + {fmtAgo(stats.secondsSinceGain)}</span>
+            <span className={idle ? "warn" : undefined} title="When XP last changed in your save">
+              XP updated {fmtAgo(stats.secondsSinceGain)}
+            </span>
             {inv && (
               <>
                 <span className="overlay-sep" aria-hidden>

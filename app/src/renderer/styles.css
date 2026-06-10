@@ -386,10 +386,11 @@ body {
 }
 
 .overlay-title {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--muted);
-  letter-spacing: 1px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .overlay-actions {

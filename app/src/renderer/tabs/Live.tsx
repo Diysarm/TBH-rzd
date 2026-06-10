@@ -48,8 +48,8 @@ export function Live() {
             <span>
               Map <b>{stageName(stats.stageKey, stats.stageWave)}</b>
             </span>
-            <span>
-              XP + <b>{fmtAgo(stats.secondsSinceGain)}</b>
+            <span title="When XP last changed in your save">
+              XP updated <b>{fmtAgo(stats.secondsSinceGain)}</b>
             </span>
           </div>
         </div>
