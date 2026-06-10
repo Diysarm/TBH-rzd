@@ -65,23 +65,21 @@ export function Chests() {
     );
   }
 
-  const { common, stageBoss, actBoss, totalHeld, capacity } = chests;
+  const { common, stageBoss, actBoss, totalHeld } = chests;
 
   return (
     <div className="chests-tab">
       <header className="chests-header">
         <h1>Chests</h1>
         <p className="muted">
-          Unopened chest slots from your save ({totalHeld.toLocaleString()} held). Common and stage
-          boss chests share an open cooldown.
+          {totalHeld.toLocaleString()} unopened chest slots from your save. Common and stage boss
+          chests share an open cooldown. Rare boss boxes use a 12-minute drop window — track them
+          with timers and ideal-stage routes below.
         </p>
         <div className="chests-header-actions">
           <button type="button" className="btn primary" onClick={() => window.tbh.openBoxTracker()}>
             Open box tracker overlay
           </button>
-          <p className="muted small">
-            Track rare boss box drops with 12-minute timers and community ideal-stage routes.
-          </p>
         </div>
       </header>
 
@@ -89,21 +87,17 @@ export function Chests() {
         <ChestCategoryCard
           title="Common"
           slot={common}
-          breakdown={capacity.common}
+          breakdown={chests.capacity.common}
           fillClass="gray"
         />
         <ChestCategoryCard
           title="Stage boss"
           slot={stageBoss}
-          breakdown={capacity.stageBoss}
+          breakdown={chests.capacity.stageBoss}
           fillClass="blue"
         />
-        <ChestCategoryCard title="Act boss" slot={actBoss} breakdown={capacity.actBoss} fillClass="red" />
+        <ChestCategoryCard title="Act boss" slot={actBoss} breakdown={chests.capacity.actBoss} fillClass="red" />
       </div>
-
-      <p className="muted small">
-        {capacity.totalRunePurchases} rune node(s) purchased in RuneSaveData.
-      </p>
     </div>
   );
 }
