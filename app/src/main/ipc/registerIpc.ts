@@ -8,6 +8,7 @@ import { registerDataHandlers } from "./handlers/data";
 import { registerLogHandlers } from "./handlers/log";
 import { registerWindowHandlers } from "./handlers/window";
 import { registerChestHandlers, registerBoxTimerHandlers } from "./handlers/chests";
+import { registerUpdateHandlers } from "./handlers/update";
 
 export function registerIpc(services: AppServices): void {
   registerStatsHandlers(ipcMain, services);
@@ -19,4 +20,5 @@ export function registerIpc(services: AppServices): void {
   registerConfigHandlers(ipcMain, services);
   registerDataHandlers(ipcMain, services);
   registerLogHandlers(ipcMain, services);
+  registerUpdateHandlers(ipcMain, services);
 }

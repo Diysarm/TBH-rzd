@@ -784,10 +784,25 @@ body {
   font-size: 14px;
   font-weight: 600;
 }
-.settings h1 {
+.settings h1,
+.about h1 {
   margin: 0;
   font-size: 18px;
 }
+
+.about {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.about-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .settings-grid {
   display: flex;
   flex-direction: column;

@@ -68,6 +68,21 @@ jobs:
       - name: Build Windows installer
         run: npm run dist
 
+      - name: Verify updater metadata ships with installer
+        shell: pwsh
+        run: |
+          $release = Join-Path $PWD "release"
+          if (-not (Test-Path $release)) {
+            throw "Expected release output at $release"
+          }
+          $yml = Get-ChildItem -Path $release -Filter "latest.yml" -File -ErrorAction SilentlyContinue
+          $exe = Get-ChildItem -Path $release -Filter "*.exe" -File -ErrorAction SilentlyContinue
+          $blockmap = Get-ChildItem -Path $release -Filter "*.blockmap" -File -ErrorAction SilentlyContinue
+          if (-not $yml) { throw "Missing latest.yml in app/release (required for in-app updates)" }
+          if (-not $exe) { throw "Missing NSIS installer .exe in app/release" }
+          if (-not $blockmap) { throw "Missing .blockmap in app/release (required for differential updates)" }
+          Write-Host "Updater artifacts OK: $($yml.Name), $($exe.Name), $($blockmap.Name)"
+
       - name: Verify bundled data ships in packaged resources
         shell: pwsh
         run: |

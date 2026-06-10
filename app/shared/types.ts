@@ -354,6 +354,27 @@ export interface BoxTimerState {
   disclaimer?: string;
 }
 
+export type UpdatePhase =
+  | "idle"
+  | "checking"
+  | "available"
+  | "not-available"
+  | "downloading"
+  | "ready"
+  | "error"
+  | "disabled";
+
+export interface UpdateStatus {
+  phase: UpdatePhase;
+  currentVersion: string;
+  availableVersion?: string;
+  percent?: number;
+  transferred?: number;
+  total?: number;
+  error?: string;
+  lastCheckedAt?: string;
+}
+
 // API surface exposed on `window.tbh` by the preload via contextBridge.
 export interface TbhApi {
   onStats(cb: (stats: Stats) => void): () => void;
@@ -386,4 +407,9 @@ export interface TbhApi {
   markBoxDropped(boxId: number): Promise<BoxTimerState>;
   clearBoxTimer(boxId: number): Promise<BoxTimerState>;
   setBoxTrackerBoxes(boxIds: number[]): Promise<BoxTimerState>;
+  getUpdateStatus(): Promise<UpdateStatus>;
+  checkForUpdates(): Promise<UpdateStatus>;
+  downloadUpdate(): Promise<UpdateStatus>;
+  quitAndInstall(): Promise<void>;
+  onUpdateStatus(cb: (status: UpdateStatus) => void): () => void;
 }

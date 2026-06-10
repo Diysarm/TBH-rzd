@@ -405,14 +405,6 @@ export function Settings() {
         </ul>
       </section>
 
-      <section className="settings-section">
-        <h2>About</h2>
-        <p className="muted small">
-          TBH Companion — unofficial fan tool for Task Bar Hero players. Not affiliated with
-          Tesseract Studio. Does not modify your save or connect to game servers.
-        </p>
-      </section>
-
       <div className="settings-actions">
         <button className="btn primary" disabled={busy} onClick={() => void onSave()}>
           Save settings

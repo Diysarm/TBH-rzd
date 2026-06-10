@@ -21,6 +21,10 @@ describe("IPC channel registry", () => {
     expect(preload).toContain("IPC.CLEAR_APP_DATA");
     expect(preload).toContain("IPC.CLEAR_DIAGNOSTIC_LOGS");
     expect(preload).toContain("IPC.LOG_RENDERER_ERROR");
+    expect(preload).toContain("IPC.GET_UPDATE_STATUS");
+    expect(preload).toContain("IPC.UPDATE_CHECK");
+    expect(preload).toContain("IPC.UPDATE_DOWNLOAD");
+    expect(preload).toContain("IPC.UPDATE_QUIT_AND_INSTALL");
   });
 
   it("IPC handlers wire invoke and send channels", () => {
@@ -36,6 +40,14 @@ describe("IPC channel registry", () => {
     const logHandler = readFileSync(join(__dirname, "../../src/main/ipc/handlers/log.ts"), "utf-8");
     expect(logHandler).toContain("IPC.CLEAR_DIAGNOSTIC_LOGS");
     expect(logHandler).toContain("IPC.LOG_RENDERER_ERROR");
+    const updateHandler = readFileSync(
+      join(__dirname, "../../src/main/ipc/handlers/update.ts"),
+      "utf-8",
+    );
+    expect(updateHandler).toContain("IPC.GET_UPDATE_STATUS");
+    expect(updateHandler).toContain("IPC.UPDATE_CHECK");
+    expect(updateHandler).toContain("IPC.UPDATE_DOWNLOAD");
+    expect(updateHandler).toContain("IPC.UPDATE_QUIT_AND_INSTALL");
   });
 
   it("services broadcast on IPC push constants", () => {
@@ -60,6 +72,11 @@ describe("IPC channel registry", () => {
     expect(inventory).toContain("IPC.PRICES_PROGRESS");
     expect(chests).toContain("IPC.CHESTS");
     expect(boxTimers).toContain("IPC.BOX_TIMERS");
+    const updates = readFileSync(
+      join(__dirname, "../../src/main/services/UpdateService.ts"),
+      "utf-8",
+    );
+    expect(updates).toContain("IPC.UPDATE_STATUS");
   });
 
   it("preload uses send channels via IPC constants", () => {

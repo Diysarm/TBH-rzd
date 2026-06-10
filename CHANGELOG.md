@@ -4,6 +4,12 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
+### About & updates
+
+- New **About** tab (after Settings) shows the installed version and in-app updates from GitHub Releases.
+- Installed builds check for updates in the background about 30 seconds after startup; download and install only when you confirm in About.
+- Updates install over your existing folder. Windows may still show an unsigned-app SmartScreen prompt — choose **More info** → **Run anyway**, same as the first install.
+
 ## [1.2.0] - 2026-06-10
 
 ### Market

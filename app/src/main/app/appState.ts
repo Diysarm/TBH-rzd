@@ -9,6 +9,7 @@ import { SessionStateService } from "../services/SessionStateService";
 import { applyConfigPatch } from "../ipc/configPatch";
 import { clearDiagnosticLogs, createLogger, logRendererError } from "../log";
 import { clearAppDataFiles, getAppDataPaths } from "../services/appData";
+import { UpdateService } from "../services/UpdateService";
 import type {
   AppDataClearTarget,
   RendererLogPayload,
@@ -26,6 +27,7 @@ const sessionState = new SessionStateService();
 const inventory = new InventoryService();
 const chests = new ChestService();
 const boxTimers = new BoxTimerService();
+const updates = new UpdateService();
 const tracking = new TrackingService(
   (snap) => inventory.onInventory(snap),
   (text, mtime) => {
@@ -214,6 +216,12 @@ export function getAppServices() {
       overlayWindow?.close();
     },
     flushSession: () => tracking.flushSession(),
+    getUpdateStatus: () => updates.getStatus(),
+    checkForUpdates: () => updates.checkForUpdates(),
+    downloadUpdate: () => updates.downloadUpdate(),
+    quitAndInstall: () => updates.quitAndInstall(),
+    startUpdates: () => updates.start(),
+    stopUpdates: () => updates.stop(),
   };
 }
 
