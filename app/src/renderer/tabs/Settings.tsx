@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { STEAM_CURRENCIES } from "../../core/steamPrice";
 import type { AppConfig, AppDataClearTarget, AppDataPaths } from "../../../shared/types";
 import { reportIpcError } from "../lib/reportError";
+import { TabHeader } from "../components/TabHeader";
 
 const CLEAR_ACTIONS: {
   target: AppDataClearTarget;
@@ -46,6 +47,20 @@ const CLEAR_ACTIONS: {
   },
 ];
 
+type SettingsPatch = Omit<AppConfig, "es3Password">;
+
+function settingsPatch(draft: AppConfig): SettingsPatch {
+  return {
+    savePath: draft.savePath,
+    pollIntervalSeconds: draft.pollIntervalSeconds,
+    rollingWindowMinutes: draft.rollingWindowMinutes,
+    trackCubeExp: draft.trackCubeExp,
+    startTopmost: draft.startTopmost,
+    logHistoryCsv: draft.logHistoryCsv,
+    currency: draft.currency,
+  };
+}
+
 export function Settings() {
   const [cfg, setCfg] = useState<AppConfig | null>(null);
   const [draft, setDraft] = useState<AppConfig | null>(null);
@@ -53,6 +68,7 @@ export function Settings() {
   const [message, setMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [browseBusy, setBrowseBusy] = useState(false);
   const [clearBusy, setClearBusy] = useState<AppDataClearTarget | null>(null);
   const [clearLogsBusy, setClearLogsBusy] = useState(false);
 
@@ -105,12 +121,31 @@ export function Settings() {
     );
   }
 
+  async function onBrowseSave() {
+    if (typeof window.tbh?.pickSaveFile !== "function") {
+      setMessage("Save picker is not loaded. Restart the app and try again.");
+      return;
+    }
+    setBrowseBusy(true);
+    setMessage(null);
+    try {
+      const path = await window.tbh.pickSaveFile();
+      if (path) setDraft({ ...draft!, savePath: path });
+    } catch (err) {
+      reportIpcError(err);
+      setMessage("Could not open the save file picker.");
+    } finally {
+      setBrowseBusy(false);
+    }
+  }
+
   async function onSave() {
     if (!draft || !cfg) return;
 
+    const patch = settingsPatch(draft);
     const resetsSession =
-      draft.rollingWindowMinutes !== cfg.rollingWindowMinutes ||
-      draft.trackCubeExp !== cfg.trackCubeExp;
+      patch.rollingWindowMinutes !== cfg.rollingWindowMinutes ||
+      patch.trackCubeExp !== cfg.trackCubeExp;
     if (
       resetsSession &&
       !window.confirm(
@@ -123,7 +158,7 @@ export function Settings() {
     setBusy(true);
     setMessage(null);
     try {
-      const saved = await window.tbh.saveConfig(draft);
+      const saved = await window.tbh.saveConfig(patch);
       setCfg(saved);
       setDraft(saved);
       setMessage(
@@ -222,40 +257,39 @@ export function Settings() {
   }
 
   return (
-    <div className="settings">
-      <h1>Settings</h1>
-      <p className="muted">
-        Configure save polling, session tracking, and defaults. Changes are stored as{" "}
-        <code>config.json</code> in your app user-data folder.
-      </p>
-      <p className="muted small">
-        Closing the main window keeps TBH Companion running in the system tray. Use{" "}
-        <strong>Quit</strong> from the tray menu to exit fully.
-      </p>
+    <div className="settings tab-page">
+      <TabHeader
+        title="Settings"
+        intro="Choose where the app reads your save and how live stats and prices behave. Settings are saved on your PC."
+      />
+
+      <div className="settings-savebar">
+        <button className="btn primary" disabled={busy} onClick={() => void onSave()}>
+          Save settings
+        </button>
+        <button className="btn" disabled={busy} onClick={onReset}>
+          Reset
+        </button>
+      </div>
 
       <section className="settings-section">
-        <h2>Game save</h2>
-        <div className="settings-grid">
-          <label className="field">
-            <span>Save file path</span>
-            <input
-              value={draft.savePath}
-              onChange={(e) => setDraft({ ...draft, savePath: e.target.value })}
-            />
-          </label>
-
-          <label className="field">
-            <span>ES3 password</span>
-            <input
-              value={draft.es3Password}
-              onChange={(e) => setDraft({ ...draft, es3Password: e.target.value })}
-            />
-          </label>
+        <h2>Save file</h2>
+        <div className="settings-path-row">
+          <span className="muted small">Current save file</span>
+          <code className="settings-path-display">{draft.savePath}</code>
+          <button
+            type="button"
+            className="btn"
+            disabled={browseBusy || busy}
+            onClick={() => void onBrowseSave()}
+          >
+            {browseBusy ? "Opening…" : "Browse…"}
+          </button>
         </div>
       </section>
 
       <section className="settings-section">
-        <h2>Tracking</h2>
+        <h2>Live stats</h2>
         <div className="settings-grid">
           <label className="field">
             <span>Poll interval (seconds)</span>
@@ -288,20 +322,6 @@ export function Settings() {
             <span className="muted small">Changing this resets the current session.</span>
           </label>
 
-          <label className="field">
-            <span>Market currency</span>
-            <select
-              value={draft.currency}
-              onChange={(e) => setDraft({ ...draft, currency: e.target.value })}
-            >
-              {STEAM_CURRENCIES.map((c) => (
-                <option key={c.iso} value={c.iso}>
-                  {c.iso} - {c.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
           <label className="field checkbox">
             <input
               type="checkbox"
@@ -309,15 +329,6 @@ export function Settings() {
               onChange={(e) => setDraft({ ...draft, trackCubeExp: e.target.checked })}
             />
             <span>Include Hero-dric Cube XP in totals (resets session when toggled)</span>
-          </label>
-
-          <label className="field checkbox">
-            <input
-              type="checkbox"
-              checked={draft.startTopmost}
-              onChange={(e) => setDraft({ ...draft, startTopmost: e.target.checked })}
-            />
-            <span>Keep main window on top</span>
           </label>
 
           <label className="field checkbox">
@@ -332,87 +343,119 @@ export function Settings() {
       </section>
 
       <section className="settings-section">
-        <h2>Diagnostics</h2>
-        <p className="muted small">
-          When reporting an issue, you can send the diagnostic log file from Settings.
-        </p>
-        {dataPaths ? (
-          <p className="muted small cache-path">
-            <span>Log file:</span> <code>{dataPaths.diagnosticLogPath}</code>
-          </p>
-        ) : (
-          <p className="muted small">Loading log path…</p>
-        )}
-        <div className="cache-action-row">
-          <div className="cache-action-copy">
-            <strong>Clear diagnostic logs</strong>
-            <span className="muted small">logs/app.log and rotated archives</span>
-          </div>
-          <button
-            type="button"
-            className="btn"
-            disabled={
-              clearLogsBusy ||
-              Boolean(clearBusy) ||
-              !dataPaths?.entries.find((e) => e.id === "diagnostic-log")?.exists
-            }
-            onClick={() => void onClearDiagnosticLogs()}
-          >
-            {clearLogsBusy ? "Clearing…" : "Clear"}
-          </button>
+        <h2>Steam Market</h2>
+        <div className="settings-grid">
+          <label className="field">
+            <span>Market currency</span>
+            <select
+              value={draft.currency}
+              onChange={(e) => setDraft({ ...draft, currency: e.target.value })}
+            >
+              {STEAM_CURRENCIES.map((c) => (
+                <option key={c.iso} value={c.iso}>
+                  {c.iso} - {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </section>
 
       <section className="settings-section">
-        <h2>Data &amp; cache</h2>
-        <p className="muted small">
-          Cached catalog, prices, and tracker data live in your app user-data folder.{" "}
-          <code>config.json</code> is never removed by these actions.
-        </p>
-        {dataPaths ? (
-          <p className="muted small cache-path">
-            <span>Folder:</span> <code>{dataPaths.userDataDir}</code>
+        <h2>Window &amp; tray</h2>
+        <div className="settings-grid">
+          <label className="field checkbox">
+            <input
+              type="checkbox"
+              checked={draft.startTopmost}
+              onChange={(e) => setDraft({ ...draft, startTopmost: e.target.checked })}
+            />
+            <span>Keep main window on top</span>
+          </label>
+          <p className="muted small">
+            Closing the main window keeps TBH Companion running in the system tray. Use{" "}
+            <strong>Quit</strong> from the tray menu to exit fully.
           </p>
-        ) : (
-          <p className="muted small">Loading cache paths…</p>
-        )}
-
-        <ul className="cache-actions">
-          {CLEAR_ACTIONS.map((action) => {
-            const hasData = pathEntryExists(action.target);
-            const isBusy = clearBusy === action.target;
-            const isDanger = action.target === "all-except-config";
-            return (
-              <li key={action.target} className="cache-action-row">
-                <div className="cache-action-copy">
-                  <strong>{action.label}</strong>
-                  <span className="muted small">{action.detail}</span>
-                  {!showMissingHint(action.target) ? null : (
-                    <span className="muted small">Nothing cached yet.</span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className={isDanger ? "btn danger" : "btn"}
-                  disabled={Boolean(clearBusy) || !hasData}
-                  onClick={() => void onClearCache(action.target, action.confirm)}
-                >
-                  {isBusy ? "Clearing…" : "Clear"}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        </div>
       </section>
 
-      <div className="settings-actions">
-        <button className="btn primary" disabled={busy} onClick={() => void onSave()}>
-          Save settings
-        </button>
-        <button className="btn" disabled={busy} onClick={onReset}>
-          Reset
-        </button>
-      </div>
+      <details className="settings-advanced">
+        <summary>Advanced — logs and cached data</summary>
+
+        <section className="settings-section">
+          <h2>Diagnostics</h2>
+          <p className="muted small">
+            When reporting an issue, you can send the diagnostic log file from Settings.
+          </p>
+          {dataPaths ? (
+            <p className="muted small cache-path">
+              <span>Log file:</span> <code>{dataPaths.diagnosticLogPath}</code>
+            </p>
+          ) : (
+            <p className="muted small">Loading log path…</p>
+          )}
+          <div className="cache-action-row">
+            <div className="cache-action-copy">
+              <strong>Clear diagnostic logs</strong>
+              <span className="muted small">logs/app.log and rotated archives</span>
+            </div>
+            <button
+              type="button"
+              className="btn"
+              disabled={
+                clearLogsBusy ||
+                Boolean(clearBusy) ||
+                !dataPaths?.entries.find((e) => e.id === "diagnostic-log")?.exists
+              }
+              onClick={() => void onClearDiagnosticLogs()}
+            >
+              {clearLogsBusy ? "Clearing…" : "Clear"}
+            </button>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <h2>Data &amp; cache</h2>
+          <p className="muted small">
+            Cached catalog, prices, and tracker data live in your app user-data folder.{" "}
+            <code>config.json</code> is never removed by these actions.
+          </p>
+          {dataPaths ? (
+            <p className="muted small cache-path">
+              <span>Folder:</span> <code>{dataPaths.userDataDir}</code>
+            </p>
+          ) : (
+            <p className="muted small">Loading cache paths…</p>
+          )}
+
+          <ul className="cache-actions">
+            {CLEAR_ACTIONS.map((action) => {
+              const hasData = pathEntryExists(action.target);
+              const isBusy = clearBusy === action.target;
+              const isDanger = action.target === "all-except-config";
+              return (
+                <li key={action.target} className="cache-action-row">
+                  <div className="cache-action-copy">
+                    <strong>{action.label}</strong>
+                    <span className="muted small">{action.detail}</span>
+                    {!showMissingHint(action.target) ? null : (
+                      <span className="muted small">Nothing cached yet.</span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className={isDanger ? "btn danger" : "btn"}
+                    disabled={Boolean(clearBusy) || !hasData}
+                    onClick={() => void onClearCache(action.target, action.confirm)}
+                  >
+                    {isBusy ? "Clearing…" : "Clear"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      </details>
 
       {message && <p className="settings-message">{message}</p>}
     </div>

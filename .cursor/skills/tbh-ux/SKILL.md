@@ -52,13 +52,18 @@ Rules:
 
 Each tab should have:
 
-1. **`<h1>` title** — short, scannable (e.g. "Inventory", "Chests", "Live stats").
-2. **One or two sentences** of `.muted` explainer — what the tab reads from the save and when to use it.
-3. **Primary controls next** — summary cards, filters, or the main CTA before long lists.
+1. **`<TabHeader>`** (or `.tab-header`) — short `<h1>` title (**18px / 600**) plus one `.muted` intro line (**6px** below title).
+2. **Primary controls next** — summary cards, filters, or the main CTA before long lists.
+
+Use `.tab-page` on the tab root for consistent **14px** section spacing. Reuse [`TabHeader.tsx`](../../app/src/renderer/components/TabHeader.tsx).
 
 Placeholder state (no data yet): same `<h1>` + `.placeholder` + `.muted` wait message — see Inventory and Chests.
 
 Avoid walls of copy; move rune breakdowns and capacity math into `<details>` or tooltips (see compact Chests cards).
+
+**Copy tone:** write for players — no “installed app”, dev-build jargon, or internal timers in tab intros. Technical paths belong in Settings advanced sections.
+
+**App icon:** ship transparent PNG/ICO under `docs/design/icons/` (`companion-icon-*`, `tray-icon-32.png`). Do not use opaque black-background PNGs for tray, taskbar, or website.
 
 ## Chests tab
 

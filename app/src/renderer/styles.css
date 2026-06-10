@@ -117,8 +117,9 @@ body {
 }
 
 .placeholder h1 {
-  margin: 0 0 6px;
-  font-size: 22px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .placeholder p {
@@ -130,6 +131,27 @@ body {
   color: var(--muted);
 }
 
+/* --- Shared tab page layout --- */
+.tab-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.tab-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tab-header h1,
+.tab-page > h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
 /* --- Live tab --- */
 .live {
   display: flex;
@@ -138,8 +160,9 @@ body {
 }
 
 .live h1 {
-  margin: 0 0 6px;
-  font-size: 22px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .tab-tips {
@@ -773,6 +796,55 @@ body {
   max-width: 640px;
 }
 
+.settings-savebar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.settings-savebar .btn.primary {
+  padding: 9px 16px;
+}
+
+.settings-advanced {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-advanced > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  list-style: none;
+}
+
+.settings-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-path-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-path-display {
+  word-break: break-all;
+  font-size: 12px;
+  padding: 7px 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+}
+
 .settings-section {
   display: flex;
   flex-direction: column;
@@ -783,11 +855,6 @@ body {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-}
-.settings h1,
-.about h1 {
-  margin: 0;
-  font-size: 18px;
 }
 
 .about {
@@ -899,10 +966,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-}
-
-.chests-header h1 {
-  margin: 0 0 6px;
 }
 
 .chests-header-actions {

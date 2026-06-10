@@ -1,5 +1,6 @@
 import { useChests } from "../lib/useChests";
 import type { BoxSlotStatus, ChestCapacityBreakdown } from "../../../shared/types";
+import { TabHeader } from "../components/TabHeader";
 
 function capacityParts(breakdown: ChestCapacityBreakdown): string[] {
   const parts = [`${breakdown.base} base`];
@@ -68,20 +69,17 @@ export function Chests() {
   const { common, stageBoss, actBoss, totalHeld } = chests;
 
   return (
-    <div className="chests-tab">
-      <header className="chests-header">
-        <h1>Chests</h1>
-        <p className="muted">
-          {totalHeld.toLocaleString()} unopened chest slots from your save. Common and stage boss
-          chests share an open cooldown. Stage boss chest drops use a 12-minute window — open the
-          Stage chest tracker below.
-        </p>
+    <div className="chests-tab tab-page">
+      <TabHeader
+        title="Chests"
+        intro={`${totalHeld.toLocaleString()} unopened chest slots from your save. Common and stage boss chests share an open cooldown. Stage boss drops are timed — use the Stage chest tracker below.`}
+      >
         <div className="chests-header-actions">
           <button type="button" className="btn primary" onClick={() => window.tbh.openBoxTracker()}>
             Open Stage chest tracker
           </button>
         </div>
-      </header>
+      </TabHeader>
 
       <div className="chest-grid">
         <ChestCategoryCard

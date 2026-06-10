@@ -2,6 +2,7 @@ import { BrowserWindow } from "electron";
 import { PRELOAD_SCRIPT } from "../paths";
 import { isAppQuitting } from "../tray/trayService";
 import { loadRenderer } from "./loadRenderer";
+import { setWindowIcon } from "../iconPaths";
 
 export function createMainWindow(
   getExisting: () => BrowserWindow | null,
@@ -43,6 +44,7 @@ export function createMainWindow(
   win.on("closed", () => setWindow(null));
 
   loadRenderer(win, "main");
+  setWindowIcon(win);
   setWindow(win);
   return win;
 }

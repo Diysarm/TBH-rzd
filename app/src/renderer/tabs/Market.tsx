@@ -61,8 +61,8 @@ export function Market() {
     <div className="market">
       <h1>Market prices</h1>
       <p className="muted">
-        Steam Community Market prices in your chosen currency. The app refreshes owned items in the
-        background and backs off on rate limits until done.
+        Steam Community Market prices in your chosen currency. Prices refresh in the background; the
+        app waits if Steam rate-limits requests.
       </p>
 
       <ul className="tab-tips muted">

@@ -43,13 +43,17 @@
         "to": "data"
       },
       {
-        "from": "../docs/design/icons/concept-companion-512.png",
-        "to": "tray-icon.png"
+        "from": "../docs/design/icons/tray-icon-32.png",
+        "to": "tray-icon-32.png"
+      },
+      {
+        "from": "../docs/design/icons/companion-icon-256.png",
+        "to": "companion-icon-256.png"
       }
     ],
     "win": {
       "target": "nsis",
-      "icon": "../docs/design/icons/concept-companion-512.png"
+      "icon": "../docs/design/icons/companion-icon.ico"
     },
     "nsis": {
       "oneClick": false,
