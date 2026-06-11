@@ -4,11 +4,44 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-06-10
+
 ### About & updates
 
 - New **About** tab (after Settings) shows the installed version and in-app updates from GitHub Releases.
+- **GitHub** and **Release notes** links under the version open the project repo and the matching release on GitHub.
 - Installed builds check for updates in the background about 30 seconds after startup; download and install only when you confirm in About.
 - Updates install over your existing folder. Windows may still show an unsigned-app SmartScreen prompt — choose **More info** → **Run anyway**, same as the first install.
+
+### App behavior
+
+- Live session stats and rolling history resume after you restart the app, as long as your save file and tracking settings are unchanged.
+- If the **Mini** overlay or **Stage chest tracker** was open when you quit, it reopens automatically on the next launch.
+
+### Live
+
+- Refreshed **Live** layout with stat cards and clearer hero and session history tables.
+- Save status (watching, errors, session restored) appears in a bar under the tab strip instead of mixed into tab content.
+
+### Settings
+
+- Reworked **Settings** with clearer sections for save file, live stats, Steam Market, window & tray, and advanced cache controls.
+- **Advanced — logs and cached data** lets you view the diagnostic log path, clear diagnostic logs, reset the session snapshot, or clear cached catalog, prices, and tracker data without touching `config.json`.
+- Removed misleading save-password wording from Diagnostics.
+
+### Mini overlay
+
+- More uniform padding on the **Mini** overlay and **Stage chest tracker** windows.
+- Expand and close controls sit flush with the window edges for easier clicking.
+
+### Inventory
+
+- **Inventory** table uses the same card styling as other tabs for a consistent look.
+
+### Appearance
+
+- Refreshed visual design across all tabs — shared buttons, cards, badges, and status colors (including **ideal** highlights on the chest tracker).
+- Taskbar and window icons use transparent backgrounds so they look correct on the Windows taskbar.
 
 ## [1.2.0] - 2026-06-10
 
