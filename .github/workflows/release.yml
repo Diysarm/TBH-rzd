@@ -65,8 +65,10 @@ jobs:
       - name: Automated QA gate
         run: npm run qa
 
+      # publish config in package.json is for latest.yml (auto-updater); upload is via
+      # action-gh-release below — never let electron-builder publish in CI (needs GH_TOKEN).
       - name: Build Windows installer
-        run: npm run dist
+        run: npm run build && npx electron-builder --publish never
 
       - name: Verify updater metadata ships with installer
         shell: pwsh
