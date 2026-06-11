@@ -116,7 +116,12 @@ export function BoxTracker() {
           <IconButton type="button" title="Open full window" onClick={() => window.tbh.showMain()}>
             {"\u2922"}
           </IconButton>
-          <IconButton type="button" title="Close" onClick={() => window.tbh.closeBoxTracker()}>
+          <IconButton
+            type="button"
+            edge="end"
+            title="Close"
+            onClick={() => window.tbh.closeBoxTracker()}
+          >
             {"\u2715"}
           </IconButton>
         </div>

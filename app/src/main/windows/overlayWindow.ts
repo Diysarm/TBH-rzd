@@ -4,7 +4,7 @@ import { loadRenderer } from "./loadRenderer";
 
 /** Mini overlay — keep in sync with `OverlayFrame` padding (p-2) and readout rows. */
 export const OVERLAY_WIDTH = 280;
-export const OVERLAY_HEIGHT = 88;
+export const OVERLAY_HEIGHT = 96;
 
 function applyOverlaySize(win: BrowserWindow): void {
   win.setSize(OVERLAY_WIDTH, OVERLAY_HEIGHT);

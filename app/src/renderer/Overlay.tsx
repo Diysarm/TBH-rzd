@@ -48,6 +48,7 @@ export function Overlay() {
           </IconButton>
           <IconButton
             type="button"
+            edge="end"
             className="text-xs"
             title="Close mini overlay (app keeps running in the tray)"
             onClick={() => window.tbh.closeOverlay()}

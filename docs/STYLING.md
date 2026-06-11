@@ -50,7 +50,7 @@ Import from `components/ui/` — **Market `Button` sizing is the reference**.
 | `CapacityBar`              | Chest capacity + box-tracker cooldown bars                                                               |
 | `HintBanner`               | Gold-accent callouts (Inventory hints, pricing banner)                                                   |
 | `LinkButton`               | Inline text links in stat labels                                                                         |
-| `IconButton`               | Overlay chrome icon buttons (close, expand)                                                              |
+| `IconButton`               | Overlay chrome icon buttons; `edge`: `start` \| `end` for optical alignment at row edges (close, expand) |
 | `ToolbarButton`            | Main-window toolbar (Mini, Stage chests)                                                                 |
 | `OverlayFrame`             | Mini overlay + box tracker shell (uniform `p-2` inset)                                                   |
 | `Accordion`                | `variant`: `default` \| `panel` (Settings Advanced)                                                      |
