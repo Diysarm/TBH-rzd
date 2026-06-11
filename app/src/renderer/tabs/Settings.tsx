@@ -4,6 +4,7 @@ import type { AppConfig, AppDataClearTarget, AppDataPaths } from "../../../share
 import { reportIpcError } from "../lib/reportError";
 import { Accordion } from "../components/ui/Accordion";
 import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { Input } from "../components/ui/Input";
 import { Section } from "../components/ui/Section";
@@ -86,7 +87,7 @@ function CacheActionRow({
   onClear: () => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-2.5">
+    <Card padding="compact" className="flex items-start justify-between gap-3">
       <div className="flex min-w-0 flex-col gap-0.5">
         <strong className="text-[13px] font-semibold">{title}</strong>
         <span className="text-xs text-muted">{detail}</span>
@@ -95,7 +96,7 @@ function CacheActionRow({
       <Button variant={variant} className="shrink-0" disabled={disabled} onClick={onClear}>
         {busy ? "Clearing…" : "Clear"}
       </Button>
-    </div>
+    </Card>
   );
 }
 
@@ -302,14 +303,14 @@ export function Settings() {
       />
 
       <div className="flex max-w-md flex-col gap-3.5">
-        <div className="flex flex-wrap items-center gap-2.5 rounded-lg border border-border bg-card p-3">
+        <Card className="flex flex-wrap items-center gap-2.5">
           <Button variant="primary" disabled={busy} onClick={() => void onSave()}>
             Save settings
           </Button>
           <Button disabled={busy} onClick={onReset}>
             Reset
           </Button>
-        </div>
+        </Card>
 
         <Section title="Save file">
           <div className="flex flex-col gap-2">
@@ -408,7 +409,7 @@ export function Settings() {
           </div>
         </Section>
 
-        <Accordion title="Advanced — logs and cached data">
+        <Accordion variant="panel" title="Advanced — logs and cached data">
           <Section title="Diagnostics">
             <p className="m-0 text-xs text-muted">
               When reporting an issue, you can send the diagnostic log file from Settings.

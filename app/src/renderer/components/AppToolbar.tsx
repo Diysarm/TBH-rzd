@@ -1,3 +1,5 @@
+import { ToolbarButton } from "./ui/ToolbarButton";
+
 function MiniOverlayIcon() {
   return (
     <svg className="size-3.5 shrink-0" viewBox="0 0 16 16" aria-hidden="true">
@@ -41,30 +43,17 @@ function BoxTrackerIcon() {
   );
 }
 
-const toolbarBtnClass =
-  "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted hover:border-accent hover:text-fg";
-
 export function AppToolbar() {
   return (
     <div className="flex shrink-0 gap-1 pb-1.5" role="toolbar" aria-label="Overlays">
-      <button
-        type="button"
-        className={toolbarBtnClass}
-        title="Open mini stats overlay"
-        onClick={() => window.tbh.openOverlay()}
-      >
+      <ToolbarButton title="Open mini stats overlay" onClick={() => window.tbh.openOverlay()}>
         <MiniOverlayIcon />
         Mini
-      </button>
-      <button
-        type="button"
-        className={toolbarBtnClass}
-        title="Open Stage chest tracker"
-        onClick={() => window.tbh.openBoxTracker()}
-      >
+      </ToolbarButton>
+      <ToolbarButton title="Open Stage chest tracker" onClick={() => window.tbh.openBoxTracker()}>
         <BoxTrackerIcon />
         Stage chests
-      </button>
+      </ToolbarButton>
     </div>
   );
 }

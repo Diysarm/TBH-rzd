@@ -3,6 +3,7 @@ import { STEAM_CURRENCIES } from "../../core/steamPrice";
 import { usePriceProgress, usePriceStatus, usePriceActions } from "../lib/usePrices";
 import { reportIpcError } from "../lib/reportError";
 import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
 import { ProgressBar } from "../components/ui/ProgressBar";
 import { Select } from "../components/ui/Select";
@@ -78,10 +79,10 @@ export function Market() {
         </ul>
 
         {cachedCount === 0 && !busy && (
-          <p className="m-0 rounded-lg border border-border bg-card px-3 py-2.5 text-muted">
+          <Card padding="compact" className="text-muted">
             No prices cached yet. Open Inventory while the game is running, or refresh here once you
             own tradable materials or Legendary+ gear.
-          </p>
+          </Card>
         )}
 
         <div className="flex flex-wrap items-end gap-2.5">

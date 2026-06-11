@@ -5,38 +5,45 @@ Read this file when implementing a **new tab from scratch** or a **large layout 
 ## Inventory header (canonical)
 
 ```tsx
-<div className="inventory">
-  <h1>Inventory</h1>
+<TabPage>
+  <TabHeader
+    title="Inventory"
+    intro="Valuation and filters for items in your save."
+  />
   <InventorySummary ... />
   {/* filters, then table */}
-</div>
+</TabPage>
 ```
 
 Loading state keeps the same title:
 
 ```tsx
-<div className="placeholder">
-  <h1>Inventory</h1>
-  <p className="muted">Waiting for the save file...</p>
+<div className="flex flex-col gap-1.5">
+  <h1 className="m-0 text-lg font-semibold">Inventory</h1>
+  <p className="m-0 text-muted">Waiting for the save file...</p>
 </div>
 ```
 
 ## Chests header (compact + CTA)
 
 ```tsx
-<TabHeader title="Chests" intro="One-line explainer.">
-  <div className="chests-header-actions">
-    <button type="button" className="btn primary" onClick={() => window.tbh.openBoxTracker()}>
-      Open Stage chest tracker
-    </button>
+<TabPage>
+  <TabHeader title="Chests" intro="One-line explainer.">
+    <div className="mt-2 flex flex-col items-start gap-1.5">
+      <Button variant="primary" onClick={() => window.tbh.openBoxTracker()}>
+        Open Stage chest tracker
+      </Button>
+    </div>
+  </TabHeader>
+  <div className="grid grid-cols-3 gap-2.5 max-[720px]:grid-cols-1">
+    {/* Card per category */}
   </div>
-</TabHeader>
-<div className="chest-grid">{/* three .chest-card */}</div>
+</TabPage>
 ```
 
 ## App chrome markup
 
-See `App.tsx`: `.app-chrome` wraps `.tabs` + `AppToolbar`; `.savebar` is a sibling below.
+See `App.tsx`: tab `<nav>` + `AppToolbar` (`ToolbarButton` for Mini / Stage chests); save status bar is a sibling below the tab row.
 
 ## Brand notes
 

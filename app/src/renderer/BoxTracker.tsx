@@ -2,6 +2,7 @@ import { useBoxTimers, fmtTimer } from "./lib/useBoxTimers";
 import { stageName } from "../core/stages";
 import type { BoxTimerCatalogEntry, BoxTimerRow } from "../../shared/types";
 import { Button } from "./components/ui/Button";
+import { Badge } from "./components/ui/Badge";
 import { CapacityBar } from "./components/ui/CapacityBar";
 import { IconButton } from "./components/ui/IconButton";
 import { cn } from "./lib/cn";
@@ -54,15 +55,12 @@ function BoxTimerCard({ row }: { row: BoxTimerRow }) {
           <span className="font-semibold">Lv{row.level ?? "?"}</span>
           <span className="text-muted">{row.idealStageLabel}</span>
         </div>
-        <span
-          className={cn(
-            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums",
-            row.status === "ready" && "bg-[rgba(111,207,151,0.15)] text-[#6fcf97]",
-            row.status === "cooldown" && "bg-[rgba(90,159,209,0.15)] text-[#5a9fd1]",
-          )}
+        <Badge
+          variant={row.status === "ready" ? "statusReady" : "statusCooldown"}
+          className="shrink-0"
         >
           {row.status === "cooldown" ? fmtTimer(row.remainingSeconds) : "Ready"}
-        </span>
+        </Badge>
       </div>
       {row.status === "cooldown" ? (
         <>
@@ -124,15 +122,9 @@ export function BoxTracker() {
       </div>
 
       <div className="no-drag flex flex-wrap gap-1.5 px-0.5">
-        <span className="rounded-full border border-[#3a6a8a] bg-card px-2 py-0.5 text-[11px] font-semibold text-[#5a9fd1]">
-          {state.cooldownCount} cooling
-        </span>
-        <span className="rounded-full border border-[#3d6b52] bg-card px-2 py-0.5 text-[11px] font-semibold text-[#6fcf97]">
-          {state.readyCount} ready
-        </span>
-        <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted">
-          Stage: {currentLabel}
-        </span>
+        <Badge variant="info">{state.cooldownCount} cooling</Badge>
+        <Badge variant="success">{state.readyCount} ready</Badge>
+        <Badge variant="muted">Stage: {currentLabel}</Badge>
       </div>
 
       <details className="no-drag shrink-0 overflow-hidden rounded-lg border border-border bg-card">
