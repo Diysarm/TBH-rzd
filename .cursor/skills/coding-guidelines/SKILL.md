@@ -80,5 +80,6 @@ Apply on every change in `app/` (especially `core/` and services):
 - **`const` over `let`** — use `let` only when reassignment is required; prefer `map` / `filter` / `find` / `reduce` to build results without mutation loops.
 - **Return early** — guard clauses at the top; avoid `else` chains and deeply nested `if` blocks when an early `return` or `continue` in a small callback is clearer.
 - **Prefer functional composition** — extract small pure helpers; use array methods and `forEach` with early `return` instead of nested `for` + `if` pyramids. Imperative mutation is OK for hot accumulators (`Map`, tallies) when a functional rewrite would be harder to read.
+- **Clear names** — avoid single-letter variables (`g`, `i`, `x`) and cryptic abbreviations (`inst`, `tmp`, `res`) except in well-known narrow scopes (e.g. `i` in a numeric `for` index). Parameters and locals should read like the domain: `catalogItem`, `instance`, `marketHash`. Function names should state intent (`ensureRow`, not `getOrMake`).
 
 `let` in a `for` loop over a growing `Map` is fine when it is the simplest correct model; do not force functional style past readability.

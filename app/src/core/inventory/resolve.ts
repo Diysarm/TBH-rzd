@@ -30,6 +30,11 @@ interface MarketResolution {
   priceChecked: boolean;
 }
 
+interface PriceProbe {
+  hash: string;
+  price: InventoryPriceInfo;
+}
+
 const NO_MARKET: MarketResolution = { hash: null, unit: EMPTY_UNIT, priceChecked: false };
 
 function emptyComposition(): InventoryComposition {
@@ -47,27 +52,28 @@ function emptyComposition(): InventoryComposition {
   };
 }
 
-function resolveMarketHashAndPrice(item: GameItem, priceLookup?: PriceLookup): MarketResolution {
-  const candidates = marketHashCandidates(item);
+function resolveMarketHashAndPrice(
+  catalogItem: GameItem,
+  priceLookup?: PriceLookup,
+): MarketResolution {
+  const candidates = marketHashCandidates(catalogItem);
   if (candidates.length === 0) return NO_MARKET;
 
-  const probes = candidates
-    .map((hash) => ({ hash, price: priceLookup?.(hash) }))
-    .filter(
-      (entry): entry is { hash: string; price: InventoryPriceInfo } => entry.price !== undefined,
-    );
+  const probes: PriceProbe[] = candidates
+    .map((candidateHash) => ({ hash: candidateHash, price: priceLookup?.(candidateHash) }))
+    .filter((probe): probe is PriceProbe => probe.price !== undefined);
 
-  const priced = probes.find((entry) => pickMarketUnit(entry.price).unit != null);
-  if (priced) {
+  const pricedProbe = probes.find((probe) => pickMarketUnit(probe.price).unit != null);
+  if (pricedProbe) {
     return {
-      hash: priced.hash,
-      unit: pickMarketUnit(priced.price),
+      hash: pricedProbe.hash,
+      unit: pickMarketUnit(pricedProbe.price),
       priceChecked: true,
     };
   }
 
   const firstHash = candidates[0];
-  const firstProbe = probes.find((entry) => entry.hash === firstHash);
+  const firstProbe = probes.find((probe) => probe.hash === firstHash);
   return {
     hash: firstHash,
     unit: firstProbe ? pickMarketUnit(firstProbe.price) : EMPTY_UNIT,
@@ -77,16 +83,16 @@ function resolveMarketHashAndPrice(item: GameItem, priceLookup?: PriceLookup): M
 
 function createResolvedRow(
   itemKey: number,
-  g: GameItem | undefined,
+  catalogItem: GameItem | undefined,
   market: MarketResolution,
 ): ResolvedInventoryRow {
   return {
     itemKey,
-    name: g?.name ?? `Unknown #${itemKey}`,
-    grade: g?.grade ?? "UNKNOWN",
-    type: g?.type ?? "UNKNOWN",
-    level: g?.level ?? null,
-    marketTradable: g?.marketTradable ?? false,
+    name: catalogItem?.name ?? `Unknown #${itemKey}`,
+    grade: catalogItem?.grade ?? "UNKNOWN",
+    type: catalogItem?.type ?? "UNKNOWN",
+    level: catalogItem?.level ?? null,
+    marketTradable: catalogItem?.marketTradable ?? false,
     marketHashName: market.hash,
     count: 0,
     inUseCount: 0,
@@ -94,7 +100,7 @@ function createResolvedRow(
     stashCount: 0,
     tradingCount: 0,
     chaoticCount: 0,
-    known: Boolean(g),
+    known: Boolean(catalogItem),
     priceRaw: market.unit.raw,
     unitPrice: market.unit.unit,
     priceSource: market.unit.source,
@@ -112,11 +118,11 @@ function locationCountKey(
   return null;
 }
 
-function applyInstance(row: ResolvedInventoryRow, inst: InventoryItemInstance): void {
+function applyInstance(row: ResolvedInventoryRow, instance: InventoryItemInstance): void {
   row.count++;
-  if (inst.inUse) row.inUseCount++;
-  if (inst.isChaotic) row.chaoticCount++;
-  const countKey = locationCountKey(inst.location);
+  if (instance.inUse) row.inUseCount++;
+  if (instance.isChaotic) row.chaoticCount++;
+  const countKey = locationCountKey(instance.location);
   if (countKey) row[countKey]++;
 }
 
@@ -159,50 +165,50 @@ function finalizeRows(rows: ResolvedInventoryRow[]): InventoryComposition {
 }
 
 function ensureRow(
-  byKey: Map<number, ResolvedInventoryRow>,
+  rowsByItemKey: Map<number, ResolvedInventoryRow>,
   itemKey: number,
-  g: GameItem | undefined,
+  catalogItem: GameItem | undefined,
   priceLookup?: PriceLookup,
 ): ResolvedInventoryRow {
-  const existing = byKey.get(itemKey);
+  const existing = rowsByItemKey.get(itemKey);
   if (existing) return existing;
 
-  const market = g ? resolveMarketHashAndPrice(g, priceLookup) : NO_MARKET;
-  const row = createResolvedRow(itemKey, g, market);
-  byKey.set(itemKey, row);
+  const market = catalogItem ? resolveMarketHashAndPrice(catalogItem, priceLookup) : NO_MARKET;
+  const row = createResolvedRow(itemKey, catalogItem, market);
+  rowsByItemKey.set(itemKey, row);
   return row;
 }
 
 function accumulateInstances(
-  byKey: Map<number, ResolvedInventoryRow>,
+  rowsByItemKey: Map<number, ResolvedInventoryRow>,
   items: InventoryItemInstance[],
   lookup: (itemKey: number) => GameItem | undefined,
   priceLookup: PriceLookup | undefined,
-  exclude?: (itemKey: number) => boolean,
+  excludeItemKey?: (itemKey: number) => boolean,
 ): void {
-  items.forEach((inst) => {
-    if (exclude?.(inst.itemKey)) return;
-    const row = ensureRow(byKey, inst.itemKey, lookup(inst.itemKey), priceLookup);
-    applyInstance(row, inst);
+  items.forEach((instance) => {
+    if (excludeItemKey?.(instance.itemKey)) return;
+    const row = ensureRow(rowsByItemKey, instance.itemKey, lookup(instance.itemKey), priceLookup);
+    applyInstance(row, instance);
   });
 }
 
 function mergeMaterialStacks(
-  byKey: Map<number, ResolvedInventoryRow>,
+  rowsByItemKey: Map<number, ResolvedInventoryRow>,
   stacks: Map<number, number>,
   lookup: (itemKey: number) => GameItem | undefined,
   priceLookup: PriceLookup | undefined,
-  exclude?: (itemKey: number) => boolean,
+  excludeItemKey?: (itemKey: number) => boolean,
 ): void {
   stacks.forEach((stackQty, itemKey) => {
-    if (exclude?.(itemKey)) return;
+    if (excludeItemKey?.(itemKey)) return;
 
-    const g = lookup(itemKey);
-    if (!g) return;
+    const catalogItem = lookup(itemKey);
+    if (!catalogItem) return;
 
-    const row = byKey.has(itemKey)
-      ? byKey.get(itemKey)!
-      : ensureRow(byKey, itemKey, g, priceLookup);
+    const row = rowsByItemKey.has(itemKey)
+      ? rowsByItemKey.get(itemKey)!
+      : ensureRow(rowsByItemKey, itemKey, catalogItem, priceLookup);
     if (row.type !== "MATERIAL" || stackQty <= row.count) return;
 
     row.count = stackQty;
@@ -217,16 +223,22 @@ export function resolveInventory(
   priceLookup?: PriceLookup,
   options?: ResolveInventoryOptions,
 ): ResolvedInventory {
-  const exclude = options?.excludeItemKey;
-  const byKey = new Map<number, ResolvedInventoryRow>();
+  const excludeItemKey = options?.excludeItemKey;
+  const rowsByItemKey = new Map<number, ResolvedInventoryRow>();
 
-  accumulateInstances(byKey, snapshot.items, lookup, priceLookup, exclude);
+  accumulateInstances(rowsByItemKey, snapshot.items, lookup, priceLookup, excludeItemKey);
 
   if (snapshot.materialStacks) {
-    mergeMaterialStacks(byKey, snapshot.materialStacks, lookup, priceLookup, exclude);
+    mergeMaterialStacks(
+      rowsByItemKey,
+      snapshot.materialStacks,
+      lookup,
+      priceLookup,
+      excludeItemKey,
+    );
   }
 
-  const rows = [...byKey.values()];
+  const rows = [...rowsByItemKey.values()];
   const composition = finalizeRows(rows);
 
   return {
@@ -245,17 +257,17 @@ export function ownedMarketNames(
   excludeItemKey?: (itemKey: number) => boolean,
 ): string[] {
   const names = new Set<string>();
-  const seenKeys = new Set<number>();
+  const seenItemKeys = new Set<number>();
 
-  snapshot.items.forEach((inst) => {
-    if (excludeItemKey?.(inst.itemKey)) return;
-    if (seenKeys.has(inst.itemKey)) return;
-    seenKeys.add(inst.itemKey);
+  snapshot.items.forEach((instance) => {
+    if (excludeItemKey?.(instance.itemKey)) return;
+    if (seenItemKeys.has(instance.itemKey)) return;
+    seenItemKeys.add(instance.itemKey);
 
-    const g = lookup(inst.itemKey);
-    if (!g) return;
+    const catalogItem = lookup(instance.itemKey);
+    if (!catalogItem) return;
 
-    marketHashCandidates(g).forEach((hash) => names.add(hash));
+    marketHashCandidates(catalogItem).forEach((marketHash) => names.add(marketHash));
   });
 
   return [...names];
