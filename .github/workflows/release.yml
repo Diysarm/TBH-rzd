@@ -96,6 +96,10 @@ jobs:
           }
           Write-Host "Updater artifacts OK: $($yml.Name), $($exe.Name), $($blockmap.Name)"
 
+      - name: Update website release manifest
+        working-directory: ${{ github.workspace }}
+        run: node .github/scripts/write-website-release.mjs
+
       - name: Verify bundled data ships in packaged resources
         shell: pwsh
         run: |
@@ -135,3 +139,22 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           files: app/release/*
           body_path: release_body.md
+
+      - name: Commit website release manifest to main
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp website/data/release.json /tmp/tbh-release.json
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+          cp /tmp/tbh-release.json website/data/release.json
+          git add website/data/release.json
+          if git diff --staged --quiet; then
+            echo "website/data/release.json unchanged"
+            exit 0
+          fi
+          git commit -m "chore(website): update release manifest for ${{ env.RELEASE_TAG }}"
+          git push origin main

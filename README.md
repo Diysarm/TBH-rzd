@@ -11,8 +11,18 @@ its servers.
 
 ## Website
 
-Landing page with features, FAQ, and a direct download link for the latest
-Windows release: **https://lucasfevi.github.io/tbh-companion/**
+Single-page landing with download link, GitHub stats, and feature overview:
+**https://lucasfevi.github.io/tbh-companion/**
+
+Preview locally without deploying (serves `website/` over HTTP — required for stats API and `data/release.json`):
+
+```
+npx --yes serve website -p 4173
+```
+
+Then open **http://localhost:4173** and hard-refresh. Do not open `index.html` directly (`file://`) — the browser blocks fetches to GitHub and local JSON.
+
+The download button uses [`website/data/release.json`](website/data/release.json) first (direct `.exe` link), then refreshes from the GitHub API when available. Stars and total downloads still come from the GitHub API.
 
 ## Quick start
 
@@ -54,27 +64,35 @@ CI uploads the NSIS installer plus `latest.yml` and `.blockmap` so the installed
 
 ## Features
 
-- **Live tab** - big XP/hour (held steady between the game's periodic saves,
-  not decaying), gold/hour (earned only), session totals, current map, a
-  per-hero level + XP/hour breakdown, an "XP updated" counter (resets only on
-  real XP change), a scrollable history of every XP change, a reset button,
-  and an idle warning after 2 minutes.
-- **Global save bar** - "Save written X ago" shared by all tabs (distinct from
-  the Live tab's XP timer).
-- **Mini overlay** - frameless always-on-top readout with XP/gold rates, map,
-  priced inventory total, and pricing status. Open from the **Mini** toolbar button or tray menu.
-- **CSV history** - every XP change is appended to `logs/xp_history.csv` when
-  `logHistoryCsv` is enabled.
-- **Inventory tab** - owned items from the save resolved against bundled catalogs
-  (`data/gamedata.json` + `data/stage_boxes.json`, main list self-refreshing on a
-  TTL), grouped by type with composition stats, search/filter/sort (grade, type,
-  location, tradable, in-use), Steam price + value columns (materials + Legendary+
-  gear), location breakdown (inventory / stash / trading / equipped), and graceful
-  handling of unknown items after game updates.
-- **Market tab** - pick a currency and refresh Steam prices (background job on
-  save load; backs off on rate limits until done).
-- **Settings tab** - edit `config.json` (save path, poll interval, rolling window,
-  currency, cube XP, CSV logging, always-on-top). Warns before settings that reset the session.
+- **Live tab** — XP/hour (held steady between the game's periodic saves), gold/hour,
+  session totals, current map, per-hero level + XP/hour breakdown, XP change history,
+  session reset, and idle warning after 2 minutes.
+- **Global save bar** — "Save written X ago" shared by all tabs (distinct from the
+  Live tab's XP timer). Save watch status and errors appear in the bar under the tab strip.
+- **Mini overlay** — frameless always-on-top readout with XP/gold rates, map, priced
+  inventory total, and pricing status. Open from the **Mini** toolbar button or tray menu.
+- **Inventory tab** — owned items resolved against bundled catalogs, grouped by type with
+  composition stats, search/filter/sort, Steam price + value columns, location breakdown,
+  and graceful handling of unknown items after game updates.
+- **Market tab** — pick a currency and refresh Steam prices (background job on save load;
+  backs off on rate limits until done).
+- **Chests tab** — unopened chest slots (common, stage boss, act boss), capacity from
+  base slots plus rune nodes and settings bonuses, with progress bars per category.
+- **Stage boss chest tracker** — per-level cooldowns and farm stages on the Chests tab;
+  always-on-top overlay with ready/cooling timers; mark **Dropped** manually or auto-detect
+  from **Player.log** when a stage boss chest drops.
+- **Pets tab** — companion unlock progress from your save, passive bonuses, kill targets,
+  best farm stages, and where each monster appears.
+- **About tab** — installed version, links to GitHub and release notes, and in-app updates
+  from GitHub Releases (background check ~30s after startup; download/install only when you
+  confirm in About).
+- **Settings tab** — edit `config.json` (save path, poll interval, rolling window, currency,
+  cube XP, CSV logging, always-on-top). Warns before settings that reset the session.
+- **Session restore** — live stats and rolling history resume after restart when your save
+  and tracking settings are unchanged; Mini and stage chest tracker reopen if they were open
+  when you quit.
+- **CSV history** — every XP change appended to `logs/xp_history.csv` when `logHistoryCsv`
+  is enabled.
 
 ## Configuration - `config.json`
 

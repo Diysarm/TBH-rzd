@@ -5,297 +5,198 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="TBH Companion — live XP, gold, and Steam inventory value from your save. Read-only, unofficial companion for Task Bar Hero players."
+      content="TBH Companion — open-source, read-only desktop companion for Task Bar Hero. Live XP/gold, inventory value, pet progress, and stage boss chest tracking."
     />
     <title>TBH Companion — unofficial Task Bar Hero companion</title>
     <link rel="icon" href="assets/icon.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="#top">
-        <img src="assets/icon.png" alt="" width="32" height="32" />
+        <img src="assets/icon.png" alt="" width="28" height="28" />
         <span>TBH Companion</span>
       </a>
-      <nav class="site-nav" aria-label="Page sections">
-        <a href="#features">Features</a>
-        <a href="#how-it-works">How it works</a>
-        <a href="#faq">FAQ</a>
-        <a href="#download" class="nav-cta">Download</a>
+      <nav class="header-nav" aria-label="External links">
+        <a href="https://github.com/lucasfevi/tbh-companion" rel="noopener noreferrer">Source</a>
+        <a href="https://github.com/lucasfevi/tbh-companion/releases" rel="noopener noreferrer"
+          >Releases</a
+        >
       </nav>
     </header>
 
-    <main id="top">
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-content">
-          <img
-            class="hero-icon"
-            src="assets/icon.png"
-            alt="TBH Companion app icon"
-            width="96"
-            height="96"
-          />
-          <h1 id="hero-title">TBH Companion</h1>
-          <p class="tagline">
-            Live XP, gold, and Steam inventory value from your save — read-only, unofficial.
-          </p>
-          <div class="hero-actions">
-            <a
-              id="hero-download"
-              class="btn btn-primary"
-              href="https://github.com/lucasfevi/tbh-companion/releases/latest"
-              rel="noopener noreferrer"
-            >
-              Download for Windows
-            </a>
-            <a
-              class="btn btn-secondary"
-              href="https://github.com/lucasfevi/tbh-companion"
-              rel="noopener noreferrer"
-            >
-              View on GitHub
-            </a>
-          </div>
-          <p id="release-meta" class="release-meta muted" hidden>
-            <span id="release-version"></span>
-            <span id="release-size"></span>
-          </p>
-        </div>
-      </section>
+    <main id="top" class="landing-main">
+      <div class="copy">
+        <p class="eyebrow">Open source companion for Task Bar Hero</p>
+        <h1>
+          <span class="h1-eyebrow">Unofficial · Read-only</span>
+          Know your rates.<br />Track your chests.
+        </h1>
+        <p class="lead">
+          A lightweight desktop app that reads your encrypted save locally — drop rates, chest
+          tracking, inventory value, and pet progress. All read-only, nothing leaves your PC.
+        </p>
 
-      <section id="features" class="section" aria-labelledby="features-title">
-        <div class="container">
-          <h2 id="features-title">Features</h2>
-          <p class="section-lead">
-            Everything in the desktop app — from live rates to chest capacity and Steam pricing.
-          </p>
-          <div class="feature-grid">
-            <article class="feature-card">
-              <h3>Live</h3>
-              <p>
-                Big XP/hour (held steady between game saves), gold/hour, session totals, and
-                current map. Per-hero level and XP/hour breakdown, an XP-updated counter, scrollable
-                history of every XP change, session reset, and an idle warning after two minutes.
-              </p>
-            </article>
+        <!-- Feature icons: Lucide (MIT) + Mini/BoxTracker from app/src/renderer/components/AppToolbar.tsx -->
+        <ul class="feature-lines" aria-label="Features">
+          <li>
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" />
+              </svg>
+            </span>
+            <span class="feature-label">Live</span>
+            <span class="feature-desc">Real-time XP and gold per hour</span>
+          </li>
+          <li>
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
+                <path d="M12 18V6" />
+              </svg>
+            </span>
+            <span class="feature-label">Inventory</span>
+            <span class="feature-desc">Items and Steam Market pricing</span>
+          </li>
+          <li>
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="2" y="3" width="12" height="10" rx="1.5" />
+                <path d="M5 11V8h2v3M9 11V6h2v5" stroke-linecap="round" />
+              </svg>
+            </span>
+            <span class="feature-label">Mini</span>
+            <span class="feature-desc">Compact always-on-top overlay</span>
+          </li>
+          <li>
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round">
+                <path d="M3 5.5 8 3l5 2.5v5L8 13 3 10.5v-5Z" />
+                <path d="M8 3v10M3 5.5l5 2.5 5-2.5" />
+              </svg>
+            </span>
+            <span class="feature-label">Chest tracker</span>
+            <span class="feature-desc">Cooldowns, overlay, automatically detected</span>
+          </li>
+          <li>
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="4" r="2" />
+                <circle cx="18" cy="8" r="2" />
+                <circle cx="20" cy="16" r="2" />
+                <circle cx="4" cy="16" r="2" />
+                <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.5 13.5a3.5 3.5 0 0 1 .877-3.29A4 4 0 0 1 9 10Z" />
+              </svg>
+            </span>
+            <span class="feature-label">Pets</span>
+            <span class="feature-desc">Unlock progress and farm stages</span>
+          </li>
+          <li>
+            <span class="feature-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                <path d="M21 3v5h-5" />
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                <path d="M8 16H3v5" />
+              </svg>
+            </span>
+            <span class="feature-label">Updates</span>
+            <span class="feature-desc">In-app from GitHub Releases</span>
+          </li>
+        </ul>
 
-            <article class="feature-card">
-              <h3>Inventory</h3>
-              <p>
-                Owned items resolved against bundled catalogs, grouped by type with composition
-                stats. Search, filter, and sort by grade, type, location, tradable, and in-use.
-                Steam price and value columns, location breakdown (inventory, stash, trading,
-                equipped), and graceful handling of unknown items after game updates.
-              </p>
-            </article>
-
-            <article class="feature-card">
-              <h3>Chests</h3>
-              <p>
-                Unopened chest slots from your save: common (gray), stage boss (blue), and act boss
-                (red). Capacity from base slots plus purchased rune nodes and settings bonuses. Full
-                badges, progress bars, and remaining-slot counts for each category.
-              </p>
-            </article>
-
-            <article class="feature-card">
-              <h3>Market</h3>
-              <p>
-                Pick a currency and refresh Steam Market prices. Background job runs on save load and
-                backs off on rate limits until complete.
-              </p>
-            </article>
-
-            <article class="feature-card">
-              <h3>Mini overlay</h3>
-              <p>
-                Frameless, always-on-top readout with XP and gold rates, current map, priced
-                inventory total, and pricing status. Toggle from <strong>Mini</strong> in the tab bar.
-              </p>
-            </article>
-
-            <article class="feature-card">
-              <h3>Box tracker overlay</h3>
-              <p>
-                Track rare boss box drops with 12-minute timers and community ideal-stage routes.
-                Mark drops, clear timers, and see which stage you're on — open from the tab bar or
-                Chests tab.
-              </p>
-            </article>
-
-            <article class="feature-card feature-card-wide">
-              <h3>Settings</h3>
-              <p>
-                Edit <code>config.json</code> from the app: save path, poll interval, rolling window,
-                currency, cube XP tracking, CSV history logging, and always-on-top. Warns before
-                changes that reset your session.
-              </p>
-              <ul class="settings-list muted">
-                <li><strong>savePath</strong> — path to <code>SaveFile_Live.es3</code></li>
-                <li><strong>es3Password</strong> — ES3 decryption password</li>
-                <li><strong>pollIntervalSeconds</strong> — how often to re-read the save</li>
-                <li><strong>rollingWindowMinutes</strong> — window for XP/hour</li>
-                <li><strong>currency</strong> — ISO code for Steam prices (USD, EUR, BRL, …)</li>
-              </ul>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section id="how-it-works" class="section section-alt" aria-labelledby="how-title">
-        <div class="container">
-          <h2 id="how-title">How it works</h2>
-          <div class="steps">
-            <div class="step">
-              <span class="step-num" aria-hidden="true">1</span>
-              <h3>Reads your local save</h3>
-              <p>
-                The app watches <code>SaveFile_Live.es3</code> on disk and decrypts it locally. No
-                connection to game servers.
-              </p>
-            </div>
-            <div class="step">
-              <span class="step-num" aria-hidden="true">2</span>
-              <h3>Never modifies anything</h3>
-              <p>
-                Read-only access. Your save file is never written to, and the companion does not
-                inject or automate gameplay.
-              </p>
-            </div>
-            <div class="step">
-              <span class="step-num" aria-hidden="true">3</span>
-              <h3>Windows for now</h3>
-              <p>
-                Official builds are Windows NSIS installers. macOS and Linux are not packaged yet.
-              </p>
-            </div>
-          </div>
-          <p class="disclaimer">
-            Fan-made tool. Not affiliated with Tesseract Studio. Does not modify your save or
-            connect to game servers.
-          </p>
-        </div>
-      </section>
-
-      <section id="faq" class="section" aria-labelledby="faq-title">
-        <div class="container">
-          <h2 id="faq-title">FAQ</h2>
-          <dl class="faq-list">
-            <div class="faq-item">
-              <dt>Is it safe? Does it modify my save?</dt>
-              <dd>
-                No. TBH Companion only <strong>reads</strong> your encrypted save file. It never
-                writes to the save, never talks to game servers, and never automates the game.
-              </dd>
-            </div>
-            <div class="faq-item">
-              <dt>Where is my save file?</dt>
-              <dd>
-                By default the app looks for
-                <code>%USERPROFILE%\AppData\LocalLow\TesseractStudio\TBH\SaveFile_Live.es3</code>.
-                You can override the path in Settings or <code>config.json</code>.
-              </dd>
-            </div>
-            <div class="faq-item">
-              <dt>Decryption stopped working after a game update</dt>
-              <dd>
-                The developer may have rotated the ES3 password. Update <code>es3Password</code> in
-                Settings (or <code>config.json</code>) and restart the app. See the project docs on
-                save format for details.
-              </dd>
-            </div>
-            <div class="faq-item">
-              <dt>How does Steam pricing work? Will I hit rate limits?</dt>
-              <dd>
-                Prices are fetched from the public Steam Market API when you open the Market tab or
-                load a save. The app backs off automatically if Steam rate-limits requests and retries
-                until done. Pricing is best-effort — some items may show as unknown.
-              </dd>
-            </div>
-            <div class="faq-item">
-              <dt>Is this an official TBH / Task Bar Hero product?</dt>
-              <dd>
-                No. TBH Companion is a fan-made, unofficial tool. It is not affiliated with or
-                endorsed by Tesseract Studio or the TBH: Task Bar Hero developers.
-              </dd>
-            </div>
-            <div class="faq-item">
-              <dt>Do I need Windows?</dt>
-              <dd>
-                Yes, for the pre-built installer. Releases are Windows NSIS installers. You can build
-                from source on other platforms, but packaged builds are Windows-only for now.
-              </dd>
-            </div>
-            <div class="faq-item">
-              <dt>How are chest capacities calculated?</dt>
-              <dd>
-                Each chest type (common, stage boss, act boss) starts at 5 base slots. Purchased
-                capacity runes in <code>RuneSaveData</code> add +1 slot per node (Rune of
-                Containment, Vault, and Infinity). Common chests can also get bonus slots from
-                settings. The Chests tab shows the full breakdown from your save.
-              </dd>
-            </div>
-            <div class="faq-item">
-              <dt>How do I clear cache or reset app data?</dt>
-              <dd>
-                Quit the app, then delete its user-data folder. Development builds use
-                <code>%APPDATA%\tbh-companion</code>; the NSIS installer uses
-                <code>%APPDATA%\TBH Companion</code>. That removes config, logs, and cached prices.
-                Your game save is untouched.
-              </dd>
-            </div>
-            <div class="faq-item">
-              <dt>Why does XP/hour look different from in-game?</dt>
-              <dd>
-                The companion computes rates from save snapshots over a rolling window (default 5
-                minutes). XP/hour is held steady between periodic game saves instead of decaying, so
-                short dips in the game UI may not match.
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </section>
-
-      <section id="download" class="section section-download" aria-labelledby="download-title">
-        <div class="container download-box">
-          <h2 id="download-title">Download</h2>
-          <p class="section-lead">
-            Get the latest Windows installer from GitHub Releases.
-          </p>
+        <div class="actions">
           <a
-            id="footer-download"
-            class="btn btn-primary btn-large"
+            id="hero-download"
+            class="btn btn-primary"
             href="https://github.com/lucasfevi/tbh-companion/releases/latest"
             rel="noopener noreferrer"
           >
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 15V3" />
+              <path d="m7 10 5 5 5-5" />
+              <path d="M21 21H3" />
+            </svg>
             Download for Windows
           </a>
-          <p id="download-meta" class="release-meta muted" hidden>
-            <span id="download-version"></span>
-            <span id="download-size"></span>
-          </p>
-          <p class="muted small">
-            Requires Windows 10 or later. Unsigned open-source build — SmartScreen may prompt on
-            first run.
-          </p>
+          <a
+            class="btn btn-ghost"
+            href="https://github.com/lucasfevi/tbh-companion"
+            rel="noopener noreferrer"
+          >
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+              <path d="M9 18c-4.51 2-5-2-7-2" />
+            </svg>
+            View on GitHub
+          </a>
         </div>
-      </section>
+      </div>
+
+      <div class="visual">
+        <div class="visual-glow" aria-hidden="true"></div>
+        <div class="icon-frame">
+          <img class="hero-icon" src="assets/icon.png" alt="TBH Companion app icon" width="200" height="200" />
+        </div>
+      </div>
     </main>
 
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <p>
-          Fan-made, read-only companion for
-          <span class="nowrap">TBH: Task Bar Hero</span> players.
-        </p>
-        <p class="muted small">
-          <a href="https://github.com/lucasfevi/tbh-companion" rel="noopener noreferrer">Source</a>
-          ·
-          <a href="https://github.com/lucasfevi/tbh-companion/releases" rel="noopener noreferrer"
-            >Releases</a
-          >
-        </p>
+    <section class="stats-bar" aria-label="Project stats">
+      <div class="stats-inner">
+        <div class="stat-block">
+          <span class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
+            </svg>
+          </span>
+          <div class="stat-text">
+            <span id="stat-stars" class="stat-value">—</span>
+            <span class="stat-label">Stars</span>
+          </div>
+        </div>
+        <div class="stat-divider" aria-hidden="true"></div>
+        <div class="stat-block">
+          <span class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 15V3" />
+              <path d="m7 10 5 5 5-5" />
+              <path d="M21 21H3" />
+            </svg>
+          </span>
+          <div class="stat-text">
+            <span id="stat-downloads" class="stat-value">—</span>
+            <span class="stat-label">Downloads</span>
+          </div>
+        </div>
+        <div class="stat-divider" aria-hidden="true"></div>
+        <div class="stat-block">
+          <span class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
+              <circle cx="7.5" cy="7.5" r=".5" fill="currentColor" />
+            </svg>
+          </span>
+          <div class="stat-text">
+            <span id="stat-version" class="stat-value">—</span>
+            <span id="stat-size" class="stat-label">Latest release</span>
+          </div>
+        </div>
       </div>
+    </section>
+
+    <footer class="site-footer">
+      <p>
+        TBH Companion is an unofficial, open-source tool for Task Bar Hero. It is not affiliated
+        with or endorsed by the game developers.
+        <a id="footer-download" class="footer-link" href="https://github.com/lucasfevi/tbh-companion/releases/latest" rel="noopener noreferrer">Download latest release</a>
+      </p>
     </footer>
 
     <script src="js/main.js" defer></script>
