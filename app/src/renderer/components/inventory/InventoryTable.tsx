@@ -15,6 +15,19 @@ function priceSourceTitle(source: ResolvedInventoryRow["priceSource"]): string |
   return undefined;
 }
 
+function emptyPriceDisplay(row: ResolvedInventoryRow): { label: string; title: string } {
+  if (row.priceChecked) {
+    return {
+      label: "No active listings",
+      title: "No active Steam Market listings or recent sales for this item",
+    };
+  }
+  return {
+    label: "—",
+    title: "Steam price not loaded yet",
+  };
+}
+
 export interface InventoryTableProps {
   rows: ResolvedInventoryRow[];
   currency: string;
@@ -45,6 +58,7 @@ const InventoryRow = memo(function InventoryRow({
   currency: string;
 }) {
   const inUse = row.inUseCount ?? 0;
+  const emptyPrice = row.marketHashName ? emptyPriceDisplay(row) : null;
   return (
     <tr
       className={cn(
@@ -117,8 +131,8 @@ const InventoryRow = memo(function InventoryRow({
               {row.priceRaw}
             </MarketListingLink>
           ) : (
-            <MarketListingLink hash={row.marketHashName} title="Open on Steam Market">
-              <span className="text-muted">pending</span>
+            <MarketListingLink hash={row.marketHashName} title={emptyPrice!.title}>
+              <span className="text-muted">{emptyPrice!.label}</span>
             </MarketListingLink>
           )
         ) : (

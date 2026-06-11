@@ -25,6 +25,7 @@ function resolveMarketHashAndPrice(
   hash: string | null;
   price: InventoryPriceInfo | undefined;
   unit: ReturnType<typeof pickMarketUnit>;
+  priceChecked: boolean;
 } {
   const candidates = marketHashCandidates(item);
   if (candidates.length === 0) {
@@ -32,21 +33,25 @@ function resolveMarketHashAndPrice(
       hash: null,
       price: undefined,
       unit: { unit: null, raw: null, source: null },
+      priceChecked: false,
     };
   }
 
+  let priceChecked = false;
   if (priceLookup) {
     for (const hash of candidates) {
       const price = priceLookup(hash);
+      if (price !== undefined) priceChecked = true;
       const unit = price ? pickMarketUnit(price) : { unit: null, raw: null, source: null };
-      if (unit.unit != null) return { hash, price, unit };
+      if (unit.unit != null) return { hash, price, unit, priceChecked };
     }
   }
 
   const hash = candidates[0];
   const price = priceLookup?.(hash);
+  if (price !== undefined) priceChecked = true;
   const unit = price ? pickMarketUnit(price) : { unit: null, raw: null, source: null };
-  return { hash, price, unit };
+  return { hash, price, unit, priceChecked };
 }
 
 export function resolveInventory(
@@ -65,11 +70,12 @@ export function resolveInventory(
     let row = byKey.get(inst.itemKey);
     if (!row) {
       const g = lookup(inst.itemKey);
-      const { hash, unit } = g
+      const { hash, unit, priceChecked } = g
         ? resolveMarketHashAndPrice(g, priceLookup)
         : {
             hash: null as string | null,
             unit: { unit: null, raw: null, source: null },
+            priceChecked: false,
           };
       row = {
         itemKey: inst.itemKey,
@@ -89,6 +95,7 @@ export function resolveInventory(
         priceRaw: unit.raw,
         unitPrice: unit.unit,
         priceSource: unit.source,
+        priceChecked,
         value: null,
       };
       byKey.set(inst.itemKey, row);
@@ -108,7 +115,7 @@ export function resolveInventory(
       let row = byKey.get(itemKey);
       const g = lookup(itemKey);
       if (!row && g) {
-        const { hash, unit } = resolveMarketHashAndPrice(g, priceLookup);
+        const { hash, unit, priceChecked } = resolveMarketHashAndPrice(g, priceLookup);
         row = {
           itemKey,
           name: g.name,
@@ -127,6 +134,7 @@ export function resolveInventory(
           priceRaw: unit.raw,
           unitPrice: unit.unit,
           priceSource: unit.source,
+          priceChecked,
           value: null,
         };
         byKey.set(itemKey, row);
@@ -155,6 +163,7 @@ export function resolveInventory(
       r.priceRaw = null;
       r.unitPrice = null;
       r.priceSource = null;
+      r.priceChecked = false;
       r.value = null;
     }
   }

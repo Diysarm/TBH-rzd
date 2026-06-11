@@ -163,4 +163,16 @@ describe("resolveInventory", () => {
     expect(sword.marketHashName).toBe("Knight Sword (Legendary) B");
     expect(sword.unitPrice).toBe(1.5);
   });
+
+  it("marks priceChecked when Steam returned no listing or sale price", () => {
+    const snap = parseInventory(wrapPlayer(playerInner), 0);
+    const priceLookup = (name: string) =>
+      name.startsWith("Knight Sword (Legendary)")
+        ? { median: null, lowest: null, rawMedian: null, rawLowest: null }
+        : undefined;
+    const res = resolveInventory(snap, lookup, true, priceLookup);
+    const sword = res.rows.find((r) => r.itemKey === 303071)!;
+    expect(sword.priceRaw).toBeNull();
+    expect(sword.priceChecked).toBe(true);
+  });
 });

@@ -21,6 +21,7 @@ const row: ResolvedInventoryRow = {
   priceRaw: null,
   unitPrice: null,
   priceSource: null,
+  priceChecked: false,
   value: null,
   inventoryCount: 1,
   stashCount: 0,
