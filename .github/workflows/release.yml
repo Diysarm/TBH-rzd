@@ -83,6 +83,17 @@ jobs:
           if (-not $yml) { throw "Missing latest.yml in app/release (required for in-app updates)" }
           if (-not $exe) { throw "Missing NSIS installer .exe in app/release" }
           if (-not $blockmap) { throw "Missing .blockmap in app/release (required for differential updates)" }
+          if ($exe.Count -ne 1) {
+            throw "Expected exactly one NSIS installer .exe in app/release, found $($exe.Count)"
+          }
+          $ymlText = Get-Content -Path $yml.FullName -Raw
+          if ($ymlText -notmatch '(?m)^path:\s*(.+)$') {
+            throw "latest.yml is missing a path: entry (required for in-app updates)"
+          }
+          $pathInYml = $Matches[1].Trim()
+          if ($pathInYml -ne $exe[0].Name) {
+            throw "latest.yml path '$pathInYml' does not match installer '$($exe[0].Name)'"
+          }
           Write-Host "Updater artifacts OK: $($yml.Name), $($exe.Name), $($blockmap.Name)"
 
       - name: Verify bundled data ships in packaged resources

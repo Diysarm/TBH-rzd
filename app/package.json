@@ -1,6 +1,6 @@
 {
   "name": "tbh-companion",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "TBH: Task Bar Hero companion - live XP/gold tracking and inventory valuation.",
   "author": "lucasfevi",
   "license": "MIT",
@@ -58,7 +58,8 @@
     "nsis": {
       "oneClick": false,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "tbh-companion-setup-${version}.${ext}"
     }
   },
   "devDependencies": {

@@ -74,7 +74,7 @@ EOF
   cat <<EOF
 ## Download
 
-Download **TBH Companion Setup ${VERSION}.exe** from the **Assets** section below (Windows installer).
+Download **tbh-companion-setup-${VERSION}.exe** from the **Assets** section below (Windows installer).
 
 ## Install (Windows)
 

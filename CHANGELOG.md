@@ -4,6 +4,12 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-06-11
+
+### About & updates
+
+- Fixed in-app update downloads failing when a newer release was available from **About**.
+
 ## [1.4.0] - 2026-06-11
 
 ### Market
