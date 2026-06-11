@@ -4,6 +4,10 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.6.0] - 2026-06-11
+
 ### Chests
 
 - **Stage boss chest tracker** on the Chests tab: pick levels to track, set per-level cooldowns and farm stages, and open the overlay from the tab or toolbar.
