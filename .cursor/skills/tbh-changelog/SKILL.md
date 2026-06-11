@@ -1,10 +1,10 @@
 ---
 name: tbh-changelog
-description: Update TBH Companion CHANGELOG.md with user-facing release notes and recommend the next semver version (MAJOR.MINOR.PATCH per semver.org). Use when shipping a release, preparing Release prepare, adding unreleased notes after a feature merge, deciding 1.1.1 vs 1.2.0, or when the user asks to update the changelog or bump version. Not for raw git commit lists in GitHub releases (see write-release-notes.sh), app code changes without release notes, or library API semver for npm consumers.
+description: Update TBH Companion CHANGELOG.md with user-facing release notes and recommend the next semver version (MAJOR.MINOR.PATCH per semver.org). Use when shipping a release, preparing Release prepare, adding unreleased notes after a feature merge, deciding 1.1.1 vs 1.2.0, or when the user asks to update the changelog or bump version. Always compare the latest release tag to main, confirm proposed changelog text before editing CHANGELOG.md, commit changelog work on main only, and confirm before push. Not for raw git commit lists in GitHub releases (see write-release-notes.sh), app code changes without release notes, or library API semver for npm consumers.
 license: CC-BY-4.0
 metadata:
   author: tbh-project
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # TBH Companion — Changelog & semver
@@ -13,13 +13,20 @@ Keep `CHANGELOG.md` as the **user-facing** source of truth. Release automation (
 
 Read [references/semver-guide.md](references/semver-guide.md) when classifying changes or the bump is ambiguous.
 
+## Hard rules (never skip)
+
+1. **Compare latest release → main.** Every run starts by diffing the latest shipped tag against `main` (not the current feature branch). User-facing bullets must reflect what landed on `main` since that tag.
+2. **Confirm text before editing.** Present the full proposed `[Unreleased]` or promoted section in chat. Edit `CHANGELOG.md` only after the user approves the wording.
+3. **Commit on `main` only.** Changelog updates and release-promotion commits belong on `main`. Switch to `main`, sync with origin, then commit. Do not leave changelog-only commits on feature branches.
+4. **Confirm before push.** Summarize branch, commits, and scope; ask explicitly. Push only after the user says yes (see `docs/AGENT_WORKFLOW.md` and `.cursor/rules/git-remote-confirm.mdc`).
+
 ## When to run
 
 | Trigger | Action |
 |---------|--------|
-| Feature/fix merged to `main` | Add bullets under `## [Unreleased]` |
-| User asks to release / tag / ship | Promote `[Unreleased]` → `## [X.Y.Z]`, recommend version, hand off to Release prepare |
-| PR merged with user-visible behavior | Update `[Unreleased]` in same PR or immediately after merge |
+| Feature/fix merged to `main` | Draft bullets for `[Unreleased]`, confirm, commit on `main` |
+| User asks to release / tag / ship | Compare tag→main, draft promoted section, confirm, commit on `main`, hand off to Release prepare |
+| PR merged with user-visible behavior | Update `[Unreleased]` on `main` after merge (confirm text first) |
 
 **Skip** for docs-only spikes under `docs/findings/` with no app behavior change, unless the user explicitly wants a note.
 
@@ -55,33 +62,78 @@ Structure:
 
 ```
 Progress:
-- [ ] Step 1: Gather changes since last release
-- [ ] Step 2: Write or update [Unreleased] bullets
-- [ ] Step 3: Recommend next semver
-- [ ] Step 4: Promote section (only when cutting a release)
-- [ ] Step 5: Report to user
+- [ ] Step 0: On main and synced
+- [ ] Step 1: Compare latest release tag → main
+- [ ] Step 2: Draft changelog text (do not edit file yet)
+- [ ] Step 3: User confirms text
+- [ ] Step 4: Update CHANGELOG.md
+- [ ] Step 5: Commit on main (if user asked for a commit)
+- [ ] Step 6: Recommend semver; confirm before push
+- [ ] Step 7: Report next steps
 ```
 
-### Step 1 — Gather changes
+### Step 0 — On `main` and synced
 
 From repo root (PowerShell — chain with `;`):
 
 ```powershell
-node .cursor/skills/tbh-changelog/scripts/version-hint.mjs
-git log (git describe --tags --abbrev=0)..HEAD --oneline --no-merges
+git fetch origin
+git checkout main
+git pull origin main
 ```
 
-Read `CHANGELOG.md` `[Unreleased]` and any open PR description. Prefer **user impact** over commit titles.
+If the user is mid-feature on another branch, finish or merge that work to `main` first. Changelog commits and release promotion always land on `main`.
+
+### Step 1 — Compare latest release → `main`
+
+Resolve the latest shipped tag and everything new on `main` since then:
+
+```powershell
+node .cursor/skills/tbh-changelog/scripts/version-hint.mjs
+git log (git describe --tags --abbrev=0)..main --oneline --no-merges
+git diff (git describe --tags --abbrev=0)..main --stat -- app/ CHANGELOG.md data/
+```
+
+Also read `CHANGELOG.md` `[Unreleased]`, merged PR descriptions, and any open PRs targeting `main`. Prefer **user impact** over commit titles.
+
+`version-hint.mjs` compares `latestTag..main` (not `HEAD`) so results stay correct even if the agent started on a feature branch.
 
 Current shipped version: `app/package.json` → `version` (must match latest git tag `v*` on main after a release).
 
-### Step 2 — Update `[Unreleased]`
+**Present a short “since last release” summary** in chat: tag name, commit count, and the user-visible themes you infer before drafting bullets.
+
+### Step 2 — Draft changelog text (no file edit)
 
 - Merge duplicate topics; one bullet per distinct user-visible change.
 - Use **bold** for UI labels, tab names, currencies, buttons.
 - If a change replaces confusing behavior, say what users see now (not “fixed bug #…”).
+- For release cuts, draft the full `## [X.Y.Z] - YYYY-MM-DD` section that will replace `[Unreleased]`.
 
-### Step 3 — Recommend next semver
+Post the complete proposed markdown block in chat.
+
+### Step 3 — User confirms text
+
+Stop and wait for approval. If the user edits wording, redraft and ask again. **Do not write to `CHANGELOG.md` until they confirm.**
+
+### Step 4 — Update `CHANGELOG.md`
+
+Apply only the confirmed text. For release cuts: move content under `## [SUGGESTED_VERSION] - TODAY_ISO` and clear `[Unreleased]` (keep the heading).
+
+Do **not** edit `app/package.json` locally unless asked — Release prepare bumps version and tags.
+
+### Step 5 — Commit on `main`
+
+Only when the user requests a commit (or their rules allow it):
+
+```powershell
+git status
+git add CHANGELOG.md
+git commit -m "docs: update changelog for ..."
+```
+
+Verify `git branch --show-current` is `main` before committing.
+
+### Step 6 — Recommend semver; confirm before push
 
 Follow [Semantic Versioning 2.0.0](https://semver.org/) with TBH’s public surface = **the desktop app experience** (tabs, overlay, settings, save read behavior, bundled data expectations) — see [references/semver-guide.md](references/semver-guide.md).
 
@@ -99,28 +151,22 @@ Report:
 
 ```
 Current: 1.1.0 (tag v1.1.0)
-Suggested next: 1.1.1 — PATCH (bug fixes only in [Unreleased])
-Compare: v1.1.0..main
+Suggested next: 1.1.1 — PATCH (bug fixes only since v1.1.0)
+Compare: v1.1.0..main (N commits)
 ```
 
-### Step 4 — Promote (release cut only)
+If pushing: summarize branch (`main`), commit message(s), and scope; ask “Want me to push `main` to origin?” Push only after yes.
 
-When the user confirms a release:
+After tag push, the **Release** workflow builds the installer and generates GitHub release body from the promoted section.
 
-1. Move all `[Unreleased]` content under `## [SUGGESTED_VERSION] - TODAY_ISO`.
-2. Clear `[Unreleased]` (keep the heading).
-3. Ensure `## [SUGGESTED_VERSION]` exists **before** running GitHub **Release prepare** with that version (workflow validates the heading).
-4. Do **not** edit `app/package.json` locally unless asked — Release prepare bumps version and tags.
-
-After tag push, the **Release** workflow builds the installer and generates GitHub release body from this section.
-
-### Step 5 — Report to user
+### Step 7 — Report to user
 
 Include:
 
-- Summary of `[Unreleased]` edits (if any)
+- “Since last release” summary (tag → main)
+- Confirmed changelog edits applied
 - Recommended version with semver rationale (one short paragraph)
-- Next manual step: “Run **Release prepare** with `{version}` on GitHub Actions” (or wait for merge if CHANGELOG is in a PR)
+- Next manual step: “Run **Release prepare** with `{version}` on GitHub Actions” (release cuts only)
 
 ## Examples
 
@@ -130,9 +176,11 @@ User says: “We added PHP and UAH currencies — update the changelog.”
 
 Actions:
 
-1. Add under `[Unreleased]` → `### Market` with currency bullet (if not already there).
-2. Run `version-hint.mjs` → likely **MINOR** (`1.2.0`) if last tag is `1.1.0` and this is new capability; **PATCH** (`1.1.1`) if other pending `[Unreleased]` items are only fixes and you batch a patch release — state both options if ambiguous.
-3. Do not promote to a version section until user asks to release.
+1. `git checkout main; git pull origin main`
+2. Compare `v1.1.0..main` — list commits and user-visible themes.
+3. Post draft under `### Market` for confirmation.
+4. On approval: edit `CHANGELOG.md`, commit on `main` if asked.
+5. Recommend **MINOR** `1.2.0` if this is new capability; ask before push.
 
 ### Example 2: Preparing release
 
@@ -140,16 +188,22 @@ User says: “Ship the next release.”
 
 Actions:
 
-1. Read `[Unreleased]` + git log since `v1.1.0`.
-2. Recommend `1.1.1` (patch) vs `1.2.0` (minor) with rationale.
-3. On confirmation: promote to `## [1.1.1] - 2026-06-10`, clear `[Unreleased]`.
-4. Tell user to run Release prepare with `1.1.1`.
+1. On `main`, run tag→main compare and `version-hint.mjs`.
+2. Draft full `## [1.2.0] - 2026-06-11` section from `[Unreleased]` + anything missing from compare.
+3. User confirms text → apply promotion, clear `[Unreleased]`.
+4. Commit on `main` if asked; recommend version; ask before push.
+5. Tell user to run Release prepare with `1.2.0`.
 
-### Example 3: Fixes only since last tag
+### Example 3: Agent started on a feature branch
 
-`[Unreleased]` contains only Live tab status copy fix and overlay button clarity.
+User on `feat/pets-tab` asks to update changelog.
 
-→ Recommend **PATCH** `1.1.1`. No MAJOR/MINOR signals.
+Actions:
+
+1. Do **not** edit or commit on the feature branch.
+2. Fetch, checkout `main`, pull.
+3. Compare latest tag → `main` (includes merged and unmerged work only if it is on `main` — if the feature is not merged yet, tell the user to merge first or note it is not releasable from `main` yet).
+4. Draft, confirm, then commit on `main`.
 
 ## Troubleshooting
 
@@ -164,3 +218,11 @@ After a successful release they should match. If main has merged work past the t
 ### Commits say `feat:` but change is internal only
 
 Do not bump MINOR based on commit prefix alone. If users gain no new capability, treat as PATCH or omit from CHANGELOG.
+
+### Not on `main`
+
+Run Step 0 before any changelog edit or commit. Never push changelog work from a feature branch.
+
+### User approved text but rejected push
+
+Leave the local commit on `main`; do not push until they confirm.

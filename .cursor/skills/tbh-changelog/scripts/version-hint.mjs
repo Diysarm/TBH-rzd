@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Suggest next semver from app/package.json, latest tag, and commits since tag.
+ * Suggest next semver from app/package.json, latest tag, and commits since tag on main.
  * Run from repo root: node .cursor/skills/tbh-changelog/scripts/version-hint.mjs
  */
 import { readFileSync } from "node:fs";
@@ -16,6 +16,20 @@ function parseVersion(v) {
   return { major: +m[1], minor: +m[2], patch: +m[3], raw: `${m[1]}.${m[2]}.${m[3]}` };
 }
 
+function resolveCompareRef() {
+  try {
+    sh("git rev-parse --verify main");
+    return "main";
+  } catch {
+    try {
+      sh("git rev-parse --verify origin/main");
+      return "origin/main";
+    } catch {
+      return "HEAD";
+    }
+  }
+}
+
 const pkg = JSON.parse(readFileSync("app/package.json", "utf8"));
 const current = parseVersion(pkg.version);
 
@@ -26,10 +40,13 @@ try {
   latestTag = "";
 }
 
+const compareRef = resolveCompareRef();
+const compareRange = latestTag ? `${latestTag}..${compareRef}` : compareRef;
+
 let subjects = [];
 if (latestTag) {
   try {
-    const log = sh(`git log ${latestTag}..HEAD --pretty=format:%s --no-merges`);
+    const log = sh(`git log ${compareRange} --pretty=format:%s --no-merges`);
     subjects = log ? log.split("\n").filter(Boolean) : [];
   } catch {
     subjects = [];
@@ -57,6 +74,8 @@ if (breaking) {
 const out = {
   packageVersion: current.raw,
   latestTag: latestTag || null,
+  compareRef,
+  compareRange,
   commitsSinceTag: subjects.length,
   signals: { breaking, feat: hasFeat, fix: hasFix },
   suggestedBump: bump,
