@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   prepare:
@@ -69,3 +70,10 @@ jobs:
           git tag "${TAG}"
           git push origin HEAD:main
           git push origin "${TAG}"
+
+      # Tag pushes from GITHUB_TOKEN do not start other workflows (GitHub Actions
+      # recursion guard). Dispatch Release explicitly after prepare succeeds.
+      - name: Trigger Release workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run release.yml -f tag="v${{ github.event.inputs.version }}"
