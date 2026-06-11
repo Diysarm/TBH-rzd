@@ -1,4 +1,14 @@
 (function () {
+  if (window.lucide) {
+    window.lucide.createIcons({
+      attrs: {
+        width: 15,
+        height: 15,
+        "stroke-width": 2,
+      },
+    });
+  }
+
   const REPO = "lucasfevi/tbh-companion";
   const REPO_URL = "https://github.com/" + REPO;
   const RELEASES_LATEST_PAGE = REPO_URL + "/releases/latest";
