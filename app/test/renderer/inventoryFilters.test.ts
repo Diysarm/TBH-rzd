@@ -22,6 +22,7 @@ const inv: ResolvedInventory = {
       priceRaw: "$1.00",
       unitPrice: 1,
       priceSource: "median",
+      priceChecked: true,
       value: 5,
     },
     {
@@ -42,6 +43,7 @@ const inv: ResolvedInventory = {
       priceRaw: "$10.00",
       unitPrice: 10,
       priceSource: "median",
+      priceChecked: true,
       value: 10,
     },
   ],

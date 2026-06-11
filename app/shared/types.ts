@@ -161,6 +161,8 @@ export interface ResolvedInventoryRow {
   priceRaw: string | null;
   unitPrice: number | null;
   priceSource: "median" | "lowest" | null;
+  /** True when Steam was queried for this hash (even if no listing/sale price came back). */
+  priceChecked: boolean;
   value: number | null;
   inventoryCount: number;
   stashCount: number;
