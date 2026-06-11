@@ -3,6 +3,7 @@ import type { BoxSlotStatus, ChestCapacityBreakdown } from "../../../shared/type
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { CapacityBar } from "../components/ui/CapacityBar";
+import { Card } from "../components/ui/Card";
 import { TabHeader } from "../components/ui/TabHeader";
 import { TabPage } from "../components/ui/TabPage";
 
@@ -30,7 +31,7 @@ function ChestCategoryCard({
   const pct = slot.capacity > 0 ? Math.min(100, (slot.quantity / slot.capacity) * 100) : 0;
 
   return (
-    <article className="rounded-lg border border-border bg-card p-3">
+    <Card>
       <div className="mb-1 flex items-center gap-2">
         <h2 className="m-0 text-sm">{title}</h2>
         {slot.isFull ? <Badge>Full</Badge> : null}
@@ -54,7 +55,7 @@ function ChestCategoryCard({
         <summary className="cursor-pointer text-xs text-muted">Capacity details</summary>
         <p className="text-xs text-muted">{capacityParts(breakdown).join(", ")}</p>
       </details>
-    </article>
+    </Card>
   );
 }
 

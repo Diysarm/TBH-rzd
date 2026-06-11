@@ -1,6 +1,14 @@
 # TBH Companion — styling
 
-The renderer uses **Tailwind CSS v4** with shared components under `app/src/renderer/components/ui/`. Legacy CSS in `styles.css` is limited to global body defaults and Electron drag-region helpers.
+The renderer uses **Tailwind CSS v4** with shared components under `app/src/renderer/components/ui/`. Legacy CSS in `styles.css` is limited to `@layer base` resets and Electron drag-region helpers.
+
+## Migration status
+
+| Phase | Scope | Status |
+| ----- | ----- | ------ |
+| 1 | Tailwind setup, primitives, Settings/Market/About | Done (PR #20) |
+| 2 | Live, Chests, Inventory, chrome, overlays; trim legacy CSS | Done (PR #21) |
+| 3 | `Card`, `ToolbarButton`, Badge variants, panel `Accordion`; agent docs | Current |
 
 ## Stack
 
@@ -10,7 +18,7 @@ The renderer uses **Tailwind CSS v4** with shared components under `app/src/rend
 | Design tokens      | `@theme { ... }` in `styles.css`                                          |
 | Class merge helper | `app/src/renderer/lib/cn.ts`                                              |
 | UI primitives      | `app/src/renderer/components/ui/`                                         |
-| Legacy CSS         | `styles.css` — body reset + `.overlay` / `.no-drag` / `.drag-handle` only |
+| Legacy CSS         | `styles.css` — base layer + `.overlay` / `.no-drag` / `.drag-handle` only |
 
 ## Design tokens
 
@@ -24,6 +32,8 @@ The renderer uses **Tailwind CSS v4** with shared components under `app/src/rend
 | Danger         | `border-danger`, `text-danger-fg` |
 | Warning / XP   | `text-gold`                       |
 
+Status accents (box tracker, chest full badge) use fixed hex in `Badge` variants — do not invent new colors in tabs.
+
 ## UI components
 
 Import from `components/ui/` — **Market `Button` sizing is the reference**.
@@ -31,16 +41,19 @@ Import from `components/ui/` — **Market `Button` sizing is the reference**.
 | Component                  | Use                                                                                                      |
 | -------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `Button`                   | `variant`: `default` \| `primary` \| `danger` \| `ghost` \| `success`; `size`: `default` \| `lg` \| `sm` |
+| `Card`                     | Bordered panels; `padding`: `default` \| `compact` \| `none`                                             |
 | `Field`, `Input`, `Select` | Form controls                                                                                            |
 | `Section`                  | Settings/About subsection headings                                                                       |
 | `PanelSection`             | Live-style uppercase section labels                                                                      |
 | `StatCard`                 | Metric tiles (Live totals, Inventory summary)                                                            |
-| `Badge`                    | Chest “Full” pill                                                                                        |
+| `Badge`                    | `full` (chest Full), `info` / `success` / `muted` (summary pills), `statusReady` / `statusCooldown`     |
 | `CapacityBar`              | Chest capacity + box-tracker cooldown bars                                                               |
 | `HintBanner`               | Gold-accent callouts (Inventory hints, pricing banner)                                                   |
 | `LinkButton`               | Inline text links in stat labels                                                                         |
-| `IconButton`               | Overlay chrome icon buttons                                                                              |
-| `Accordion`                | Settings Advanced                                                                                        |
+| `IconButton`               | Overlay chrome icon buttons; `edge`: `start` \| `end` for optical alignment at row edges (close, expand) |
+| `ToolbarButton`            | Main-window toolbar (Mini, Stage chests)                                                                 |
+| `OverlayFrame`             | Mini overlay + box tracker shell (`px-2.5 py-1.5`, `gap-1`)                                              |
+| `Accordion`                | `variant`: `default` \| `panel` (Settings Advanced)                                                      |
 | `TabHeader`, `TabPage`     | Tab chrome                                                                                               |
 | `ProgressBar`              | Market/About download bars                                                                               |
 

@@ -15,39 +15,28 @@
   --font-sans: "Segoe UI", system-ui, sans-serif;
 }
 
-:root {
-  --bg: #0f1117;
-  --panel: #171a23;
-  --card: #1d212c;
-  --border: #2a2f3d;
-  --fg: #e8eaf0;
-  --muted: #8b93a7;
-  --accent: #5ad17a;
-  --gold: #e8c45a;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-* {
-  box-sizing: border-box;
-}
+  html,
+  body,
+  #root {
+    @apply m-0 h-full;
+  }
 
-html,
-body,
-#root {
-  margin: 0;
-  height: 100%;
-}
-
-body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: 14px;
-  user-select: none;
+  body {
+    @apply bg-bg font-sans text-sm text-fg select-none;
+  }
 }
 
 /* Electron frameless window drag regions (Mini overlay + box tracker). */
 .overlay {
   -webkit-app-region: drag;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
 }
 
 .no-drag {

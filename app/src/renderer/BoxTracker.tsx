@@ -2,8 +2,10 @@ import { useBoxTimers, fmtTimer } from "./lib/useBoxTimers";
 import { stageName } from "../core/stages";
 import type { BoxTimerCatalogEntry, BoxTimerRow } from "../../shared/types";
 import { Button } from "./components/ui/Button";
+import { Badge } from "./components/ui/Badge";
 import { CapacityBar } from "./components/ui/CapacityBar";
 import { IconButton } from "./components/ui/IconButton";
+import { OverlayFrame } from "./components/ui/OverlayFrame";
 import { cn } from "./lib/cn";
 
 const PRESETS: { label: string; title: string; levels: number[] }[] = [
@@ -54,15 +56,12 @@ function BoxTimerCard({ row }: { row: BoxTimerRow }) {
           <span className="font-semibold">Lv{row.level ?? "?"}</span>
           <span className="text-muted">{row.idealStageLabel}</span>
         </div>
-        <span
-          className={cn(
-            "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums",
-            row.status === "ready" && "bg-[rgba(111,207,151,0.15)] text-[#6fcf97]",
-            row.status === "cooldown" && "bg-[rgba(90,159,209,0.15)] text-[#5a9fd1]",
-          )}
+        <Badge
+          variant={row.status === "ready" ? "statusReady" : "statusCooldown"}
+          className="shrink-0"
         >
           {row.status === "cooldown" ? fmtTimer(row.remainingSeconds) : "Ready"}
-        </span>
+        </Badge>
       </div>
       {row.status === "cooldown" ? (
         <>
@@ -96,9 +95,9 @@ export function BoxTracker() {
 
   if (!state) {
     return (
-      <div className="overlay flex h-screen flex-col gap-2 border border-border bg-bg p-2">
-        <p className="mt-2 text-muted">Loading…</p>
-      </div>
+      <OverlayFrame>
+        <p className="m-0 text-muted">Loading…</p>
+      </OverlayFrame>
     );
   }
 
@@ -108,7 +107,7 @@ export function BoxTracker() {
   const levelsSummary = trackLevelsSummary(state.catalog);
 
   return (
-    <div className="overlay flex h-screen flex-col gap-2 border border-border bg-bg p-2">
+    <OverlayFrame>
       <div className="flex shrink-0 items-center justify-between">
         <span className="drag-handle whitespace-nowrap text-[10px] font-bold tracking-wide text-muted">
           Stage chest tracker
@@ -117,22 +116,21 @@ export function BoxTracker() {
           <IconButton type="button" title="Open full window" onClick={() => window.tbh.showMain()}>
             {"\u2922"}
           </IconButton>
-          <IconButton type="button" title="Close" onClick={() => window.tbh.closeBoxTracker()}>
+          <IconButton
+            type="button"
+            edge="end"
+            title="Close"
+            onClick={() => window.tbh.closeBoxTracker()}
+          >
             {"\u2715"}
           </IconButton>
         </div>
       </div>
 
-      <div className="no-drag flex flex-wrap gap-1.5 px-0.5">
-        <span className="rounded-full border border-[#3a6a8a] bg-card px-2 py-0.5 text-[11px] font-semibold text-[#5a9fd1]">
-          {state.cooldownCount} cooling
-        </span>
-        <span className="rounded-full border border-[#3d6b52] bg-card px-2 py-0.5 text-[11px] font-semibold text-[#6fcf97]">
-          {state.readyCount} ready
-        </span>
-        <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-muted">
-          Stage: {currentLabel}
-        </span>
+      <div className="no-drag flex flex-wrap gap-1.5">
+        <Badge variant="info">{state.cooldownCount} cooling</Badge>
+        <Badge variant="success">{state.readyCount} ready</Badge>
+        <Badge variant="muted">Stage: {currentLabel}</Badge>
       </div>
 
       <details className="no-drag shrink-0 overflow-hidden rounded-lg border border-border bg-card">
@@ -185,14 +183,14 @@ export function BoxTracker() {
       </details>
 
       {state.rows.length === 0 ? (
-        <p className="no-drag px-2 py-3 text-center text-xs text-muted">
+        <p className="no-drag m-0 text-center text-xs text-muted">
           Expand track levels above to pick boxes and start cooldown timers.
         </p>
       ) : (
         <div className="no-drag flex min-h-0 flex-1 flex-col gap-2.5 overflow-auto">
           {cooldownRows.length > 0 && (
             <section className="flex flex-col gap-1.5">
-              <h3 className="m-0 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">
+              <h3 className="m-0 text-[11px] font-bold uppercase tracking-wide text-muted">
                 On cooldown
               </h3>
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
@@ -204,7 +202,7 @@ export function BoxTracker() {
           )}
           {readyRows.length > 0 && (
             <section className="flex flex-col gap-1.5">
-              <h3 className="m-0 px-1 text-[11px] font-bold uppercase tracking-wide text-muted">
+              <h3 className="m-0 text-[11px] font-bold uppercase tracking-wide text-muted">
                 Ready to mark
               </h3>
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
@@ -216,6 +214,6 @@ export function BoxTracker() {
           )}
         </div>
       )}
-    </div>
+    </OverlayFrame>
   );
 }

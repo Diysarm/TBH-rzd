@@ -14,13 +14,13 @@ Follow these patterns so every tab and overlay feels like the same app. **Invent
 ## Before you change UI
 
 1. Open [`app/src/renderer/tabs/Inventory.tsx`](../../app/src/renderer/tabs/Inventory.tsx) and match its header pattern.
-2. Read [`docs/STYLING.md`](../../docs/STYLING.md) and use `app/src/renderer/components/ui/*` on migrated tabs; skim [`app/src/renderer/styles.css`](../../app/src/renderer/styles.css) for legacy classes (Inventory, Live, Chests grid, chrome).
+2. Read [`docs/STYLING.md`](../../docs/STYLING.md) and use `app/src/renderer/components/ui/*`; skim [`app/src/renderer/styles.css`](../../app/src/renderer/styles.css) for Electron drag helpers only.
 3. If the change touches main-window chrome or tray behavior, read [`app/src/main/tray/trayService.ts`](../../app/src/main/tray/trayService.ts) and [`app/src/main/app/appState.ts`](../../app/src/main/app/appState.ts).
 4. For a **new tab from scratch** or large layout refactor, also read [references/patterns.md](references/patterns.md).
 
 ## Design tokens (do not drift)
 
-Tailwind `@theme` in `styles.css` mirrors legacy `:root` vars — see [`docs/STYLING.md`](../../docs/STYLING.md).
+Tailwind `@theme` in `styles.css` — see [`docs/STYLING.md`](../../docs/STYLING.md). Do not add legacy CSS class blocks to `styles.css`.
 
 | Token | Use |
 |-------|-----|
@@ -31,22 +31,22 @@ Tailwind `@theme` in `styles.css` mirrors legacy `:root` vars — see [`docs/STY
 | `bg-accent` `#5ad17a` | Primary actions, positive states |
 | `text-gold` | XP / idle warnings |
 
-Typography: Segoe UI / system sans, 14px body. On migrated tabs use `Button`, `Field`, `text-muted`, `text-xs` — not one-off hex colors.
+Typography: Segoe UI / system sans, 14px body. Use `Button`, `Field`, `Card`, `text-muted`, `text-xs` from `components/ui/` — not one-off hex colors.
 
 ## Main window chrome
 
 ```text
-[ Live | Inventory | Chests | Market | Settings ]     [ Mini ] [ Boxes ]
+[ Live | Inventory | Chests | Market | Settings | About ]     [ Mini ] [ Stage chests ]
 [ save status bar ]
 [ tab content ]
 ```
 
 Rules:
 
-- **Tab bar = navigation only.** Never put overlay toggles or actions in `.tabs`.
-- **Overlay entry points:** [`AppToolbar`](../../app/src/renderer/components/AppToolbar.tsx) (Mini + Boxes with inline SVG icons), Chests header CTA for box tracker, and system tray menu.
+- **Tab bar = navigation only.** Never put overlay toggles or actions in the tab `<nav>`.
+- **Overlay entry points:** [`AppToolbar`](../../app/src/renderer/components/AppToolbar.tsx) (`ToolbarButton` for Mini + Stage chests), Chests header CTA for box tracker, and system tray menu.
 - **Do not use Unicode box glyphs** (`□`, `▣`) as icons — use inline SVG like `AppToolbar`.
-- Save status stays in `.savebar` below chrome; do not duplicate save timing inside tabs.
+- Save status stays below chrome in `App.tsx`; do not duplicate save timing inside tabs.
 
 ## Tab content pattern (match Inventory)
 
@@ -57,9 +57,9 @@ Each tab should have:
 
 Wrap the tab root in **`<TabPage>`** for **14px** vertical section spacing (`gap-3.5`). Form-heavy tabs (Settings, About): inner column `max-w-md`. The main window is **900px wide** (fixed — no horizontal resize); height remains resizable from 480px. Section subtitles use **`Section`** or **4px** between `h2` and content.
 
-Placeholder state (no data yet): same `<h1>` + `.placeholder` + `.muted` wait message — see Inventory and Chests.
+Placeholder state (no data yet): same `<h1>` + muted wait message — see Inventory and Chests loading states.
 
-Avoid walls of copy; move rune breakdowns and capacity math into `<details>` or tooltips (see compact Chests cards).
+Avoid walls of copy; move rune breakdowns and capacity math into `<details>` or tooltips (see Chests `Card` + capacity details).
 
 **Copy tone:** write for players — no “installed app”, dev-build jargon, or internal timers in tab intros. Technical paths belong in Settings advanced sections.
 
@@ -67,9 +67,9 @@ Avoid walls of copy; move rune breakdowns and capacity math into `<details>` or 
 
 ## Chests tab
 
-- **3-column `.chest-grid`** on wide layouts; stack on narrow (`max-width: 720px` breakpoint).
-- Each category: title + `quantity / capacity` + `.progress-bar.compact` + optional "Full" badge.
-- **Box tracker CTA at top** of header (`.chests-header-actions`), not only at page footer.
+- **3-column grid** on wide layouts (`grid-cols-3`); stack on narrow (`max-[720px]:grid-cols-1`).
+- Each category: `Card` with title + `quantity / capacity` + `CapacityBar` + optional `Badge` Full.
+- **Box tracker CTA at top** of `TabHeader` children, not only at page footer.
 - Goal at 900×640: all three chest categories visible without scrolling.
 
 ## Overlays (Mini + Box tracker)
@@ -77,7 +77,7 @@ Avoid walls of copy; move rune breakdowns and capacity math into `<details>` or 
 - Frameless, always-on-top; drag region on chrome; `.no-drag` on buttons.
 - Closing Mini must **restore the main window** (handled in main process — do not re-hide main from renderer on close).
 - Mini hides main while open; box tracker does not need to hide main.
-- Overlay actions use `.icon-btn` / small text buttons, not full `.btn.primary` unless intentional.
+- Overlay actions use `IconButton` or small `Button size="sm"`, not oversized primary buttons unless intentional.
 
 ## Tray and close behavior
 
@@ -89,15 +89,17 @@ Avoid walls of copy; move rune breakdowns and capacity math into `<details>` or 
 
 | Need | Use |
 |------|-----|
-| Primary button (migrated tabs) | `<Button variant="primary">` |
-| Secondary button | `<Button>` or legacy `.btn` on Inventory |
-| Danger | `<Button variant="danger">` or `.btn.danger` |
+| Primary button | `<Button variant="primary">` |
+| Secondary button | `<Button>` |
+| Danger | `<Button variant="danger">` |
+| Panel / row card | `<Card>` (`padding="compact"` for dense rows) |
 | Form field | `<Field>` + `<Input>` / `<Select>` |
-| Collapsible advanced block | `<Accordion>` |
-| Status badge | `.badge.full` |
-| Progress | `<ProgressBar>` or `.progress-bar` + `.progress-fill.{gray,blue,red}` |
-| Link-style control | `.linkish` or `.market-link` |
-| Toolbar overlay buttons | `.toolbar-btn` + `.toolbar-icon` |
+| Collapsible advanced block | `<Accordion variant="panel">` |
+| Status badge | `<Badge>` variants (`full`, `info`, `success`, `muted`, …) |
+| Progress | `<CapacityBar>` or `<ProgressBar>` |
+| Link-style control | `<LinkButton>` |
+| Toolbar overlay buttons | `<ToolbarButton>` |
+| Overlay icon buttons | `<IconButton>` |
 
 Add new shared UI to `app/src/renderer/components/ui/` when used in more than one place.
 
@@ -118,9 +120,9 @@ User: "Add a Pets tab."
 
 Actions:
 
-1. Add tab id to `TABS` in `App.tsx` only — no extra buttons in `.tabs`.
-2. Create `tabs/Pets.tsx` with `<h1>Pets</h1>`, muted explainer, then content.
-3. Reuse `.card` / table patterns from Inventory or Live.
+1. Add tab id to `TABS` in `App.tsx` only — no extra buttons in the tab `<nav>`.
+2. Create `tabs/Pets.tsx` with `TabPage`, `TabHeader`, muted intro, then content.
+3. Reuse `Card`, `StatCard`, or table patterns from Inventory or Live.
 
 Result: Pets feels like Inventory, not a one-off page.
 
@@ -130,7 +132,7 @@ User: "Add a quick way to open the mini overlay from Live."
 
 Actions:
 
-1. Add a contextual `.btn` or `.linkish` **inside Live tab content** — not the tab bar.
+1. Add a contextual `<Button>` or `<LinkButton>` **inside Live tab content** — not the tab bar.
 2. Call `window.tbh.openOverlay()` — do not duplicate overlay window logic in renderer.
 
 Result: Discoverable from Live without polluting global chrome.
@@ -141,7 +143,7 @@ User: "Show rune details on Chests."
 
 Actions:
 
-1. Put verbose text in `<details class="chest-card-details">` on each card.
+1. Put verbose text in `<details>` inside each `Card`.
 2. Keep the grid single-screen at default window size.
 
 Result: Details available without scrolling past three tall sections.
@@ -150,7 +152,7 @@ Result: Details available without scrolling past three tall sections.
 
 ### Tab bar feels crowded
 
-Cause: Actions mixed into `.tabs`.
+Cause: Actions mixed into tab `<nav>`.
 Solution: Move to `AppToolbar`, tab header, or in-tab controls.
 
 ### Main window disappears after closing Mini
@@ -161,4 +163,4 @@ Solution: Fix in `appState.ts` / overlay `closed` handler — not renderer-only 
 ### Chests requires scrolling at default size
 
 Cause: Tall stacked sections or footer-only CTA.
-Solution: Use `.chest-grid` + header CTA; collapse detail into `<details>`.
+Solution: Use 3-column grid + header CTA; collapse detail into `<details>`.
