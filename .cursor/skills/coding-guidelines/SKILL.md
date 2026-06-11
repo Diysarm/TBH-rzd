@@ -72,3 +72,13 @@ For multi-step tasks, state a brief plan:
 ```
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+## 5. TypeScript style (TBH)
+
+Apply on every change in `app/` (especially `core/` and services):
+
+- **`const` over `let`** — use `let` only when reassignment is required; prefer `map` / `filter` / `find` / `reduce` to build results without mutation loops.
+- **Return early** — guard clauses at the top; avoid `else` chains and deeply nested `if` blocks when an early `return` or `continue` in a small callback is clearer.
+- **Prefer functional composition** — extract small pure helpers; use array methods and `forEach` with early `return` instead of nested `for` + `if` pyramids. Imperative mutation is OK for hot accumulators (`Map`, tallies) when a functional rewrite would be harder to read.
+
+`let` in a `for` loop over a growing `Map` is fine when it is the simplest correct model; do not force functional style past readability.
