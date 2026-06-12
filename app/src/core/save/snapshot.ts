@@ -76,14 +76,6 @@ export function parseSnapshot(decryptedText: string, saveMtime = 0): SaveSnapsho
     }
   }
 
-  let cubeLevel = 0;
-  let cubeExp = 0;
-  const cube = player.cubeSaveLevelData as Record<string, unknown> | undefined;
-  if (cube && typeof cube === "object") {
-    cubeLevel = Math.trunc(toNum(cube.Level, 0));
-    cubeExp = toNum(cube.Exp, 0);
-  }
-
   let playTime = 0;
   let stageKey = 0;
   let stageWave = 0;
@@ -99,8 +91,6 @@ export function parseSnapshot(decryptedText: string, saveMtime = 0): SaveSnapsho
   return {
     heroes,
     totalHeroExp,
-    cubeLevel,
-    cubeExp,
     playTime,
     saveMtime,
     stageKey,

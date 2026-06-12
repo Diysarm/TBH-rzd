@@ -49,6 +49,10 @@
       {
         "from": "../docs/design/icons/companion-icon-256.png",
         "to": "companion-icon-256.png"
+      },
+      {
+        "from": "resources/sounds",
+        "to": "sounds"
       }
     ],
     "win": {

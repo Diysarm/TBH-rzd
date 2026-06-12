@@ -57,17 +57,13 @@ const CLEAR_ACTIONS: {
 
 type SettingsPatch = Omit<AppConfig, "es3Password">;
 
-function settingsPatch(draft: AppConfig): SettingsPatch {
-  return {
-    savePath: draft.savePath,
-    pollIntervalSeconds: draft.pollIntervalSeconds,
-    rollingWindowMinutes: draft.rollingWindowMinutes,
-    trackCubeExp: draft.trackCubeExp,
-    startTopmost: draft.startTopmost,
-    logHistoryCsv: draft.logHistoryCsv,
-    currency: draft.currency,
-  };
-}
+const CHEST_SOUND_OPTIONS: { value: AppConfig["chestSoundVariant"]; label: string }[] = [
+  { value: "soft-chime", label: "Soft chime (default)" },
+  { value: "double-tap", label: "Double tap" },
+  { value: "wood-tick", label: "Wood tick" },
+  { value: "whisper-ping", label: "Whisper ping" },
+  { value: "none", label: "None (silent)" },
+];
 
 function CacheActionRow({
   title,
@@ -102,14 +98,14 @@ function CacheActionRow({
 
 export function Settings() {
   const [cfg, setCfg] = useState<AppConfig | null>(null);
-  const [draft, setDraft] = useState<AppConfig | null>(null);
   const [dataPaths, setDataPaths] = useState<AppDataPaths | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
   const [browseBusy, setBrowseBusy] = useState(false);
   const [clearBusy, setClearBusy] = useState<AppDataClearTarget | null>(null);
   const [clearLogsBusy, setClearLogsBusy] = useState(false);
+  const [previewBusy, setPreviewBusy] = useState(false);
 
   async function refreshDataPaths(): Promise<void> {
     if (typeof window.tbh?.getDataPaths !== "function") return;
@@ -131,7 +127,6 @@ export function Settings() {
       .getConfig()
       .then((c) => {
         setCfg(c);
-        setDraft(c);
         setLoadError(null);
       })
       .catch((err: unknown) => {
@@ -142,6 +137,30 @@ export function Settings() {
     void refreshDataPaths();
   }, []);
 
+  async function savePartial(
+    patch: Partial<SettingsPatch>,
+    successMessage?: string,
+  ): Promise<AppConfig | null> {
+    if (!cfg) return null;
+    const prev = cfg;
+    setCfg({ ...prev, ...patch });
+    setSaveBusy(true);
+    setMessage(null);
+    try {
+      const saved = await window.tbh.saveConfig(patch);
+      setCfg(saved);
+      if (successMessage) setMessage(successMessage);
+      return saved;
+    } catch (err) {
+      reportIpcError(err);
+      setCfg(prev);
+      setMessage("Failed to save settings.");
+      return null;
+    } finally {
+      setSaveBusy(false);
+    }
+  }
+
   if (loadError) {
     return (
       <div className="flex flex-col gap-1.5">
@@ -151,13 +170,30 @@ export function Settings() {
     );
   }
 
-  if (!draft) {
+  if (!cfg) {
     return (
       <div className="flex flex-col gap-1.5">
         <h1 className="m-0 text-lg font-semibold">Settings</h1>
         <p className="m-0 text-muted">Loading...</p>
       </div>
     );
+  }
+
+  async function onPreviewChestSound() {
+    if (!cfg) return;
+    if (typeof window.tbh?.previewChestSound !== "function") {
+      setMessage("Preview API is not loaded. Restart the app and try again.");
+      return;
+    }
+    setPreviewBusy(true);
+    try {
+      await window.tbh.previewChestSound(cfg.chestSoundVariant);
+    } catch (err) {
+      reportIpcError(err);
+      setMessage("Could not play the preview sound.");
+    } finally {
+      setPreviewBusy(false);
+    }
   }
 
   async function onBrowseSave() {
@@ -169,53 +205,13 @@ export function Settings() {
     setMessage(null);
     try {
       const path = await window.tbh.pickSaveFile();
-      if (path) setDraft({ ...draft!, savePath: path });
+      if (path) await savePartial({ savePath: path }, "Save path updated.");
     } catch (err) {
       reportIpcError(err);
       setMessage("Could not open the save file picker.");
     } finally {
       setBrowseBusy(false);
     }
-  }
-
-  async function onSave() {
-    if (!draft || !cfg) return;
-
-    const patch = settingsPatch(draft);
-    const resetsSession =
-      patch.rollingWindowMinutes !== cfg.rollingWindowMinutes ||
-      patch.trackCubeExp !== cfg.trackCubeExp;
-    if (
-      resetsSession &&
-      !window.confirm(
-        "Changing the rolling window or Cube XP setting resets your current session stats and history. Continue?",
-      )
-    ) {
-      return;
-    }
-
-    setBusy(true);
-    setMessage(null);
-    try {
-      const saved = await window.tbh.saveConfig(patch);
-      setCfg(saved);
-      setDraft(saved);
-      setMessage(
-        resetsSession
-          ? "Saved. Session stats were reset for the new tracking settings."
-          : "Saved. Save-path or poll changes take effect immediately.",
-      );
-    } catch (err) {
-      reportIpcError(err);
-      setMessage("Failed to save settings.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function onReset() {
-    if (cfg) setDraft({ ...cfg });
-    setMessage(null);
   }
 
   async function onClearDiagnosticLogs() {
@@ -299,26 +295,17 @@ export function Settings() {
     <TabPage>
       <TabHeader
         title="Settings"
-        intro="Choose where the app reads your save and how live stats and prices behave. Settings are saved on your PC."
+        intro="Choose where the app reads your save and how live stats and prices behave. Changes save automatically."
       />
 
       <div className="flex max-w-md flex-col gap-3.5">
-        <Card className="flex flex-wrap items-center gap-2.5">
-          <Button variant="primary" disabled={busy} onClick={() => void onSave()}>
-            Save settings
-          </Button>
-          <Button disabled={busy} onClick={onReset}>
-            Reset
-          </Button>
-        </Card>
-
         <Section title="Save file">
           <div className="flex flex-col gap-2">
             <span className="text-xs text-muted">Current save file</span>
             <code className="break-all rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-muted">
-              {draft.savePath}
+              {cfg.savePath}
             </code>
-            <Button disabled={browseBusy || busy} onClick={() => void onBrowseSave()}>
+            <Button disabled={browseBusy || saveBusy} onClick={() => void onBrowseSave()}>
               {browseBusy ? "Opening…" : "Browse…"}
             </Button>
           </div>
@@ -329,13 +316,14 @@ export function Settings() {
             <Field label="Poll interval (seconds)">
               <NumberInput
                 min={1}
-                value={draft.pollIntervalSeconds}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    pollIntervalSeconds: Math.max(1, Number(e.target.value) || 1),
-                  })
-                }
+                defaultValue={cfg.pollIntervalSeconds}
+                key={`poll-${cfg.pollIntervalSeconds}`}
+                disabled={saveBusy}
+                onBlur={(e) => {
+                  const value = Math.max(1, Number(e.target.value) || 1);
+                  if (value === cfg.pollIntervalSeconds) return;
+                  void savePartial({ pollIntervalSeconds: value });
+                }}
               />
             </Field>
 
@@ -345,32 +333,34 @@ export function Settings() {
             >
               <NumberInput
                 min={1}
-                value={draft.rollingWindowMinutes}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    rollingWindowMinutes: Math.max(1, Number(e.target.value) || 1),
-                  })
-                }
-              />
-            </Field>
-
-            <Field
-              label="Include Hero-dric Cube XP in totals (resets session when toggled)"
-              checkbox
-            >
-              <input
-                type="checkbox"
-                checked={draft.trackCubeExp}
-                onChange={(e) => setDraft({ ...draft, trackCubeExp: e.target.checked })}
+                defaultValue={cfg.rollingWindowMinutes}
+                key={`rolling-${cfg.rollingWindowMinutes}`}
+                disabled={saveBusy}
+                onBlur={(e) => {
+                  const value = Math.max(1, Number(e.target.value) || 1);
+                  if (value === cfg.rollingWindowMinutes) return;
+                  if (
+                    !window.confirm(
+                      "Changing the rolling window resets your current session stats and history. Continue?",
+                    )
+                  ) {
+                    e.target.value = String(cfg.rollingWindowMinutes);
+                    return;
+                  }
+                  void savePartial(
+                    { rollingWindowMinutes: value },
+                    "Session stats were reset for the new rolling window.",
+                  );
+                }}
               />
             </Field>
 
             <Field label="Log XP history to CSV" checkbox>
               <input
                 type="checkbox"
-                checked={draft.logHistoryCsv}
-                onChange={(e) => setDraft({ ...draft, logHistoryCsv: e.target.checked })}
+                checked={cfg.logHistoryCsv}
+                disabled={saveBusy}
+                onChange={(e) => void savePartial({ logHistoryCsv: e.target.checked })}
               />
             </Field>
           </div>
@@ -379,8 +369,9 @@ export function Settings() {
         <Section title="Steam Market">
           <Field label="Market currency">
             <Select
-              value={draft.currency}
-              onChange={(e) => setDraft({ ...draft, currency: e.target.value })}
+              value={cfg.currency}
+              disabled={saveBusy}
+              onChange={(e) => void savePartial({ currency: e.target.value })}
             >
               {STEAM_CURRENCIES.map((c) => (
                 <option key={c.iso} value={c.iso}>
@@ -391,13 +382,81 @@ export function Settings() {
           </Field>
         </Section>
 
+        <Section title="Notifications">
+          <p className="m-0 text-xs text-muted">
+            Chest cooldown alerts play a sound in the app. App updates can show a Windows
+            notification when enabled below.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Field label="Enable notifications" checkbox>
+              <input
+                type="checkbox"
+                checked={cfg.notificationsEnabled}
+                disabled={saveBusy}
+                onChange={(e) => void savePartial({ notificationsEnabled: e.target.checked })}
+              />
+            </Field>
+
+            <Field
+              label="Notify when an app update is available"
+              checkbox
+              hint={!cfg.notificationsEnabled ? "Enable notifications above first." : undefined}
+            >
+              <input
+                type="checkbox"
+                checked={cfg.notifyOnUpdateAvailable}
+                disabled={!cfg.notificationsEnabled || saveBusy}
+                onChange={(e) => void savePartial({ notifyOnUpdateAvailable: e.target.checked })}
+              />
+            </Field>
+
+            <Field
+              label="Chest ready sound"
+              hint={
+                !cfg.notificationsEnabled
+                  ? "Enable notifications above first."
+                  : "Played when a tracked chest cooldown finishes (sound only)."
+              }
+            >
+              <Select
+                value={cfg.chestSoundVariant}
+                disabled={!cfg.notificationsEnabled || saveBusy}
+                onChange={(e) =>
+                  void savePartial({
+                    chestSoundVariant: e.target.value as AppConfig["chestSoundVariant"],
+                  })
+                }
+              >
+                {CHEST_SOUND_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+
+            <Button
+              disabled={
+                !cfg.notificationsEnabled ||
+                cfg.chestSoundVariant === "none" ||
+                previewBusy ||
+                saveBusy
+              }
+              onClick={() => void onPreviewChestSound()}
+            >
+              {previewBusy ? "Playing…" : "Preview sound"}
+            </Button>
+          </div>
+        </Section>
+
         <Section title="Window & tray">
           <div className="flex flex-col gap-3">
             <Field label="Keep all windows on top" checkbox>
               <input
                 type="checkbox"
-                checked={draft.startTopmost}
-                onChange={(e) => setDraft({ ...draft, startTopmost: e.target.checked })}
+                checked={cfg.startTopmost}
+                disabled={saveBusy}
+                onChange={(e) => void savePartial({ startTopmost: e.target.checked })}
               />
             </Field>
             <p className="m-0 text-xs text-muted">

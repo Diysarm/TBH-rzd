@@ -22,10 +22,12 @@ const DEFAULTS: AppConfig = {
   es3Password: DEFAULT_PASSWORD,
   pollIntervalSeconds: 5,
   rollingWindowMinutes: 5,
-  trackCubeExp: false,
   startTopmost: true,
   logHistoryCsv: true,
   currency: "USD",
+  notificationsEnabled: true,
+  notifyOnUpdateAvailable: true,
+  chestSoundVariant: "soft-chime",
 };
 
 // Expand %VAR% (Windows) and ~ in a path.

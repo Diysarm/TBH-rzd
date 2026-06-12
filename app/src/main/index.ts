@@ -8,6 +8,8 @@ import { getAppServices, restoreSessionWindows, startTracking, stopTracking } fr
 import { registerIpc } from "./ipc/registerIpc";
 import { createTray, destroyTray, isAppQuitting, setAppQuitting } from "./tray/trayService";
 
+app.setAppUserModelId("com.electron.tbh-companion");
+
 app.on("web-contents-created", (_event, contents) => {
   attachExternalLinkHandlers(contents);
 });

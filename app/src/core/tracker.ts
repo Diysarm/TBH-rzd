@@ -79,7 +79,6 @@ function deltaGain(prev: number | undefined, current: number): number {
 
 export class XpTracker {
   readonly rollingWindow: number;
-  readonly trackCube: boolean;
 
   onHistory: ((entry: HistoryEntry) => void) | null = null;
 
@@ -95,7 +94,6 @@ export class XpTracker {
 
   private prevHero!: Map<string, number>;
   private heroMeters!: Map<string, RateMeter>;
-  private prevCube!: number | null;
   private samples!: Array<[number, number]>;
   private initialized!: boolean;
   private firstMtime!: number | null;
@@ -111,9 +109,8 @@ export class XpTracker {
   private goldRollingRateValue!: number;
   private goldSessionRateValue!: number;
 
-  constructor(rollingWindowSeconds = 300, trackCube = false) {
+  constructor(rollingWindowSeconds = 300) {
     this.rollingWindow = Math.max(10, rollingWindowSeconds);
-    this.trackCube = trackCube;
     this.reset();
   }
 
@@ -123,7 +120,6 @@ export class XpTracker {
     this.cumulativeGained = 0;
     this.prevHero = new Map();
     this.heroMeters = new Map();
-    this.prevCube = null;
     this.samples = [];
     this.initialized = false;
     this.firstMtime = null;
@@ -150,7 +146,7 @@ export class XpTracker {
     const now = nowSeconds();
     const mtime = snap.saveMtime || now;
     this.heroes = snap.heroes;
-    this.currentTotalXp = snap.totalHeroExp + (this.trackCube ? snap.cubeExp : 0);
+    this.currentTotalXp = snap.totalHeroExp;
     this.currentGold = snap.gold;
 
     if (!this.initialized) {
@@ -160,7 +156,6 @@ export class XpTracker {
         meter.init(mtime);
         this.heroMeters.set(h.key, meter);
       }
-      this.prevCube = snap.cubeExp;
       this.prevGold = snap.gold;
       this.initialized = true;
       this.firstMtime = mtime;
@@ -186,11 +181,6 @@ export class XpTracker {
         this.heroMeters.set(h.key, meter);
       }
       meter.add(heroGain, mtime);
-    }
-
-    if (this.trackCube) {
-      gain += deltaGain(this.prevCube ?? undefined, snap.cubeExp);
-      this.prevCube = snap.cubeExp;
     }
 
     if (gain > 0) {
@@ -317,7 +307,6 @@ export class XpTracker {
       lastGainMtime: this.lastGainMtime,
       prevHero: Object.fromEntries(this.prevHero),
       heroMeters,
-      prevCube: this.prevCube,
       samples: this.samples.map(([t, g]) => [t, g] as [number, number]),
       initialized: this.initialized,
       firstMtime: this.firstMtime,
@@ -333,7 +322,7 @@ export class XpTracker {
     };
   }
 
-  /** Restore tracker internals from a captured snapshot (expects matching rollingWindow/trackCube). */
+  /** Restore tracker internals from a captured snapshot (expects matching rollingWindow). */
   applySnapshot(snapshot: TrackerSnapshot): void {
     this.sessionStart = snapshot.sessionStart;
     this.cumulativeGained = snapshot.cumulativeGained;
@@ -349,7 +338,6 @@ export class XpTracker {
         ([key, data]) => [key, RateMeter.fromSnapshot(data)] as const,
       ),
     );
-    this.prevCube = snapshot.prevCube;
     this.samples = snapshot.samples.map(([t, g]) => [t, g] as [number, number]);
     this.initialized = snapshot.initialized;
     this.firstMtime = snapshot.firstMtime;

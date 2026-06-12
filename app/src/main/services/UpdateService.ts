@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { IPC } from "../../../shared/ipc";
-import type { UpdatePhase, UpdateStatus } from "../../../shared/types";
+import type { AppConfig, UpdatePhase, UpdateStatus } from "../../../shared/types";
 import { createLogger } from "../log";
 import { setAppQuitting } from "../tray/trayService";
 import { broadcast } from "./broadcast";
@@ -53,15 +53,24 @@ function friendlyUpdateError(err: unknown): string {
   return message;
 }
 
+export interface UpdateServiceDeps {
+  getConfig: () => AppConfig;
+  onUpdateAvailable?: (version: string) => void;
+}
+
 export class UpdateService {
   private status: UpdateStatus;
   private started = false;
   private backgroundTimer: ReturnType<typeof setTimeout> | null = null;
   private checkInFlight = false;
   private downloadInFlight = false;
+  private readonly getConfig: () => AppConfig;
+  private readonly onUpdateAvailable?: (version: string) => void;
 
-  constructor() {
+  constructor(deps?: UpdateServiceDeps) {
     this.status = this.baseStatus();
+    this.getConfig = deps?.getConfig ?? (() => ({}) as AppConfig);
+    this.onUpdateAvailable = deps?.onUpdateAvailable;
   }
 
   private baseStatus(phase: UpdatePhase = "idle"): UpdateStatus {
@@ -108,6 +117,10 @@ export class UpdateService {
         lastCheckedAt: new Date().toISOString(),
       });
       updateLog.info(`Update available: v${info.version}`);
+      const config = this.getConfig();
+      if (config.notificationsEnabled && config.notifyOnUpdateAvailable) {
+        this.onUpdateAvailable?.(info.version);
+      }
     });
 
     autoUpdater.on("update-not-available", () => {

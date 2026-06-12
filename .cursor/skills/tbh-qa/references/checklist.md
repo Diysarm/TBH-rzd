@@ -38,9 +38,9 @@ Default path (Settings):
 
 ### Settings (if touched)
 
-- [ ] Tab loads config fields
-- [ ] Save settings → success message
-- [ ] Changing rolling window / Cube XP → confirm dialog appears
+- [ ] Tab loads config fields; changes persist without Save/Reset buttons
+- [ ] Changing rolling window → confirm dialog appears (resets session)
+- [ ] Notifications section: master toggle, update toggle, chest sound + preview
 - [ ] Changing currency → inventory prices refresh (not stale currency)
 
 ## Known failure modes
@@ -75,7 +75,7 @@ From `docs/reviews/playtest-bugs.md` — re-test when editing these:
 
 - Settings currency → must call `ensureOwnedPrices(true)` (`configPatch.ts`)
 - CSV logging toggle → `tracker.onHistory` without recreating tracker
-- Session reset → confirm before rolling window / Cube XP change (`Settings.tsx`)
+- Session reset → confirm before rolling window change (`Settings.tsx`)
 
 ## Windows dev notes
 

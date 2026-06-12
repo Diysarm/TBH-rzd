@@ -2,14 +2,13 @@ import type { AppConfig, PersistedSessionState, SaveSnapshot } from "../../share
 
 /** Whether persisted session metadata matches current tracking settings. */
 export function sessionMatchesConfig(
-  persisted: Pick<PersistedSessionState, "savePath" | "rollingWindowMinutes" | "trackCubeExp">,
+  persisted: Pick<PersistedSessionState, "savePath" | "rollingWindowMinutes">,
   savePath: string,
   config: AppConfig,
 ): boolean {
   return (
     persisted.savePath === savePath &&
-    persisted.rollingWindowMinutes === config.rollingWindowMinutes &&
-    persisted.trackCubeExp === config.trackCubeExp
+    persisted.rollingWindowMinutes === config.rollingWindowMinutes
   );
 }
 
@@ -29,7 +28,6 @@ export function isPersistedSessionState(raw: unknown): raw is PersistedSessionSt
     typeof o.savePath === "string" &&
     typeof o.lastSaveMtime === "number" &&
     typeof o.rollingWindowMinutes === "number" &&
-    typeof o.trackCubeExp === "boolean" &&
     o.tracker !== null &&
     typeof o.tracker === "object" &&
     o.ui !== null &&

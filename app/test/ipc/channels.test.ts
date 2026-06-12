@@ -20,6 +20,8 @@ describe("IPC channel registry", () => {
     expect(preload).toContain("IPC.CLEAR_BOX_TRACKER_COOLDOWN");
     expect(preload).toContain("IPC.SET_BOX_TRACKER_FARM_STAGE");
     expect(preload).toContain("IPC.CLEAR_BOX_TRACKER_FARM_STAGE");
+    expect(preload).toContain("IPC.SET_BOX_TRACKER_NOTIFY");
+    expect(preload).toContain("IPC.PREVIEW_CHEST_SOUND");
     expect(preload).toContain("IPC.SAVE_CONFIG");
     expect(preload).toContain("IPC.PICK_SAVE_FILE");
     expect(preload).toContain("IPC.PRICES_REFRESH");
@@ -81,6 +83,9 @@ describe("IPC channel registry", () => {
     expect(chests).toContain("IPC.CHESTS");
     expect(pets).toContain("IPC.PETS");
     expect(boxTimers).toContain("IPC.BOX_TIMERS");
+    const chestHandlers = readHandler("chests");
+    expect(chestHandlers).toContain("IPC.SET_BOX_TRACKER_NOTIFY");
+    expect(chestHandlers).toContain("IPC.PREVIEW_CHEST_SOUND");
     const updates = readFileSync(
       join(__dirname, "../../src/main/services/UpdateService.ts"),
       "utf-8",

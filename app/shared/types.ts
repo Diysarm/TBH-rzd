@@ -10,8 +10,6 @@ export interface HeroSnapshot {
 export interface SaveSnapshot {
   heroes: HeroSnapshot[];
   totalHeroExp: number;
-  cubeLevel: number;
-  cubeExp: number;
   playTime: number;
   saveMtime: number; // epoch seconds (file mtime)
   stageKey: number;
@@ -73,7 +71,6 @@ export interface TrackerSnapshot {
   lastGainMtime: number | null;
   prevHero: Record<string, number>;
   heroMeters: Record<string, TrackerRateMeterSnapshot>;
-  prevCube: number | null;
   samples: Array<[number, number]>;
   initialized: boolean;
   firstMtime: number | null;
@@ -99,7 +96,6 @@ export interface PersistedSessionState {
   savePath: string;
   lastSaveMtime: number;
   rollingWindowMinutes: number;
-  trackCubeExp: boolean;
   tracker: TrackerSnapshot;
   ui: SessionUiSnapshot;
 }
@@ -225,15 +221,19 @@ export interface PriceRefreshResult {
   error?: string;
 }
 
+export type ChestSoundVariant = "none" | "soft-chime" | "double-tap" | "wood-tick" | "whisper-ping";
+
 export interface AppConfig {
   savePath: string;
   es3Password: string;
   pollIntervalSeconds: number;
   rollingWindowMinutes: number;
-  trackCubeExp: boolean;
   startTopmost: boolean;
   logHistoryCsv: boolean;
   currency: string;
+  notificationsEnabled: boolean;
+  notifyOnUpdateAvailable: boolean;
+  chestSoundVariant: ChestSoundVariant;
 }
 
 /** Scoped targets for Settings → Data & cache clear actions. */
@@ -401,6 +401,7 @@ export interface BoxTimerCatalogEntry {
   cooldownSeconds: number;
   cooldownIsCustom: boolean;
   enabled: boolean;
+  notifyWhenReady: boolean;
 }
 
 export interface BoxTimerState {
@@ -475,6 +476,8 @@ export interface TbhApi {
   clearBoxTrackerCooldown(boxId: number): Promise<BoxTimerState>;
   setBoxTrackerFarmStage(boxId: number, stageKey: number): Promise<BoxTimerState>;
   clearBoxTrackerFarmStage(boxId: number): Promise<BoxTimerState>;
+  setBoxTrackerNotify(boxId: number, enabled: boolean): Promise<BoxTimerState>;
+  previewChestSound(variant?: ChestSoundVariant): Promise<void>;
   getUpdateStatus(): Promise<UpdateStatus>;
   checkForUpdates(): Promise<UpdateStatus>;
   downloadUpdate(): Promise<UpdateStatus>;

@@ -13,6 +13,7 @@ import type {
   PriceProgress,
   PriceRefreshResult,
   AppConfig,
+  ChestSoundVariant,
   AppDataClearTarget,
   AppDataPaths,
   ClearAppDataResult,
@@ -106,6 +107,12 @@ const api: TbhApi = {
   },
   clearBoxTrackerFarmStage(boxId: number): Promise<BoxTimerState> {
     return ipcRenderer.invoke(IPC.CLEAR_BOX_TRACKER_FARM_STAGE, boxId);
+  },
+  setBoxTrackerNotify(boxId: number, enabled: boolean): Promise<BoxTimerState> {
+    return ipcRenderer.invoke(IPC.SET_BOX_TRACKER_NOTIFY, boxId, enabled);
+  },
+  previewChestSound(variant?: ChestSoundVariant): Promise<void> {
+    return ipcRenderer.invoke(IPC.PREVIEW_CHEST_SOUND, variant);
   },
   pricesStatus(): Promise<PriceStatus> {
     return ipcRenderer.invoke(IPC.PRICES_STATUS);

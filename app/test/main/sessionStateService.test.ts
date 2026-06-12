@@ -19,18 +19,18 @@ const config: AppConfig = {
   es3Password: "x",
   pollIntervalSeconds: 5,
   rollingWindowMinutes: 5,
-  trackCubeExp: false,
   startTopmost: true,
   logHistoryCsv: false,
   currency: "USD",
+  notificationsEnabled: true,
+  notifyOnUpdateAvailable: true,
+  chestSoundVariant: "soft-chime",
 };
 
 function snap(mtime: number, heroExp: number): SaveSnapshot {
   return {
     heroes: [{ key: "101", level: 1, exp: heroExp, unlocked: true }],
     totalHeroExp: heroExp,
-    cubeLevel: 0,
-    cubeExp: 0,
     playTime: 0,
     saveMtime: mtime,
     stageKey: 3205,
@@ -56,7 +56,7 @@ describe("SessionStateService", () => {
   }
 
   it("persists and restores tracker state for matching save", async () => {
-    const tracker = new XpTracker(300, false);
+    const tracker = new XpTracker(300);
     tracker.update(snap(1000, 0));
     tracker.update(snap(1060, 600));
 
@@ -68,7 +68,7 @@ describe("SessionStateService", () => {
 
     const svc2 = await loadService();
     svc2.load(config);
-    const fresh = new XpTracker(300, false);
+    const fresh = new XpTracker(300);
     expect(svc2.tryRestoreOnSnapshot(fresh, snap(1060, 600))).toBe("restored");
     fresh.update(snap(1060, 600));
     expect(fresh.cumulativeGained).toBe(600);
@@ -76,7 +76,7 @@ describe("SessionStateService", () => {
   });
 
   it("discards snapshot when save mtime rolled back", async () => {
-    const tracker = new XpTracker(300, false);
+    const tracker = new XpTracker(300);
     tracker.update(snap(2000, 0));
     tracker.update(snap(2060, 500));
 
@@ -85,7 +85,7 @@ describe("SessionStateService", () => {
 
     const svc2 = await loadService();
     svc2.load(config);
-    const fresh = new XpTracker(300, false);
+    const fresh = new XpTracker(300);
     expect(svc2.tryRestoreOnSnapshot(fresh, snap(1999, 500))).toBe("discarded");
     expect(svc2.getStatusOverride()).toBe("New session");
     expect(existsSync(join(userDataDir, SESSION_STATE_FILE))).toBe(false);
@@ -99,8 +99,7 @@ describe("SessionStateService", () => {
         savePath: "C:/other/save.es3",
         lastSaveMtime: 1,
         rollingWindowMinutes: 5,
-        trackCubeExp: false,
-        tracker: new XpTracker(300, false).captureSnapshot(),
+        tracker: new XpTracker(300).captureSnapshot(),
         ui: { miniOverlayOpen: true, boxTrackerOpen: true },
       }),
     );
@@ -112,7 +111,7 @@ describe("SessionStateService", () => {
   });
 
   it("writes reset session while keeping UI flags", async () => {
-    const tracker = new XpTracker(300, false);
+    const tracker = new XpTracker(300);
     tracker.update(snap(1000, 0));
     tracker.update(snap(1060, 600));
 

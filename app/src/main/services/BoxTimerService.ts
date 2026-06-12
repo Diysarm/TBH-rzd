@@ -19,6 +19,7 @@ import type {
 import { IPC } from "../../../shared/ipc";
 import { broadcast } from "./broadcast";
 import { createLogger } from "../log";
+import type { ChestReadyPayload } from "./NotificationService";
 
 const log = createLogger("boxTimers");
 
@@ -32,6 +33,7 @@ interface PersistedFile {
   enabledBoxIds?: number[];
   cooldownSecondsByBoxId?: Record<string, number>;
   idealStageKeyByBoxId?: Record<string, number>;
+  notifyWhenReadyByBoxId?: Record<string, boolean>;
 }
 
 export class BoxTimerService {
@@ -44,6 +46,9 @@ export class BoxTimerService {
   private enabledBoxIds = new Set<number>();
   private cooldownSecondsByBoxId = new Map<number, number>();
   private idealStageKeyByBoxId = new Map<number, number>();
+  private notifyWhenReadyByBoxId = new Map<number, boolean>();
+  private wasOnCooldown = new Map<number, boolean>();
+  private onChestReady: ((payload: ChestReadyPayload) => void) | null = null;
   private tickTimer: NodeJS.Timeout | null = null;
   private subscribers = 0;
   private currentStageKey = 0;
@@ -55,6 +60,7 @@ export class BoxTimerService {
       (a, b) => (this.boxById.get(a)?.level ?? 0) - (this.boxById.get(b)?.level ?? 0) || a - b,
     );
     this.load();
+    this.seedWasOnCooldown();
   }
 
   setCurrentStageKey(key: number): void {
@@ -112,6 +118,21 @@ export class BoxTimerService {
 
   clearTimer(boxId: number): BoxTimerState {
     this.timers.delete(boxId);
+    this.wasOnCooldown.delete(boxId);
+    return this.commitState();
+  }
+
+  setOnChestReady(callback: (payload: ChestReadyPayload) => void): void {
+    this.onChestReady = callback;
+  }
+
+  setBoxTrackerNotify(boxId: number, enabled: boolean): BoxTimerState {
+    if (!this.routeById.has(boxId)) return this.buildState();
+    if (enabled) {
+      this.notifyWhenReadyByBoxId.delete(boxId);
+    } else {
+      this.notifyWhenReadyByBoxId.set(boxId, false);
+    }
     return this.commitState();
   }
 
@@ -159,6 +180,8 @@ export class BoxTimerService {
     this.enabledBoxIds.clear();
     this.cooldownSecondsByBoxId.clear();
     this.idealStageKeyByBoxId.clear();
+    this.notifyWhenReadyByBoxId.clear();
+    this.wasOnCooldown.clear();
     for (const id of this.defaultEnabledIds()) this.enabledBoxIds.add(id);
     return this.commitState();
   }
@@ -180,6 +203,27 @@ export class BoxTimerService {
 
   private resolveCooldownSeconds(boxId: number): number {
     return this.cooldownSecondsByBoxId.get(boxId) ?? this.catalogFile.defaultCooldownSeconds ?? 720;
+  }
+
+  private seedWasOnCooldown(): void {
+    const now = Date.now();
+    for (const boxId of this.enabledBoxIds) {
+      const droppedAt = this.timers.get(boxId);
+      if (droppedAt === undefined) {
+        this.wasOnCooldown.set(boxId, false);
+        continue;
+      }
+      const cooldownSeconds = this.resolveCooldownSeconds(boxId);
+      const elapsed = (now - droppedAt) / 1000;
+      const remaining = Math.max(0, Math.ceil(cooldownSeconds - elapsed));
+      this.wasOnCooldown.set(boxId, remaining > 0);
+    }
+  }
+
+  private resolveNotifyWhenReady(boxId: number): boolean {
+    if (!this.enabledBoxIds.has(boxId)) return false;
+    const explicit = this.notifyWhenReadyByBoxId.get(boxId);
+    return explicit ?? true;
   }
 
   private resolveFarmStage(boxId: number): {
@@ -236,6 +280,7 @@ export class BoxTimerService {
         cooldownSeconds: this.resolveCooldownSeconds(boxId),
         cooldownIsCustom: this.cooldownSecondsByBoxId.has(boxId),
         enabled: this.enabledBoxIds.has(boxId),
+        notifyWhenReady: this.resolveNotifyWhenReady(boxId),
       };
     });
   }
@@ -281,10 +326,24 @@ export class BoxTimerService {
   private buildState(): BoxTimerState {
     const now = Date.now();
     const rows: BoxTimerRow[] = [];
+    const readyNotifications: ChestReadyPayload[] = [];
 
     for (const boxId of this.routeBoxIds) {
-      if (!this.enabledBoxIds.has(boxId)) continue;
-      rows.push(this.buildRow(boxId, now));
+      if (!this.enabledBoxIds.has(boxId)) {
+        this.wasOnCooldown.delete(boxId);
+        continue;
+      }
+      const prevOnCooldown = this.wasOnCooldown.get(boxId) ?? false;
+      const row = this.buildRow(boxId, now);
+      if (prevOnCooldown && !row.active && this.resolveNotifyWhenReady(boxId)) {
+        readyNotifications.push({ boxId, name: row.name, level: row.level });
+      }
+      this.wasOnCooldown.set(boxId, row.active);
+      rows.push(row);
+    }
+
+    for (const payload of readyNotifications) {
+      this.onChestReady?.(payload);
     }
 
     rows.sort((a, b) => {
@@ -349,6 +408,12 @@ export class BoxTimerService {
           this.idealStageKeyByBoxId.set(id, key);
         }
       }
+      for (const [boxId, notify] of Object.entries(raw.notifyWhenReadyByBoxId ?? {})) {
+        const id = Number(boxId);
+        if (id > 0 && this.routeById.has(id)) {
+          this.notifyWhenReadyByBoxId.set(id, Boolean(notify));
+        }
+      }
       const enabled = raw.enabledBoxIds?.filter((id) => this.routeById.has(id)) ?? [];
       if (enabled.length > 0) {
         for (const id of enabled) this.enabledBoxIds.add(id);
@@ -358,6 +423,7 @@ export class BoxTimerService {
     } catch {
       for (const id of this.defaultEnabledIds()) this.enabledBoxIds.add(id);
     }
+    this.seedWasOnCooldown();
   }
 
   private persist(): void {
@@ -369,6 +435,9 @@ export class BoxTimerService {
     }));
     const cooldownSecondsByBoxId = Object.fromEntries(this.cooldownSecondsByBoxId);
     const idealStageKeyByBoxId = Object.fromEntries(this.idealStageKeyByBoxId);
+    const notifyWhenReadyByBoxId = Object.fromEntries(
+      [...this.notifyWhenReadyByBoxId.entries()].filter(([, enabled]) => !enabled),
+    );
     writeFileSync(
       path,
       JSON.stringify(
@@ -377,6 +446,7 @@ export class BoxTimerService {
           enabledBoxIds: [...this.enabledBoxIds],
           cooldownSecondsByBoxId,
           idealStageKeyByBoxId,
+          notifyWhenReadyByBoxId,
         },
         null,
         2,
