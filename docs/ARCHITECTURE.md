@@ -12,6 +12,8 @@ flowchart LR
     Watcher[SaveWatcher]
     Tracking[TrackingService]
     InventorySvc[InventoryService]
+    BoxTimers[BoxTimerService]
+    Notify[NotificationService]
     Es3[es3 decrypt]
     Parser[parseSnapshot / parseInventory]
     Tracker[XpTracker]
@@ -66,9 +68,33 @@ logger. See `docs/DIAGNOSTIC_LOGGING.md` for how agents should add logs to new f
 
 Two `BrowserWindow`s load the same Vite bundle on different routes:
 
-- **Full companion window** — resizable, tabbed (Live / Inventory / Market / Settings).
+- **Full companion window** — resizable, tabbed (Live / Inventory / Market / Chests / Pets /
+  Settings / About).
 - **Mini overlay** (`/overlay`) — frameless, always-on-top, draggable, compact;
   toggled from the tab bar **Mini** button.
+- **Stage chest tracker** (`/box-tracker`) — frameless overlay for tracked cooldown timers;
+  opened from the Chests tab or toolbar.
+
+## Notifications
+
+`NotificationService` (main) reads `AppConfig` notification fields:
+
+- **`notificationsEnabled`** — master gate for all notification behavior.
+- **`notifyOnUpdateAvailable`** — when enabled, `UpdateService` triggers a Windows OS
+  notification (Electron `Notification`) for a new GitHub release; click focuses the main window.
+- **Chest cooldown ready** — `BoxTimerService` calls `showChestReady` when a tracked route's
+  cooldown finishes and **Notify when ready** is on for that box. This plays a bundled WAV via
+  PowerShell (`chestSoundVariant`: `soft-chime`, `double-tap`, `wood-tick`, `whisper-ping`, or
+  `none`). No OS toast for chest ready.
+
+Per-box notify toggles live in `box_timers.json` (Chests tab), not in `config.json`. Settings
+exposes **Preview sound** over IPC to audition the selected variant.
+
+## Settings persistence
+
+The Settings tab patches `config.json` through IPC on each change (`savePartial` →
+`saveConfig` in main). There is no Save/Reset bar. Changing **rolling window (minutes)** still
+prompts for confirmation in the renderer because it resets live session stats via `configPatch`.
 
 ## Data flow (live stats)
 

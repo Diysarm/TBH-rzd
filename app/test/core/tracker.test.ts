@@ -6,8 +6,6 @@ function snap(mtime: number, heroExp: number, gold = 0): SaveSnapshot {
   return {
     heroes: [{ key: "101", level: 1, exp: heroExp, unlocked: true }],
     totalHeroExp: heroExp,
-    cubeLevel: 0,
-    cubeExp: 0,
     playTime: 0,
     saveMtime: mtime,
     stageKey: 3205,
@@ -19,14 +17,14 @@ function snap(mtime: number, heroExp: number, gold = 0): SaveSnapshot {
 
 describe("XpTracker", () => {
   it("returns 0 and sets no rate on the first (init) update", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     expect(t.update(snap(1000, 500))).toBe(0);
     expect(t.rollingRate).toBe(0);
     expect(t.cumulativeGained).toBe(0);
   });
 
   it("computes XP/hour from the mtime span, not poll time", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     t.update(snap(1000, 0));
     const gain = t.update(snap(1060, 600)); // +600 over 60s -> 36000/hr
     expect(gain).toBe(600);
@@ -36,7 +34,7 @@ describe("XpTracker", () => {
   });
 
   it("holds the rate constant when XP does not change", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     t.update(snap(1000, 0));
     t.update(snap(1060, 600));
     const before = t.rollingRate;
@@ -46,7 +44,7 @@ describe("XpTracker", () => {
   });
 
   it("treats an XP drop (level-up reset) as a gain of the new value", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     t.update(snap(1000, 0));
     t.update(snap(1060, 600));
     const gain = t.update(snap(1120, 50)); // dropped 600 -> 50: counts 50
@@ -55,7 +53,7 @@ describe("XpTracker", () => {
   });
 
   it("records history entries only on XP change", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     t.update(snap(1000, 0));
     t.update(snap(1060, 600));
     t.update(snap(1120, 600)); // no change -> no history
@@ -67,7 +65,7 @@ describe("XpTracker", () => {
   });
 
   it("counts gold earned only, ignoring spending", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     t.update(snap(1000, 0, 1000));
     t.update(snap(1060, 0, 1500)); // +500 earned
     t.update(snap(1120, 0, 1200)); // spent 300 -> ignored
@@ -77,7 +75,7 @@ describe("XpTracker", () => {
   });
 
   it("reset clears session state", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     t.update(snap(1000, 0));
     t.update(snap(1060, 600));
     t.reset();
@@ -88,10 +86,10 @@ describe("XpTracker", () => {
   });
 
   it("round-trips captureSnapshot and applySnapshot", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     t.update(snap(1000, 0));
     t.update(snap(1060, 600));
-    const copy = new XpTracker(300, false);
+    const copy = new XpTracker(300);
     copy.applySnapshot(t.captureSnapshot());
     expect(copy.cumulativeGained).toBe(600);
     expect(copy.rollingRate).toBeCloseTo(t.rollingRate, 5);
@@ -102,7 +100,7 @@ describe("XpTracker", () => {
   });
 
   it("secondsSinceGain uses save mtime and ignores reads without XP change", () => {
-    const t = new XpTracker(300, false);
+    const t = new XpTracker(300);
     t.update(snap(1000, 0));
     expect(t.secondsSinceGain).toBeNull();
 

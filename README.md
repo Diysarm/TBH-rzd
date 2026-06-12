@@ -80,14 +80,19 @@ CI uploads the NSIS installer plus `latest.yml` and `.blockmap` so the installed
   base slots plus rune nodes and settings bonuses, with progress bars per category.
 - **Stage boss chest tracker** — per-level cooldowns and farm stages on the Chests tab;
   always-on-top overlay with ready/cooling timers; mark **Dropped** manually or auto-detect
-  from **Player.log** when a stage boss chest drops.
+  from **Player.log** when a stage boss chest drops. Per-level **Notify when ready** toggles
+  play a sound cue when a cooldown finishes (no OS toast).
+- **Notifications** — master toggle in **Settings**; optional Windows notification when an
+  app update is available; chest-ready alerts are sound-only (Soft chime, Double tap, Wood tick,
+  Whisper ping, or None) with **Preview sound** to try a variant.
 - **Pets tab** — companion unlock progress from your save, passive bonuses, kill targets,
   best farm stages, and where each monster appears.
 - **About tab** — installed version, links to GitHub and release notes, and in-app updates
   from GitHub Releases (background check ~30s after startup; download/install only when you
   confirm in About).
 - **Settings tab** — edit `config.json` (save path, poll interval, rolling window, currency,
-  cube XP, CSV logging, always-on-top). Warns before settings that reset the session.
+  notifications, CSV logging, always-on-top). Changes save automatically; changing the rolling
+  window confirms first because it resets the session.
 - **Session restore** — live stats and rolling history resume after restart when your save
   and tracking settings are unchanged; Mini and stage chest tracker reopen if they were open
   when you quit.
@@ -104,10 +109,12 @@ Editable from the **Settings** tab or by hand. Stored under the app user-data fo
 | `es3Password` | ES3 decryption password | the game's built-in password |
 | `pollIntervalSeconds` | How often to re-read the save | `5` |
 | `rollingWindowMinutes` | Window for the "XP/hour" figure | `5` |
-| `trackCubeExp` | Also count Hero-dric Cube XP | `false` |
 | `startTopmost` | Keep main window on top | `true` |
 | `logHistoryCsv` | Append every XP change to `logs/xp_history.csv` | `true` |
 | `currency` | ISO code for Steam Market prices (`USD`, `EUR`, `BRL`, ...) | `USD` |
+| `notificationsEnabled` | Master switch for update toasts and chest-ready sounds | `true` |
+| `notifyOnUpdateAvailable` | Windows notification when a newer release is available | `true` |
+| `chestSoundVariant` | Sound when a tracked chest cooldown finishes (`soft-chime`, `double-tap`, `wood-tick`, `whisper-ping`, `none`) | `soft-chime` |
 
 If decryption stops working after a game update, the developer may have rotated
 the ES3 password; update `es3Password` and restart. See `docs/SAVE_FORMAT.md`.

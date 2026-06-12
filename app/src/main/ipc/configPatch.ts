@@ -29,7 +29,7 @@ export function applyConfigPatch(deps: ConfigPatchDeps, patch: Partial<AppConfig
     patch.savePath !== undefined ||
     patch.pollIntervalSeconds !== undefined ||
     patch.es3Password !== undefined;
-  const needsTracker = patch.rollingWindowMinutes !== undefined || patch.trackCubeExp !== undefined;
+  const needsTracker = patch.rollingWindowMinutes !== undefined;
   const csvToggled = patch.logHistoryCsv !== undefined;
 
   const prev = deps.getConfig();
@@ -58,7 +58,7 @@ export function applyConfigPatch(deps: ConfigPatchDeps, patch: Partial<AppConfig
   }
 
   if (needsTracker) {
-    const tracker = new TrackerCtor(next.rollingWindowMinutes * 60, next.trackCubeExp);
+    const tracker = new TrackerCtor(next.rollingWindowMinutes * 60);
     if (next.logHistoryCsv) tracker.onHistory = makeHistoryLogger();
     deps.setTracker(tracker);
   } else if (csvToggled) {

@@ -9,7 +9,6 @@ function baseConfig(): Config {
     es3Password: "test",
     pollIntervalSeconds: 5,
     rollingWindowMinutes: 5,
-    trackCubeExp: false,
     startTopmost: true,
     logHistoryCsv: true,
     currency: "USD",
@@ -29,7 +28,7 @@ describe("applyConfigPatch", () => {
           cfg = c;
         },
         saveConfig: vi.fn(),
-        getTracker: () => new XpTracker(300, false),
+        getTracker: () => new XpTracker(300),
         setTracker: vi.fn(),
         getMarket: () => market as never,
         restartWatcher: vi.fn(),
@@ -47,7 +46,7 @@ describe("applyConfigPatch", () => {
 
   it("updates CSV logger without recreating tracker when only logHistoryCsv toggles", () => {
     let cfg = baseConfig();
-    const tracker = new XpTracker(300, false);
+    const tracker = new XpTracker(300);
     tracker.onHistory = () => {};
     const setTracker = vi.fn();
 

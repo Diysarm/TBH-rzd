@@ -12,8 +12,10 @@ import { applyConfigPatch } from "../ipc/configPatch";
 import { clearDiagnosticLogs, createLogger, logRendererError } from "../log";
 import { clearAppDataFiles, getAppDataPaths } from "../services/appData";
 import { UpdateService } from "../services/UpdateService";
+import { NotificationService } from "../services/NotificationService";
 import type {
   AppDataClearTarget,
+  ChestSoundVariant,
   RendererLogPayload,
   SessionUiSnapshot,
 } from "../../../shared/types";
@@ -31,7 +33,25 @@ const inventory = new InventoryService();
 const chests = new ChestService();
 const pets = new PetService();
 const boxTimers = new BoxTimerService();
-const updates = new UpdateService();
+
+function focusMainWindow(): void {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+    return;
+  }
+  openMainWindow();
+  mainWindow?.show();
+  mainWindow?.focus();
+}
+
+const notifications = new NotificationService(() => config, focusMainWindow);
+const updates = new UpdateService({
+  getConfig: () => config,
+  onUpdateAvailable: (version) => notifications.showUpdateAvailable(version),
+});
+
+boxTimers.setOnChestReady((payload) => notifications.showChestReady(payload));
 const tracking = new TrackingService(
   (snap) => inventory.onInventory(snap),
   (text, mtime) => {
@@ -143,6 +163,9 @@ export function getAppServices() {
     setBoxTrackerFarmStage: (boxId: number, stageKey: number) =>
       boxTimers.setFarmStageKey(boxId, stageKey),
     clearBoxTrackerFarmStage: (boxId: number) => boxTimers.clearFarmStageOverride(boxId),
+    setBoxTrackerNotify: (boxId: number, enabled: boolean) =>
+      boxTimers.setBoxTrackerNotify(boxId, enabled),
+    previewChestSound: (variant?: ChestSoundVariant) => notifications.previewChestSound(variant),
     gameDataStatus: () => inventory.gameDataStatus(),
     refreshGameData: () => inventory.refreshGameData(),
     pricesStatus: () => inventory.pricesStatus(),

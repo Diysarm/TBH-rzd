@@ -7,7 +7,7 @@ function wrap(player: unknown): string {
 }
 
 describe("parseSnapshot", () => {
-  it("extracts heroes, gold, cube, and stage", () => {
+  it("extracts heroes, gold, and stage", () => {
     const player = {
       heroSaveDatas: [
         { heroKey: 101, HeroLevel: 5, HeroExp: 1234, IsUnLock: true },
@@ -18,7 +18,6 @@ describe("parseSnapshot", () => {
         { Key: 999, Quantity: 1 },
         { Key: GOLD_KEY, Quantity: 50000 },
       ],
-      cubeSaveLevelData: { Level: 2, Exp: 99 },
       commonSaveData: {
         playTime: 3600,
         currentStageKey: 3205,
@@ -32,8 +31,6 @@ describe("parseSnapshot", () => {
     expect(snap.heroes[0]).toEqual({ key: "101", level: 5, exp: 1234, unlocked: true });
     expect(snap.totalHeroExp).toBe(1234 + 766 + 0);
     expect(snap.gold).toBe(50000);
-    expect(snap.cubeLevel).toBe(2);
-    expect(snap.cubeExp).toBe(99);
     expect(snap.stageKey).toBe(3205);
     expect(snap.stageWave).toBe(7);
     expect(snap.maxStage).toBe(3209);

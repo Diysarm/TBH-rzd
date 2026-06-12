@@ -4,7 +4,22 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
-Nothing yet.
+### Notifications
+
+- **Enable notifications** master toggle in **Settings** controls update toasts and chest-ready sounds.
+- **Notify when an app update is available** shows a Windows notification when a newer release is found (requires the master toggle).
+- Stage boss chest cooldown ready alerts are **sound only** (no OS toast). Per-level **Notify when ready** toggles on the **Chests** tab choose which routes alert you.
+- Pick a chest-ready sound: **Soft chime**, **Double tap**, **Wood tick**, **Whisper ping**, or **None**.
+- **Preview sound** in Settings plays your current selection so you can hear a variant before moving on.
+
+### Settings
+
+- Settings save automatically as you change them — no **Save** or **Reset** buttons.
+- Changing **Rolling window (minutes)** still asks for confirmation because it resets the current session.
+
+### Live stats
+
+- Removed the **Hero-dric Cube XP** tracking option; live XP totals use hero XP only.
 
 ## [1.6.0] - 2026-06-11
 

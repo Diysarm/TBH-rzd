@@ -45,7 +45,7 @@ export class TrackingService {
 
   start(config: AppConfig): void {
     this.config = config;
-    this.tracker = new XpTracker(config.rollingWindowMinutes * 60, config.trackCubeExp);
+    this.tracker = new XpTracker(config.rollingWindowMinutes * 60);
     if (config.logHistoryCsv) {
       this.tracker.onHistory = makeHistoryLogger();
     }

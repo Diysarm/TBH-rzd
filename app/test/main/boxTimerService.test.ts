@@ -146,4 +146,56 @@ describe("BoxTimerService", () => {
     expect(svc.tryMarkDroppedFromLog(920004)).toBe(true);
     expect(svc.getState().rows.find((r) => r.boxId === 920003)?.status).toBe("cooldown");
   });
+
+  it("defaults notifyWhenReady to true and persists opt-out", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920151]);
+    expect(svc.getState().catalog.find((e) => e.boxId === 920151)?.notifyWhenReady).toBe(true);
+
+    svc.setBoxTrackerNotify(920151, false);
+    expect(svc.getState().catalog.find((e) => e.boxId === 920151)?.notifyWhenReady).toBe(false);
+
+    const svc2 = await loadService();
+    expect(svc2.getState().catalog.find((e) => e.boxId === 920151)?.notifyWhenReady).toBe(false);
+  });
+
+  it("fires chest-ready callback once on cooldown transition", async () => {
+    const onReady = vi.fn();
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920151]);
+    svc.setOnChestReady(onReady);
+    svc.setCooldownSeconds(920151, 60);
+    svc.markDropped(920151);
+
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.now() + 61_000);
+    svc.getState();
+    expect(onReady).toHaveBeenCalledTimes(1);
+    expect(onReady).toHaveBeenCalledWith(
+      expect.objectContaining({ boxId: 920151, level: expect.any(Number) }),
+    );
+
+    svc.getState();
+    expect(onReady).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("does not fire chest-ready on cold load of expired timer", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920151]);
+    svc.setCooldownSeconds(920151, 60);
+    svc.markDropped(920151);
+
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.now() + 120_000);
+    svc.getState();
+
+    const onReady = vi.fn();
+    const svc2 = await loadService();
+    svc2.setEnabledBoxIds([920151]);
+    svc2.setOnChestReady(onReady);
+    svc2.getState();
+    expect(onReady).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
 });

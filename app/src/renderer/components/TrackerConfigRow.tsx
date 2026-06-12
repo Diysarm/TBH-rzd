@@ -1,6 +1,7 @@
 import type { BoxTimerCatalogEntry } from "../../../shared/types";
 import { formatCooldownMinutes, parseCooldownMinutesInput } from "../lib/boxTrackerUi";
 import { TrackerFarmStageSelect } from "./TrackerFarmStageSelect";
+import { Field } from "./ui/Field";
 import { LinkButton } from "./ui/LinkButton";
 import { NumberField } from "./ui/NumberInput";
 import { cn } from "../lib/cn";
@@ -8,9 +9,11 @@ import { cn } from "../lib/cn";
 export function TrackerConfigRow({
   entry,
   defaultCooldownSeconds,
+  notificationsEnabled = true,
 }: {
   entry: BoxTimerCatalogEntry;
   defaultCooldownSeconds: number;
+  notificationsEnabled?: boolean;
 }) {
   const minutes = Math.round(entry.cooldownSeconds / 60);
 
@@ -71,6 +74,19 @@ export function TrackerConfigRow({
       </div>
 
       <TrackerFarmStageSelect entry={entry} />
+
+      <Field
+        label="Notify when ready"
+        checkbox
+        hint={!notificationsEnabled ? "Enable chest sounds in Settings." : undefined}
+      >
+        <input
+          type="checkbox"
+          checked={entry.notifyWhenReady}
+          disabled={!notificationsEnabled}
+          onChange={(e) => void window.tbh.setBoxTrackerNotify(entry.boxId, e.target.checked)}
+        />
+      </Field>
     </article>
   );
 }

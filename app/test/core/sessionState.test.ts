@@ -11,10 +11,12 @@ const config: AppConfig = {
   es3Password: "x",
   pollIntervalSeconds: 5,
   rollingWindowMinutes: 5,
-  trackCubeExp: false,
   startTopmost: true,
   logHistoryCsv: false,
   currency: "USD",
+  notificationsEnabled: true,
+  notifyOnUpdateAvailable: true,
+  chestSoundVariant: "soft-chime",
 };
 
 describe("sessionState", () => {
@@ -22,7 +24,6 @@ describe("sessionState", () => {
     const meta = {
       savePath: "C:/game/save.es3",
       rollingWindowMinutes: 5,
-      trackCubeExp: false,
     };
     expect(sessionMatchesConfig(meta, "C:/game/save.es3", config)).toBe(true);
     expect(sessionMatchesConfig(meta, "C:/other/save.es3", config)).toBe(false);
@@ -47,7 +48,6 @@ describe("sessionState", () => {
       savePath: "x",
       lastSaveMtime: 1,
       rollingWindowMinutes: 5,
-      trackCubeExp: false,
       tracker: {
         sessionStart: 1,
         cumulativeGained: 0,
@@ -59,7 +59,6 @@ describe("sessionState", () => {
         lastGainMtime: null,
         prevHero: {},
         heroMeters: {},
-        prevCube: null,
         samples: [],
         initialized: false,
         firstMtime: null,

@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
+import type { AppConfig } from "../../../shared/types";
 import { useBoxTimers } from "../lib/useBoxTimers";
+import { reportIpcError } from "../lib/reportError";
 import {
   applyTrackerPreset,
   enabledCatalogEntries,
@@ -14,6 +17,15 @@ import { cn } from "../lib/cn";
 
 export function ChestsTrackerPanel() {
   const state = useBoxTimers();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  useEffect(() => {
+    if (typeof window.tbh?.getConfig !== "function") return;
+    void window.tbh
+      .getConfig()
+      .then((config: AppConfig) => setNotificationsEnabled(config.notificationsEnabled))
+      .catch((err: unknown) => reportIpcError(err));
+  }, []);
 
   if (!state) {
     return (
@@ -56,6 +68,12 @@ export function ChestsTrackerPanel() {
           Open overlay
         </Button>
       </div>
+
+      {!notificationsEnabled ? (
+        <p className="m-0 text-xs text-muted">
+          Enable chest sounds in Settings to hear when tracked cooldowns finish.
+        </p>
+      ) : null}
 
       <PanelSection title="Levels to track">
         <div className="flex flex-wrap gap-1">
@@ -109,6 +127,7 @@ export function ChestsTrackerPanel() {
                 key={entry.boxId}
                 entry={entry}
                 defaultCooldownSeconds={state.defaultCooldownSeconds}
+                notificationsEnabled={notificationsEnabled}
               />
             ))}
           </div>

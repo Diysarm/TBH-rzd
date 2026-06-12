@@ -130,7 +130,6 @@ export class SessionStateService {
       savePath: this.savePath,
       lastSaveMtime: storedMtime,
       rollingWindowMinutes: config.rollingWindowMinutes,
-      trackCubeExp: config.trackCubeExp,
       tracker: tracker.captureSnapshot(),
       ui: { ...this.ui },
     };
