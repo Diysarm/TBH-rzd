@@ -2,7 +2,7 @@ import { BrowserWindow } from "electron";
 import { PRELOAD_SCRIPT } from "../paths";
 import { isAppQuitting } from "../tray/trayService";
 import { loadRenderer } from "./loadRenderer";
-import { setWindowIcon } from "../iconPaths";
+import { appIconImage, setWindowIcon } from "../iconPaths";
 import { MAIN_WINDOW_HEIGHT, MAIN_WINDOW_MIN_HEIGHT, MAIN_WINDOW_WIDTH } from "./constants";
 import { applyWindowTopmost } from "./alwaysOnTop";
 
@@ -20,6 +20,7 @@ export function createMainWindow(
     return existing;
   }
 
+  const icon = appIconImage();
   const win = new BrowserWindow({
     width: MAIN_WINDOW_WIDTH,
     height: MAIN_WINDOW_HEIGHT,
@@ -29,6 +30,7 @@ export function createMainWindow(
     show: false,
     backgroundColor: "#0f1117",
     autoHideMenuBar: true,
+    ...(icon.isEmpty() ? {} : { icon }),
     webPreferences: {
       preload: PRELOAD_SCRIPT,
       sandbox: false,
