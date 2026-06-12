@@ -1,31 +1,35 @@
 import { app, nativeImage, type BrowserWindow } from "electron";
 import { join } from "node:path";
 
-const ICON_DIR = join(app.getAppPath(), "..", "docs", "design", "icons");
-
-function packagedIcon(name: string): string {
-  return join(process.resourcesPath, name);
+/** Bundled main lives in out/main/ — resolve repo icons relative to that. */
+function devIconsDir(): string {
+  return join(__dirname, "../../../docs/design/icons");
 }
 
-function devIcon(name: string): string {
-  return join(ICON_DIR, name);
+function windowIconFileName(): string {
+  return process.platform === "win32" ? "companion-icon.ico" : "companion-icon-256.png";
 }
 
 export function appIconPath(): string {
-  const name = "companion-icon-256.png";
-  return app.isPackaged ? packagedIcon(name) : devIcon(name);
+  if (app.isPackaged) {
+    return join(process.resourcesPath, windowIconFileName());
+  }
+  return join(devIconsDir(), windowIconFileName());
 }
 
 export function trayIconPath(): string {
-  const name = "tray-icon-32.png";
   if (app.isPackaged) {
-    return packagedIcon(name);
+    return join(process.resourcesPath, "tray-icon-32.png");
   }
-  return devIcon(name);
+  return join(devIconsDir(), "tray-icon-32.png");
+}
+
+export function appIconImage() {
+  return nativeImage.createFromPath(appIconPath());
 }
 
 export function setWindowIcon(win: BrowserWindow): void {
-  const image = nativeImage.createFromPath(appIconPath());
+  const image = appIconImage();
   if (!image.isEmpty()) {
     win.setIcon(image);
   }

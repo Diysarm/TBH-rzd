@@ -51,6 +51,10 @@
         "to": "companion-icon-256.png"
       },
       {
+        "from": "../docs/design/icons/companion-icon.ico",
+        "to": "companion-icon.ico"
+      },
+      {
         "from": "resources/sounds",
         "to": "sounds"
       }
