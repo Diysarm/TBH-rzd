@@ -4,6 +4,29 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-06-13
+
+### Notifications
+
+- **Notification sounds** in **Settings** now configure three alert types separately: **Chest drop** (Player.log or **Dropped**), **Chest ready** (cooldown finished), and **Hero level up** (level gain detected in your save).
+- Each type has its own **Enabled** toggle, **Sound** picker, and **Preview sound** button.
+- Added twelve new sounds (**Bright pop**, **Clear bell**, **Soft ding**, **Quick rise**, **Game blip**, **Arcade tone**, **Crystal chime**, **Happy ping**, **Magic spark**, **Level triumph**, **Treasure fanfare**, **Gentle alert**) in addition to the four from v1.7.0; pick **None (silent)** per type.
+- Existing **Chest ready** sound choices migrate automatically from the old single picker.
+
+### Market
+
+- Steam price refresh shows shared progress on **Market** and **Inventory** while a fetch runs, with a **Stop** control.
+- Refresh result messages are clearer when a run is queued, everything is already up to date, or inventory is not loaded yet.
+- Price fetching is more reliable (timeouts and stale cache cleanup).
+
+### App behavior
+
+- On Windows, the taskbar shows **TBH Companion** with the app icon instead of a generic Electron label.
+
+### Settings
+
+- Diagnostic logs are consolidated into **app.log**; the path shown under **Advanced — logs and cached data** reflects the single file.
+
 ## [1.7.0] - 2026-06-11
 
 ### Notifications
