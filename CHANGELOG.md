@@ -4,6 +4,16 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-06-14
+
+### Market
+
+- Updated the bundled item catalog from game-extracted data (v1.00.11). **Dimensional Arcana** gear and other items with corrected Steam tradability are now included in **Refresh prices** instead of being skipped as non-tradable.
+
+### Inventory
+
+- Item names and tradability flags in **Inventory** match the current game catalog (5885 items).
+
 ## [1.8.0] - 2026-06-13
 
 ### Notifications
