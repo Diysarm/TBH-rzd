@@ -4,6 +4,8 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-06-14
+
 ### App behavior
 
 - Main window, Mini overlay, and Stage boss chest tracker remember their position (and size where resizable) across restarts, including on multi-monitor setups. If a monitor is unplugged, windows fall back to the primary display.
