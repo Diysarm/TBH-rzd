@@ -3,6 +3,8 @@
 // Bundled snapshots use CATALOG_SOURCE. Refresh scrapes a public item list page
 // and enriches gear levels from per-item detail pages (see item-mapping docs).
 
+import { PRODUCT_NAME } from "../../shared/product";
+
 /** Neutral label stored in bundled/cache JSON (no external URLs). */
 export const CATALOG_SOURCE = "companion-item-catalog";
 
@@ -117,7 +119,7 @@ export function extractItemsFromHtml(
 
 export async function fetchLevelForItemId(itemId: number): Promise<number | null> {
   const res = await fetch(`${TBH_ITEM_BASE}/${itemId}`, {
-    headers: { "User-Agent": "Mozilla/5.0 (TBH Companion)" },
+    headers: { "User-Agent": `Mozilla/5.0 (${PRODUCT_NAME})` },
   });
   if (!res.ok) return null;
   return extractLevelFromDetailHtml(await res.text());

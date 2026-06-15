@@ -9,9 +9,9 @@ import {
   type WindowLayoutApplyOptions,
 } from "./windowLayout";
 
-/** Mini overlay — keep in sync with `OverlayFrame` (px-2.5 py-1.5) and readout rows. */
-export const OVERLAY_WIDTH = 280;
-export const OVERLAY_HEIGHT = 94;
+/** Mini overlay — keep in sync with compact `OverlayFrame` + readout rows. */
+export const OVERLAY_WIDTH = 260;
+export const OVERLAY_HEIGHT = 72;
 
 const OVERLAY_LAYOUT_OPTIONS: WindowLayoutApplyOptions = {
   defaults: { width: OVERLAY_WIDTH, height: OVERLAY_HEIGHT },
@@ -47,7 +47,7 @@ export function createOverlayWindow(
     resizable: false,
     alwaysOnTop: topmost,
     skipTaskbar: true,
-    backgroundColor: "#0f1117",
+    backgroundColor: "#0a0812",
     webPreferences: {
       preload: PRELOAD_SCRIPT,
       sandbox: false,

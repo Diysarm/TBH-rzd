@@ -1,13 +1,7 @@
-import { Notification, app } from "electron";
-import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { PRODUCT_NAME } from "../../../shared/product";
+import { Notification } from "electron";
 
-import {
-  notificationSoundFile,
-  type NotificationKindId,
-  type NotificationSoundId,
-} from "../../../shared/notificationCatalog";
+import type { NotificationSoundId } from "../../../shared/notificationCatalog";
 import type { AppConfig } from "../../../shared/types";
 import { createLogger } from "../log";
 
@@ -52,69 +46,17 @@ export class NotificationService {
 
     const notification = new Notification({
       title: "Update available",
-      body: `TBH Companion v${version} is available. Open About to download.`,
+      body: `${PRODUCT_NAME} v${version} is available. Open About to download.`,
     });
     notification.on("click", () => this.focusMainWindow());
     notification.show();
   }
 
-  showChestDrop(_payload: ChestEventPayload): void {
-    this.playKindSound("chestDrop");
-  }
+  showChestDrop(_payload: ChestEventPayload): void {}
 
-  showChestReady(_payload: ChestEventPayload): void {
-    this.playKindSound("chestReady");
-  }
+  showChestReady(_payload: ChestEventPayload): void {}
 
-  /** Plays once per save poll even when multiple heroes level up together. */
-  showHeroLevelUp(events: HeroLevelUpPayload[]): void {
-    if (events.length === 0) return;
-    this.playKindSound("heroLevelUp");
-  }
+  showHeroLevelUp(_events: HeroLevelUpPayload[]): void {}
 
-  previewNotificationSound(soundId: NotificationSoundId): void {
-    const config = this.getConfig();
-    if (!config.notificationsEnabled) return;
-    this.playSound(soundId);
-  }
-
-  private playKindSound(kind: NotificationKindId): void {
-    const config = this.getConfig();
-    if (!config.notificationsEnabled) return;
-    const pref = config.notificationPrefs[kind];
-    if (!pref.enabled) return;
-    this.playSound(pref.sound);
-  }
-
-  private playSound(soundId: NotificationSoundId): void {
-    if (soundId === "none") return;
-    const path = resolveSoundPath(soundId);
-    if (!path) return;
-    if (!existsSync(path)) {
-      log.warn(`Notification sound file missing: ${path}`);
-      return;
-    }
-    if (process.platform !== "win32") {
-      log.debug(`Notification sound playback skipped on ${process.platform}`);
-      return;
-    }
-    const escaped = path.replace(/'/g, "''");
-    execFile(
-      "powershell",
-      ["-NoProfile", "-Command", `(New-Object Media.SoundPlayer '${escaped}').PlaySync()`],
-      { windowsHide: true },
-      (err) => {
-        if (err) log.warn(`Notification sound playback failed: ${err.message}`);
-      },
-    );
-  }
-}
-
-export function resolveSoundPath(soundId: NotificationSoundId): string {
-  const filename = notificationSoundFile(soundId);
-  if (!filename) return "";
-  if (app.isPackaged) {
-    return join(process.resourcesPath, "sounds", filename);
-  }
-  return join(app.getAppPath(), "resources", "sounds", filename);
+  previewNotificationSound(_soundId: NotificationSoundId): void {}
 }

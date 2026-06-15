@@ -18,6 +18,7 @@ vi.mock("../../src/main/playerLogWatcher", () => ({
   PlayerLogWatcher: class {
     start = vi.fn();
     stop = vi.fn();
+    pollNow = vi.fn();
   },
 }));
 

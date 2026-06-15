@@ -49,7 +49,7 @@ describe("BoxTimerService", () => {
     expect(state.enabledCount).toBe(4);
     expect(state.rows).toHaveLength(4);
     expect(state.catalog).toHaveLength(14);
-    expect(state.defaultCooldownSeconds).toBe(720);
+    expect(state.defaultCooldownSeconds).toBe(780);
   });
 
   it("toggles enabled boxes and persists selection", async () => {
@@ -90,13 +90,46 @@ describe("BoxTimerService", () => {
     expect(svc.getState().rows.find((r) => r.boxId === 920151)?.cooldownIsCustom).toBe(true);
 
     svc.clearCooldownOverride(920151);
-    expect(svc.getState().rows.find((r) => r.boxId === 920151)?.cooldownSeconds).toBe(720);
+    expect(svc.getState().rows.find((r) => r.boxId === 920151)?.cooldownSeconds).toBe(780);
     expect(svc.getState().rows.find((r) => r.boxId === 920151)?.cooldownIsCustom).toBe(false);
 
     const raw = JSON.parse(readFileSync(join(userDataDir, "box_timers.json"), "utf-8")) as {
       cooldownSecondsByBoxId?: Record<string, number>;
     };
     expect(raw.cooldownSecondsByBoxId?.["920151"]).toBeUndefined();
+  });
+
+  it("reduces active cooldown by clear time seconds", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920151]);
+    svc.setCooldownSeconds(920151, 780);
+    svc.setClearTimeSeconds(920151, 120);
+    svc.markDropped(920151);
+    const row = svc.getState().rows.find((r) => r.boxId === 920151);
+    expect(row?.effectiveCooldownSeconds).toBe(660);
+    expect(row?.remainingSeconds).toBe(660);
+    expect(row?.status).toBe("cooldown");
+  });
+
+  it("persists clear time overrides", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920151]);
+    svc.setClearTimeSeconds(920151, 200);
+    expect(svc.getState().catalog.find((e) => e.boxId === 920151)?.clearTimeSeconds).toBe(200);
+
+    const svc2 = await loadService();
+    expect(svc2.getState().catalog.find((e) => e.boxId === 920151)?.clearTimeSeconds).toBe(200);
+
+    svc2.clearClearTimeOverride(920151);
+    expect(svc2.getState().catalog.find((e) => e.boxId === 920151)?.clearTimeSeconds).toBe(0);
+  });
+
+  it("clamps clear time when base cooldown is lowered", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920151]);
+    svc.setClearTimeSeconds(920151, 300);
+    svc.setCooldownSeconds(920151, 240);
+    expect(svc.getState().catalog.find((e) => e.boxId === 920151)?.clearTimeSeconds).toBe(240);
   });
 
   it("includes drop stage range on catalog", async () => {
@@ -127,6 +160,15 @@ describe("BoxTimerService", () => {
     );
   });
 
+  it("resets cooldown when Player.log ItemKey repeats (upstream behavior)", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920151]);
+    expect(svc.tryMarkDroppedFromLog(920151)).toBe(true);
+    expect(svc.getState().rows.find((r) => r.boxId === 920151)?.status).toBe("cooldown");
+    expect(svc.tryMarkDroppedFromLog(920151)).toBe(true);
+    expect(svc.getState().rows.find((r) => r.boxId === 920151)?.status).toBe("cooldown");
+  });
+
   it("marks dropped from Player.log ItemKey for tracked boxes", async () => {
     const svc = await loadService();
     expect(svc.tryMarkDroppedFromLog(920151)).toBe(true);
@@ -145,6 +187,31 @@ describe("BoxTimerService", () => {
     svc.setEnabledBoxIds([920003]);
     expect(svc.tryMarkDroppedFromLog(920004)).toBe(true);
     expect(svc.getState().rows.find((r) => r.boxId === 920003)?.status).toBe("cooldown");
+  });
+
+  it("marks dropped when rare boss chest slot count rises on a tracked stage", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920501]);
+    svc.setCurrentStageKey(2305);
+    expect(svc.tryMarkDroppedFromSave([{ type: 1, quantity: 1 }])).toBe(false);
+    expect(svc.tryMarkDroppedFromSave([{ type: 1, quantity: 2 }])).toBe(true);
+    expect(svc.getState().rows.find((r) => r.boxId === 920501)?.status).toBe("cooldown");
+  });
+
+  it("marks dropped when rare stage-box count rises in itemSaveDatas", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920301]);
+    expect(svc.tryMarkDroppedFromInventory([{ itemKey: 920301 }])).toBe(false);
+    expect(svc.tryMarkDroppedFromInventory([{ itemKey: 920301 }, { itemKey: 920301 }])).toBe(true);
+    expect(svc.getState().rows.find((r) => r.boxId === 920301)?.status).toBe("cooldown");
+  });
+
+  it("ignores rare chest increase when stage has no tracked route", async () => {
+    const svc = await loadService();
+    svc.setEnabledBoxIds([920501]);
+    svc.setCurrentStageKey(9999);
+    expect(svc.tryMarkDroppedFromSave([{ type: 1, quantity: 1 }])).toBe(false);
+    expect(svc.tryMarkDroppedFromSave([{ type: 1, quantity: 2 }])).toBe(false);
   });
 
   it("defaults notifyWhenReady to true and persists opt-out", async () => {

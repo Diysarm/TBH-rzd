@@ -58,7 +58,7 @@ export function createBoxTrackerWindow(
     minWidth: BOX_TRACKER_MIN_WIDTH,
     minHeight: BOX_TRACKER_MIN_HEIGHT,
     alwaysOnTop: topmost,
-    backgroundColor: "#0f1117",
+    backgroundColor: "#0a0812",
     ...(icon.isEmpty() ? {} : { icon }),
     webPreferences: {
       preload: PRELOAD_SCRIPT,
@@ -72,7 +72,10 @@ export function createBoxTrackerWindow(
   }
 
   applyWindowTopmost(win, topmost, true);
-  win.on("ready-to-show", () => win.show());
+  win.on("ready-to-show", () => {
+    setWindowIcon(win);
+    win.show();
+  });
   win.on("closed", () => {
     setWindow(null);
     onClose?.();

@@ -14,7 +14,7 @@ import type { SessionStateService } from "./SessionStateService";
 
 const log = createLogger("tracking");
 
-const PLAYER_LOG_POLL_MS = 1000;
+const PLAYER_LOG_POLL_MS = 250;
 
 export interface PlayerLogHooks {
   onDrop: (itemKey: number) => void;
@@ -162,6 +162,7 @@ export class TrackingService {
         }
         this.tracker.update(snap);
         this.onStageKey?.(snap.stageKey);
+        this.playerLogWatcher?.pollNow();
         this.pushStats();
       },
       onError: (message) => {

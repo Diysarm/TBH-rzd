@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../../shared/product";
 import "./appIdentity";
 import "./logInit";
 
@@ -36,7 +37,7 @@ if (isPrimaryInstance) {
 
   app.whenReady().then(() => {
     const appLog = createLogger("app");
-    appLog.info(`TBH Companion v${appVersion()} ready`);
+    appLog.info(`${PRODUCT_NAME} v${appVersion()} ready`);
     const sessionUi = startTracking();
     const services = getAppServices();
     registerIpc(services);

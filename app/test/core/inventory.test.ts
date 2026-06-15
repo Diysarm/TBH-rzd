@@ -93,6 +93,15 @@ describe("parseInventory", () => {
     expect(snap.chests).toEqual([]);
   });
 
+  it("parses BoxData from nested player JSON string when object unwrap is empty", () => {
+    const inner = `{"itemSaveDatas":[{"ItemKey":0}],"BoxData":{"BoxTypes":[1,0],"BoxQuantity":[2,5]}}`;
+    const snap = parseInventory(JSON.stringify({ PlayerSaveData: { value: inner } }), 0);
+    expect(snap.chests).toEqual([
+      { type: 1, quantity: 2 },
+      { type: 0, quantity: 5 },
+    ]);
+  });
+
   it("normalizes suffixed ItemKeys from newer saves", () => {
     const inner = `{
       "itemSaveDatas":[

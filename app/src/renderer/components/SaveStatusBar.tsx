@@ -12,8 +12,8 @@ export function SaveStatusBar() {
   const idle = since !== null && since > IDLE_THRESHOLD;
 
   let saveText: string;
-  if (!stats || !stats.connected) saveText = "Connecting to the save file...";
-  else if (since === null) saveText = "Waiting for the first save read...";
+  if (!stats || !stats.connected) saveText = "Connecting to save…";
+  else if (since === null) saveText = "Waiting for first save read…";
   else saveText = `Save written ${fmtAgo(since)}`;
 
   const showPlayerLog = Boolean(boxTimers?.playerLogPath);
@@ -22,18 +22,21 @@ export function SaveStatusBar() {
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 border-b border-border px-3.5 py-1.5 text-xs",
+        "flex items-center justify-between gap-3 border-b border-border/80 bg-panel/60 px-4 py-2 text-xs backdrop-blur-sm",
         idle && "text-gold",
       )}
       role="status"
     >
       <div className="flex min-w-0 items-center gap-2">
         <span
-          className={cn("size-2 shrink-0 rounded-full bg-accent", idle && "bg-gold")}
+          className={cn(
+            "size-2 shrink-0 rounded-full shadow-[0_0_8px_currentColor]",
+            idle ? "bg-gold text-gold" : "bg-accent text-accent",
+          )}
           aria-hidden
         />
         <span>{saveText}</span>
-        {idle ? <span className="text-gold">- is the game running?</span> : null}
+        {idle ? <span className="text-gold">— is the game running?</span> : null}
       </div>
       {showPlayerLog ? (
         <div
@@ -45,7 +48,7 @@ export function SaveStatusBar() {
           <span
             className={cn(
               "size-2 shrink-0 rounded-full",
-              playerLogAvailable ? "bg-accent" : "bg-muted",
+              playerLogAvailable ? "bg-status-success" : "bg-muted",
             )}
             aria-hidden
           />

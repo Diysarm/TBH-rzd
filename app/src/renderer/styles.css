@@ -1,25 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0f1117;
-  --color-panel: #171a23;
-  --color-card: #1d212c;
-  --color-border: #2a2f3d;
-  --color-fg: #e8eaf0;
-  --color-muted: #8b93a7;
-  --color-accent: #5ad17a;
-  --color-accent-fg: #0c0f14;
-  --color-danger: #d15a5a;
-  --color-danger-fg: #f0a0a0;
-  --color-gold: #e8c45a;
-  --color-status-info: #5a9fd1;
-  --color-status-info-border: #3a6a8a;
-  --color-status-success: #6fcf97;
-  --color-status-success-border: #3d6b52;
-  --color-status-danger: #c94a4a;
-  --color-status-muted: #9aa3b5;
-  --color-ideal: #4aa3ff;
-  --font-sans: "Segoe UI", system-ui, sans-serif;
+  --color-bg: #0a0812;
+  --color-panel: #110e1a;
+  --color-card: #181422;
+  --color-border: #2a2438;
+  --color-fg: #f2ebe4;
+  --color-muted: #9a8fad;
+  --color-accent: #f0b429;
+  --color-accent-fg: #1a1208;
+  --color-danger: #e85d6c;
+  --color-danger-fg: #ffc9cf;
+  --color-gold: #ffd166;
+  --color-status-info: #6eb5ff;
+  --color-status-info-border: #3d5f8a;
+  --color-status-success: #5ee4b5;
+  --color-status-success-border: #2d6b58;
+  --color-status-danger: #e85d6c;
+  --color-status-muted: #8b7fa3;
+  --color-ideal: #c77dff;
+  --font-sans: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Cinzel", "Georgia", serif;
 }
 
 @layer base {
@@ -35,7 +36,27 @@
 
   body {
     @apply bg-bg font-sans text-sm text-fg select-none;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgb(157 78 221 / 0.12), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgb(240 180 41 / 0.06), transparent);
   }
+}
+
+.rzd-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.rzd-panel-glow {
+  box-shadow:
+    inset 0 1px 0 0 rgb(240 180 41 / 0.08),
+    0 4px 24px rgb(0 0 0 / 0.35);
+}
+
+.rzd-card-glow {
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.04),
+    0 2px 12px rgb(0 0 0 / 0.25);
 }
 
 /* Electron frameless window drag regions (Mini overlay + box tracker). */

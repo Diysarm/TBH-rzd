@@ -41,20 +41,24 @@ export function Live() {
         intro="Reads your save on a timer. XP and gold rates update when the game writes new progress—often up to three minutes apart, sometimes longer."
       />
 
-      <Card className="grid grid-cols-[auto_1fr_auto] items-center gap-x-[18px] gap-y-3.5 max-[560px]:grid-cols-[1fr_auto] max-[560px]:grid-rows-[auto_auto]">
+      <Card className="relative grid grid-cols-[auto_1fr_auto] items-center gap-x-5 gap-y-3.5 overflow-hidden border-accent/25 bg-gradient-to-br from-card via-panel/80 to-card max-[560px]:grid-cols-[1fr_auto] max-[560px]:grid-rows-[auto_auto]">
         <div
-          className="flex cursor-help items-baseline gap-2 max-[560px]:col-span-full"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgb(240_180_41/0.08),transparent_55%)]"
+          aria-hidden
+        />
+        <div
+          className="relative flex cursor-help items-baseline gap-2 max-[560px]:col-span-full"
           title={RATE_TIP}
         >
-          <span className="text-[40px] font-bold leading-none text-accent">
+          <span className="text-[42px] font-bold leading-none text-gold drop-shadow-sm">
             {fmtCompact(stats.rollingRate)}
           </span>
-          <span className="text-[13px] tracking-wide text-muted">XP / hr</span>
+          <span className="text-[13px] font-medium uppercase tracking-wider text-muted">XP / hr</span>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-1">
+        <div className="relative flex min-w-0 flex-col gap-1">
           <div
-            className="cursor-help text-[15px] font-semibold leading-tight text-gold"
+            className="cursor-help text-[15px] font-semibold leading-tight text-accent"
             title={GOLD_TIP}
           >
             {fmtCompact(stats.goldRate)} gold / hr
@@ -78,7 +82,7 @@ export function Live() {
 
         <Button
           size="sm"
-          className="self-center"
+          className="relative self-center"
           title="Reset session stats"
           onClick={() => window.tbh.reset()}
         >
@@ -106,7 +110,7 @@ export function Live() {
               >
                 <span className="font-semibold">{h.name}</span>
                 <span className="text-muted">Lv {h.level}</span>
-                <span className="tabular-nums text-accent">{fmtCompact(h.rate)}/hr</span>
+                <span className="tabular-nums text-gold">{fmtCompact(h.rate)}/hr</span>
               </DataListRow>
             ))}
           </DataList>
@@ -131,7 +135,7 @@ export function Live() {
                 className="grid grid-cols-[auto_auto_auto_1fr] items-center gap-3 tabular-nums"
               >
                 <span className="text-muted">{fmtClock(e.wallTime)}</span>
-                <span className="text-accent">+{fmtCompact(e.delta)}</span>
+                <span className="text-gold">+{fmtCompact(e.delta)}</span>
                 <span>{fmtCompact(e.rate)}/hr</span>
                 <span className="text-right text-muted">{stageName(e.stageKey, e.stageWave)}</span>
               </DataListRow>

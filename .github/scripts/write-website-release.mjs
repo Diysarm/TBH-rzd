@@ -7,7 +7,7 @@
 import { readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const repo = process.env.GITHUB_REPOSITORY || "lucasfevi/tbh-companion";
+const repo = process.env.GITHUB_REPOSITORY || "Diysarm/TBH-rzd";
 const tag = process.env.RELEASE_TAG;
 const version = process.env.RELEASE_VERSION;
 const releaseDir = join(process.cwd(), "app", "release");

@@ -47,12 +47,29 @@ export function formatCooldownMinutes(seconds: number): string {
   return `${minutes} min`;
 }
 
+export function formatEffectiveCooldown(
+  baseSeconds: number,
+  clearTimeSeconds: number,
+): string {
+  const effective = Math.max(0, baseSeconds - clearTimeSeconds);
+  if (clearTimeSeconds <= 0) return formatCooldownMinutes(baseSeconds);
+  return `${formatCooldownMinutes(effective)} (−${clearTimeSeconds}s clear)`;
+}
+
 export function parseCooldownMinutesInput(value: string): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   const minutes = Number(trimmed);
   if (!Number.isFinite(minutes) || minutes < 1 || minutes > 1440) return null;
   return Math.round(minutes * 60);
+}
+
+export function parseClearTimeSecondsInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return 0;
+  const seconds = Number(trimmed);
+  if (!Number.isFinite(seconds) || seconds < 0 || seconds > 3600) return null;
+  return Math.round(seconds);
 }
 
 export function enabledCatalogEntries(catalog: BoxTimerCatalogEntry[]): BoxTimerCatalogEntry[] {

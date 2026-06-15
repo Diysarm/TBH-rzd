@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../../../shared/product";
 import { app, Menu, Tray } from "electron";
 
 import type { AppServices } from "../app/appState";
@@ -18,7 +19,7 @@ export function createTray(services: AppServices): Tray {
   if (tray && !tray.isDestroyed()) return tray;
 
   tray = new Tray(trayImage());
-  tray.setToolTip("TBH Companion");
+  tray.setToolTip(PRODUCT_NAME);
 
   const menu = Menu.buildFromTemplate([
     {

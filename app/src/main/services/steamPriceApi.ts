@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../../../shared/product";
 import { currencyCode, parseMoney } from "../../core/steamPrice";
 import type { PriceEntry } from "./priceCache";
 
@@ -14,7 +15,7 @@ export async function fetchSteamPrice(
   let res: Response;
   try {
     res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (TBH Companion)" },
+      headers: { "User-Agent": `Mozilla/5.0 (${PRODUCT_NAME})` },
       signal: AbortSignal.timeout(30_000),
     });
   } catch {

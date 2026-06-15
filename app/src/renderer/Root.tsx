@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../../shared/product";
 import { App } from "./App";
 import { Overlay } from "./Overlay";
 import { BoxTracker } from "./BoxTracker";
@@ -21,7 +22,7 @@ export function Root() {
   };
 
   return (
-    <ErrorBoundary title="TBH Companion failed to start">
+    <ErrorBoundary title={`${PRODUCT_NAME} failed to start`}>
       <TbhProvider>{renderContent()}</TbhProvider>
     </ErrorBoundary>
   );

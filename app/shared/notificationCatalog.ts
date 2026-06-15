@@ -57,9 +57,9 @@ export type LegacyChestSoundVariant =
   | "whisper-ping";
 
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
-  chestDrop: { enabled: true, sound: "treasure-fanfare" },
-  chestReady: { enabled: true, sound: "soft-chime" },
-  heroLevelUp: { enabled: true, sound: "level-triumph" },
+  chestDrop: { enabled: false, sound: "none" },
+  chestReady: { enabled: false, sound: "none" },
+  heroLevelUp: { enabled: false, sound: "none" },
 };
 
 export function notificationSoundFile(soundId: NotificationSoundId): string {
@@ -109,6 +109,10 @@ export function migrateNotificationPrefs(
     notificationPrefs?: NotificationPrefs;
   }>,
 ): NotificationPrefs {
+  if (!raw.notificationPrefs && raw.chestSoundVariant === undefined) {
+    return sanitizeNotificationPrefs(DEFAULT_NOTIFICATION_PREFS);
+  }
+
   if (raw.notificationPrefs) {
     return sanitizeNotificationPrefs({
       ...DEFAULT_NOTIFICATION_PREFS,

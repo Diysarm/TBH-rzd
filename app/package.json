@@ -1,8 +1,8 @@
 {
   "name": "tbh-companion",
   "version": "1.10.0",
-  "description": "TBH: Task Bar Hero companion - live XP/gold tracking and inventory valuation.",
-  "author": "lucasfevi",
+  "description": "TBH Rzd — unofficial Task Bar Hero farming toolkit.",
+  "author": "Diysarm",
   "license": "MIT",
   "main": "./out/main/index.js",
   "scripts": {
@@ -21,19 +21,21 @@
     "qa": "node scripts/qa-gate.mjs",
     "qa:dev": "node scripts/qa-dev.mjs",
     "regenerate-gamedata": "vitest run --config vitest.regenerate.config.ts",
+    "build:icons": "node ../scripts/build-rzd-icons.mjs",
     "pack": "electron-vite build && electron-builder --dir",
+    "pack:portable": "npm run pack && node scripts/zip-portable.mjs",
     "dist": "electron-vite build && electron-builder"
   },
   "build": {
     "appId": "com.electron.tbh-companion",
-    "productName": "TBH Companion",
+    "productName": "TBH Rzd",
     "directories": {
       "output": "release"
     },
     "publish": {
       "provider": "github",
-      "owner": "lucasfevi",
-      "repo": "tbh-companion"
+      "owner": "Diysarm",
+      "repo": "TBH-rzd"
     },
     "files": [
       "out/**/*",
@@ -49,12 +51,12 @@
         "to": "tray-icon-32.png"
       },
       {
-        "from": "../docs/design/icons/companion-icon-256.png",
-        "to": "companion-icon-256.png"
+        "from": "../docs/design/icons/rzd-icon-256.png",
+        "to": "rzd-icon-256.png"
       },
       {
-        "from": "../docs/design/icons/companion-icon.ico",
-        "to": "companion-icon.ico"
+        "from": "../docs/design/icons/rzd-icon.ico",
+        "to": "rzd-icon.ico"
       },
       {
         "from": "resources/sounds",
@@ -63,13 +65,13 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "../docs/design/icons/companion-icon.ico"
+      "icon": "../docs/design/icons/rzd-icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "tbh-companion-setup-${version}.${ext}"
+      "artifactName": "tbh-rzd-setup-${version}.${ext}"
     }
   },
   "devDependencies": {

@@ -11,8 +11,10 @@ export function PanelSection({
   className?: string;
 }) {
   return (
-    <section className={cn("flex flex-col gap-1", className)}>
-      <h2 className="m-0 text-[13px] font-semibold uppercase tracking-wide text-muted">{title}</h2>
+    <section className={cn("flex flex-col gap-2", className)}>
+      <h2 className="rzd-display m-0 text-xs font-semibold uppercase tracking-[0.14em] text-accent/90">
+        {title}
+      </h2>
       {children}
     </section>
   );

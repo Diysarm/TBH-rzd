@@ -14,17 +14,23 @@ export function StatCard({
   className?: string;
 }) {
   return (
-    <Card padding="compact" className={cn("flex flex-col gap-1 bg-panel", className)}>
+    <Card
+      padding="compact"
+      className={cn(
+        "border-accent/10 bg-gradient-to-br from-panel to-card",
+        className,
+      )}
+    >
       {valueFirst ? (
-        <>
-          <div className="text-lg font-semibold">{value}</div>
-          <div className="text-[11px] uppercase tracking-wide text-muted">{label}</div>
-        </>
+        <div className="flex flex-col gap-1">
+          <div className="text-lg font-bold tabular-nums text-gold">{value}</div>
+          <div className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</div>
+        </div>
       ) : (
-        <>
-          <span className="text-[11px] uppercase tracking-wide text-muted">{label}</span>
-          <span className="text-lg font-semibold">{value}</span>
-        </>
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</span>
+          <span className="text-lg font-bold tabular-nums text-fg">{value}</span>
+        </div>
       )}
     </Card>
   );

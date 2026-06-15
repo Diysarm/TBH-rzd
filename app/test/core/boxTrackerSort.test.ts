@@ -10,6 +10,8 @@ function row(overrides: Partial<BoxTimerRow> & Pick<BoxTimerRow, "boxId" | "stat
     idealStageLabel: "Stage 1",
     cooldownSeconds: 720,
     cooldownIsCustom: false,
+    clearTimeSeconds: 0,
+    effectiveCooldownSeconds: 720,
     active: overrides.status === "cooldown",
     remainingSeconds: overrides.status === "cooldown" ? 300 : 0,
     progress: 0,

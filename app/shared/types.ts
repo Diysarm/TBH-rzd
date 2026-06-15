@@ -431,6 +431,8 @@ export interface BoxTimerRow {
   idealStageLabel: string;
   cooldownSeconds: number;
   cooldownIsCustom: boolean;
+  clearTimeSeconds: number;
+  effectiveCooldownSeconds: number;
   active: boolean;
   remainingSeconds: number;
   progress: number;
@@ -451,6 +453,7 @@ export interface BoxTimerCatalogEntry {
   dropStageRangeLabel: string;
   cooldownSeconds: number;
   cooldownIsCustom: boolean;
+  clearTimeSeconds: number;
   enabled: boolean;
   notifyWhenReady: boolean;
 }
@@ -528,6 +531,8 @@ export interface TbhApi {
   setBoxTrackerBoxes(boxIds: number[]): Promise<BoxTimerState>;
   setBoxTrackerCooldown(boxId: number, cooldownSeconds: number): Promise<BoxTimerState>;
   clearBoxTrackerCooldown(boxId: number): Promise<BoxTimerState>;
+  setBoxTrackerClearTime(boxId: number, clearTimeSeconds: number): Promise<BoxTimerState>;
+  clearBoxTrackerClearTime(boxId: number): Promise<BoxTimerState>;
   setBoxTrackerFarmStage(boxId: number, stageKey: number): Promise<BoxTimerState>;
   clearBoxTrackerFarmStage(boxId: number): Promise<BoxTimerState>;
   setBoxTrackerNotify(boxId: number, enabled: boolean): Promise<BoxTimerState>;

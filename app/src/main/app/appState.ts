@@ -62,6 +62,8 @@ const tracking = new TrackingService(
   (text, mtime) => {
     const inv = inventory.parseFromSave(text, mtime);
     chests.onSave(text, mtime, inv.chests);
+    boxTimers.tryMarkDroppedFromInventory(inv.items);
+    boxTimers.tryMarkDroppedFromSave(inv.chests);
     pets.onSave(text, mtime);
     return inv;
   },
@@ -100,6 +102,7 @@ export function startTracking(): SessionUiSnapshot {
   inventory.loadGameData();
   const ui = sessionState.load(config);
   tracking.start(config);
+  boxTimers.startTick();
   return ui;
 }
 
@@ -130,7 +133,6 @@ export function openMainWindow(): BrowserWindow {
     (w) => {
       mainWindow = w;
     },
-    () => config.startTopmost,
     config.windowLayout?.main,
     (entry) => persistWindowLayout("main", entry),
   );
@@ -186,6 +188,9 @@ export function getAppServices() {
     setBoxTrackerCooldown: (boxId: number, cooldownSeconds: number) =>
       boxTimers.setCooldownSeconds(boxId, cooldownSeconds),
     clearBoxTrackerCooldown: (boxId: number) => boxTimers.clearCooldownOverride(boxId),
+    setBoxTrackerClearTime: (boxId: number, clearTimeSeconds: number) =>
+      boxTimers.setClearTimeSeconds(boxId, clearTimeSeconds),
+    clearBoxTrackerClearTime: (boxId: number) => boxTimers.clearClearTimeOverride(boxId),
     setBoxTrackerFarmStage: (boxId: number, stageKey: number) =>
       boxTimers.setFarmStageKey(boxId, stageKey),
     clearBoxTrackerFarmStage: (boxId: number) => boxTimers.clearFarmStageOverride(boxId),
@@ -235,7 +240,7 @@ export function getAppServices() {
           getMarket: () => inventory.getMarket(),
           restartWatcher: () => tracking.restartWatcher(),
           setAlwaysOnTop: (v) => {
-            if (mainWindow && !mainWindow.isDestroyed()) applyWindowTopmost(mainWindow, v);
+            if (mainWindow && !mainWindow.isDestroyed()) applyWindowTopmost(mainWindow, false);
             if (overlayWindow && !overlayWindow.isDestroyed())
               applyWindowTopmost(overlayWindow, v, true);
             if (boxTrackerWindow && !boxTrackerWindow.isDestroyed())

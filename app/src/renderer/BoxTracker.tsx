@@ -1,81 +1,60 @@
 import { useBoxTimers, fmtTimer } from "./lib/useBoxTimers";
 import { stageName } from "../core/stages";
 import type { BoxTimerRow } from "../../shared/types";
-import {
-  boxTrackerRowsBySection,
-  boxTrackerSectionOrder,
-  formatCooldownMinutes,
-} from "./lib/boxTrackerUi";
-import { Button } from "./components/ui/Button";
-import { Badge } from "./components/ui/Badge";
-import { CapacityBar } from "./components/ui/CapacityBar";
-import { Card } from "./components/ui/Card";
+import { AlwaysOnTopIconPin } from "./components/AlwaysOnTopPin";
 import { IconButton } from "./components/ui/IconButton";
-import { LinkButton } from "./components/ui/LinkButton";
 import { OverlayFrame } from "./components/ui/OverlayFrame";
 import { cn } from "./lib/cn";
 
-function BoxTimerCard({ row }: { row: BoxTimerRow }) {
+function CompactTimerRow({ row }: { row: BoxTimerRow }) {
+  const onCooldown = row.status === "cooldown";
+
   return (
-    <Card
-      as="li"
-      padding="compact"
+    <li
       className={cn(
-        "border-l-[3px]",
-        row.status === "cooldown" && "border-l-status-info",
-        row.status === "ready" && "border-l-status-success",
-        row.atIdealStage && "shadow-[inset_0_0_0_1px] shadow-ideal/25",
+        "flex items-center gap-1 rounded border border-border/70 bg-card/50 px-1 py-0.5",
+        "border-l-2",
+        onCooldown ? "border-l-status-info" : "border-l-status-success",
+        row.atIdealStage && "ring-1 ring-ideal/20",
       )}
+      title={`${row.idealStageLabel}${row.clearTimeSeconds > 0 ? ` · −${row.clearTimeSeconds}s clear` : ""}`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline justify-between gap-2 text-xs">
-            <span className="font-semibold">Lv{row.level ?? "?"}</span>
-            <span
-              className={cn(
-                "truncate text-right text-[10px] leading-snug",
-                row.atIdealStage ? "font-medium text-ideal" : "text-muted",
-              )}
-            >
-              {row.idealStageLabel}
-            </span>
-          </div>
+      <span className="w-7 shrink-0 text-[11px] font-semibold tabular-nums">Lv{row.level ?? "?"}</span>
+      <span
+        className={cn(
+          "min-w-[3.25rem] shrink-0 text-center text-[10px] font-bold tabular-nums",
+          onCooldown ? "text-status-info" : "text-status-success",
+        )}
+      >
+        {onCooldown ? fmtTimer(row.remainingSeconds) : "OK"}
+      </span>
+      {onCooldown ? (
+        <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border/80">
+          <div
+            className="h-full rounded-full bg-status-info transition-[width]"
+            style={{ width: `${Math.round(row.progress * 100)}%` }}
+          />
         </div>
-        <Badge
-          variant={row.status === "ready" ? "statusReady" : "statusCooldown"}
-          className="shrink-0"
-        >
-          {row.status === "cooldown" ? fmtTimer(row.remainingSeconds) : "Ready"}
-        </Badge>
-      </div>
-      <p className="m-0 mt-1 text-[10px] text-muted">
-        Cooldown: {formatCooldownMinutes(row.cooldownSeconds)}
-        {row.cooldownIsCustom ? " (custom)" : ""}
-      </p>
-      {row.status === "cooldown" ? (
-        <>
-          <CapacityBar percent={row.progress * 100} variant="blue" compact className="mt-1" />
-          <div className="mt-1 flex items-center justify-between gap-2">
-            <span className="flex-1 text-xs text-muted">On cooldown</span>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => void window.tbh.clearBoxTimer(row.boxId)}
-            >
-              Reset
-            </Button>
-          </div>
-        </>
       ) : (
-        <Button
-          variant="success"
-          className="mt-1 w-full"
-          onClick={() => void window.tbh.markBoxDropped(row.boxId)}
-        >
-          Dropped
-        </Button>
+        <span className="min-w-0 flex-1 truncate text-[9px] text-muted">{row.idealStageLabel}</span>
       )}
-    </Card>
+      <button
+        type="button"
+        className={cn(
+          "shrink-0 cursor-pointer rounded border px-1.5 py-0 text-[10px] font-semibold leading-5",
+          onCooldown
+            ? "border-border bg-transparent text-muted hover:text-fg"
+            : "border-status-success-border bg-status-success/15 text-status-success hover:bg-status-success/25",
+        )}
+        onClick={() =>
+          void (onCooldown
+            ? window.tbh.clearBoxTimer(row.boxId)
+            : window.tbh.markBoxDropped(row.boxId))
+        }
+      >
+        {onCooldown ? "Rst" : "Drop"}
+      </button>
+    </li>
   );
 }
 
@@ -84,41 +63,24 @@ export function BoxTracker() {
 
   if (!state) {
     return (
-      <OverlayFrame>
-        <p className="m-0 text-muted">Loading…</p>
+      <OverlayFrame density="compact">
+        <p className="m-0 text-[11px] text-muted">Loading…</p>
       </OverlayFrame>
     );
   }
 
   const currentLabel = stageName(state.currentStageKey);
-  const sections = boxTrackerSectionOrder(state.sortOrder);
-
-  const sectionContent = {
-    cooldown: {
-      title: "On cooldown",
-      rows: boxTrackerRowsBySection(state.rows, "cooldown"),
-    },
-    ready: {
-      title: "Ready to mark",
-      rows: boxTrackerRowsBySection(state.rows, "ready"),
-    },
-  } as const;
 
   return (
-    <OverlayFrame>
-      <div className="flex shrink-0 items-center justify-between">
-        <span className="drag-handle whitespace-nowrap text-[10px] font-bold tracking-wide text-muted">
-          Stage boss chest tracker
-        </span>
-        <div className="no-drag flex gap-1">
-          <IconButton
-            type="button"
-            title="Minimize"
-            onClick={() => window.tbh.minimizeBoxTracker()}
-          >
+    <OverlayFrame density="compact">
+      <div className="drag-handle flex shrink-0 items-center justify-between gap-1">
+        <span className="truncate text-[10px] font-semibold text-muted">Boss chests</span>
+        <div className="no-drag flex shrink-0 items-center gap-0.5">
+          <AlwaysOnTopIconPin />
+          <IconButton type="button" title="Minimize" onClick={() => window.tbh.minimizeBoxTracker()}>
             {"\u2212"}
           </IconButton>
-          <IconButton type="button" title="Open full window" onClick={() => window.tbh.showMain()}>
+          <IconButton type="button" title="Open main window" onClick={() => window.tbh.showMain()}>
             {"\u2922"}
           </IconButton>
           <IconButton
@@ -132,44 +94,25 @@ export function BoxTracker() {
         </div>
       </div>
 
-      <div className="no-drag flex flex-wrap gap-1.5">
-        <Badge variant="info">{state.cooldownCount} cooling</Badge>
-        <Badge variant="success">{state.readyCount} ready</Badge>
-        <Badge variant="muted">Stage: {currentLabel}</Badge>
+      <div className="no-drag flex shrink-0 items-center gap-1.5 text-[9px] text-muted">
+        <span className="text-status-info">{state.cooldownCount} cd</span>
+        <span aria-hidden>·</span>
+        <span className="text-status-success">{state.readyCount} ok</span>
+        <span aria-hidden>·</span>
+        <span className="truncate" title={currentLabel}>
+          {currentLabel}
+        </span>
       </div>
 
-      <p className="no-drag m-0 break-words text-[10px] text-muted">
-        Tap Dropped when a boss chest drops, or rely on Player.log auto-detect.
-      </p>
-
       {state.rows.length === 0 ? (
-        <p className="no-drag m-0 text-center text-xs text-muted">
-          No levels tracked. Open the Chests tab to pick boxes and set cooldowns.
-        </p>
+        <p className="no-drag m-0 text-center text-[10px] text-muted">No levels tracked.</p>
       ) : (
-        <div className="no-drag flex min-h-0 flex-1 flex-col gap-2.5 overflow-auto">
-          {sections.map((section) => {
-            const { title, rows } = sectionContent[section];
-            if (rows.length === 0) return null;
-            return (
-              <section key={section} className="flex flex-col gap-1.5">
-                <h3 className="m-0 text-[11px] font-bold uppercase tracking-wide text-muted">
-                  {title}
-                </h3>
-                <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                  {rows.map((row) => (
-                    <BoxTimerCard key={row.boxId} row={row} />
-                  ))}
-                </ul>
-              </section>
-            );
-          })}
-        </div>
+        <ul className="no-drag m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-0">
+          {state.rows.map((row) => (
+            <CompactTimerRow key={row.boxId} row={row} />
+          ))}
+        </ul>
       )}
-
-      <LinkButton className="no-drag self-start text-[10px]" onClick={() => window.tbh.showMain()}>
-        Configure on Chests tab
-      </LinkButton>
     </OverlayFrame>
   );
 }

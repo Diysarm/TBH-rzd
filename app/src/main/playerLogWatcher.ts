@@ -43,6 +43,11 @@ export class PlayerLogWatcher {
     }
   }
 
+  /** Immediate tail read — e.g. when the save file updates (game often flushes Player.log then). */
+  pollNow(): void {
+    this.tick();
+  }
+
   private seekToEnd(): void {
     try {
       this.offset = statSync(this.opts.path).size;
@@ -63,13 +68,30 @@ export class PlayerLogWatcher {
   }
 
   private tick(): void {
-    const { text, nextOffset, available } = readFileTailUtf8(this.opts.path, this.offset);
-    this.setAvailable(available);
-    if (!available || !text) return;
+    try {
+      let size: number;
+      try {
+        size = statSync(this.opts.path).size;
+      } catch {
+        this.setAvailable(false);
+        return;
+      }
 
-    this.offset = nextOffset;
-    for (const itemKey of parseGetBoxCountItemKeys(text)) {
-      this.opts.onDrop(itemKey);
+      if (size < this.offset) {
+        log.info("Player.log reset — tailing from start");
+        this.offset = 0;
+      }
+
+      const { text, nextOffset, available } = readFileTailUtf8(this.opts.path, this.offset);
+      this.setAvailable(available);
+      if (!available || !text) return;
+
+      this.offset = nextOffset;
+      for (const itemKey of parseGetBoxCountItemKeys(text)) {
+        this.opts.onDrop(itemKey);
+      }
+    } catch (err) {
+      log.warn(`Player.log tail read failed: ${String(err)}`);
     }
   }
 }

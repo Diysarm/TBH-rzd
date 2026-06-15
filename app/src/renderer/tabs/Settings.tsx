@@ -1,13 +1,9 @@
+import { PRODUCT_NAME } from "../../../shared/product";
 import { useEffect, useState } from "react";
 import { STEAM_CURRENCIES } from "../../core/steamPrice";
-import type {
-  NotificationKindId,
-  NotificationKindPreference,
-} from "../../../shared/notificationCatalog";
 import type { AppConfig, AppDataClearTarget, AppDataPaths } from "../../../shared/types";
 import { reportIpcError } from "../lib/reportError";
 import { Accordion } from "../components/ui/Accordion";
-import { NotificationSoundAccordion } from "../components/NotificationKindRow";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Field } from "../components/ui/Field";
@@ -363,8 +359,7 @@ export function Settings() {
 
         <Section title="Notifications">
           <p className="m-0 text-xs text-muted">
-            Sound alerts play in the app when enabled below. App updates can show a Windows
-            notification when that option is on.
+            Optional Windows toast when a new app version is available.
           </p>
           <div className="flex flex-col gap-3">
             <Field label="Enable notifications" checkbox>
@@ -388,28 +383,16 @@ export function Settings() {
                 onChange={(e) => void savePartial({ notifyOnUpdateAvailable: e.target.checked })}
               />
             </Field>
-
-            <Accordion variant="panel" title="Notification sounds">
-              <NotificationSoundAccordion
-                prefs={cfg.notificationPrefs}
-                disabled={!cfg.notificationsEnabled}
-                saveBusy={saveBusy}
-                onKindChange={(kindId: NotificationKindId, next: NotificationKindPreference) =>
-                  void savePartial({
-                    notificationPrefs: {
-                      ...cfg.notificationPrefs,
-                      [kindId]: next,
-                    },
-                  })
-                }
-              />
-            </Accordion>
           </div>
         </Section>
 
         <Section title="Window & tray">
           <div className="flex flex-col gap-3">
-            <Field label="Keep all windows on top" checkbox>
+            <Field
+              label="Keep overlay windows on top"
+              checkbox
+              hint="Pin icon on Mini overlay / Boss chests overlay. Main window is never pinned."
+            >
               <input
                 type="checkbox"
                 checked={cfg.startTopmost}
@@ -418,7 +401,7 @@ export function Settings() {
               />
             </Field>
             <p className="m-0 text-xs text-muted">
-              Closing the main window keeps TBH Companion running in the system tray. Use{" "}
+              Closing the main window keeps {PRODUCT_NAME} running in the system tray. Use{" "}
               <strong>Quit</strong> from the tray menu to exit fully.
             </p>
           </div>

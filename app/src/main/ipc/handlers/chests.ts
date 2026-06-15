@@ -20,6 +20,12 @@ export function registerBoxTimerHandlers(ipc: IpcMain, services: AppServices): v
   ipc.handle(IPC.CLEAR_BOX_TRACKER_COOLDOWN, (_e, boxId: number) =>
     services.clearBoxTrackerCooldown(boxId),
   );
+  ipc.handle(IPC.SET_BOX_TRACKER_CLEAR_TIME, (_e, boxId: number, clearTimeSeconds: number) =>
+    services.setBoxTrackerClearTime(boxId, clearTimeSeconds),
+  );
+  ipc.handle(IPC.CLEAR_BOX_TRACKER_CLEAR_TIME, (_e, boxId: number) =>
+    services.clearBoxTrackerClearTime(boxId),
+  );
   ipc.handle(IPC.SET_BOX_TRACKER_FARM_STAGE, (_e, boxId: number, stageKey: number) =>
     services.setBoxTrackerFarmStage(boxId, stageKey),
   );

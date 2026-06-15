@@ -140,6 +140,22 @@ function parseChests(player: Record<string, unknown> | undefined): ChestHolding[
   return chests;
 }
 
+/** Fallback when PlayerSaveData is a nested JSON string and object unwrap misses BoxData. */
+function parseChestsFromPlayerString(playerStr: string): ChestHolding[] {
+  const typesMatch = /"BoxTypes"\s*:\s*\[([\d,\s]*)\]/.exec(playerStr);
+  const qtyMatch = /"BoxQuantity"\s*:\s*\[([\d,\s]*)\]/.exec(playerStr);
+  if (!typesMatch || !qtyMatch) return [];
+  const types = typesMatch[1].split(",").map((s) => Math.trunc(Number(s.trim())));
+  const quantities = qtyMatch[1].split(",").map((s) => Math.trunc(Number(s.trim())));
+  const chests: ChestHolding[] = [];
+  for (let i = 0; i < types.length; i++) {
+    const quantity = quantities[i] ?? 0;
+    if (quantity <= 0) continue;
+    chests.push({ type: types[i] ?? 0, quantity });
+  }
+  return chests;
+}
+
 export function parseInventory(
   decryptedText: string,
   saveMtime = 0,
@@ -157,7 +173,13 @@ export function parseInventory(
     items = parseItemsFromPlayerObject(player);
   }
 
-  const chests = parseChests(player);
+  const chestsFromObject = parseChests(player);
+  const chests =
+    chestsFromObject.length > 0
+      ? chestsFromObject
+      : playerStr
+        ? parseChestsFromPlayerString(playerStr)
+        : [];
   let materialStacks: Map<number, number> | undefined;
   if (isMaterialItemKey) {
     materialStacks = materialStacksFromAggregates(parseAggregateEntries(player), isMaterialItemKey);

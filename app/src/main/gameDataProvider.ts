@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from "../../shared/product";
 import { app } from "electron";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -208,7 +209,7 @@ export class GameDataProvider {
   async refresh(): Promise<{ ok: boolean; count?: number; error?: string }> {
     try {
       const res = await fetch(CATALOG_FETCH_URL, {
-        headers: { "User-Agent": "Mozilla/5.0 (TBH Companion)" },
+        headers: { "User-Agent": `Mozilla/5.0 (${PRODUCT_NAME})` },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();

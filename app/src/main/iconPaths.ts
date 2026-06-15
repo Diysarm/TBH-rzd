@@ -6,8 +6,9 @@ function devIconsDir(): string {
   return join(__dirname, "../../../docs/design/icons");
 }
 
+/** Runtime window icon — PNG decodes reliably in Electron (multi-size ICO glitches on title bar). */
 function windowIconFileName(): string {
-  return process.platform === "win32" ? "companion-icon.ico" : "companion-icon-256.png";
+  return "rzd-icon-256.png";
 }
 
 export function appIconPath(): string {
@@ -25,7 +26,13 @@ export function trayIconPath(): string {
 }
 
 export function appIconImage() {
-  return nativeImage.createFromPath(appIconPath());
+  const image = nativeImage.createFromPath(appIconPath());
+  if (image.isEmpty()) return image;
+  // Windows title bar expects a small raster; 256px PNG alone can render as noise.
+  if (process.platform === "win32") {
+    return image.resize({ width: 32, height: 32 });
+  }
+  return image;
 }
 
 export function setWindowIcon(win: BrowserWindow): void {

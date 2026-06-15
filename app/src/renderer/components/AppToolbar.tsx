@@ -45,13 +45,14 @@ function BoxTrackerIcon() {
 
 export function AppToolbar() {
   return (
-    <div className="flex shrink-0 gap-1 pb-1.5" role="toolbar" aria-label="Overlays">
-      <ToolbarButton title="Open mini stats overlay" onClick={() => window.tbh.openOverlay()}>
+    <div className="flex flex-col gap-1" role="toolbar" aria-label="Overlays">
+      <ToolbarButton title="Open mini stats overlay" className="w-full" onClick={() => window.tbh.openOverlay()}>
         <MiniOverlayIcon />
-        Mini
+        Mini overlay
       </ToolbarButton>
       <ToolbarButton
         title="Open Stage boss chest tracker"
+        className="w-full"
         onClick={() => window.tbh.openBoxTracker()}
       >
         <BoxTrackerIcon />

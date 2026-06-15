@@ -21,7 +21,6 @@ const MAIN_LAYOUT_OPTIONS: WindowLayoutApplyOptions = {
 export function createMainWindow(
   getExisting: () => BrowserWindow | null,
   setWindow: (w: BrowserWindow | null) => void,
-  startTopmost: () => boolean,
   savedLayout?: WindowLayoutEntry,
   onLayoutChange?: (entry: WindowLayoutEntry) => void,
 ): BrowserWindow {
@@ -29,7 +28,7 @@ export function createMainWindow(
   if (existing && !existing.isDestroyed()) {
     existing.setMinimumSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_MIN_HEIGHT);
     existing.setMaximumSize(MAIN_WINDOW_WIDTH, 0);
-    applyWindowTopmost(existing, startTopmost());
+    applyWindowTopmost(existing, false);
     existing.show();
     return existing;
   }
@@ -42,7 +41,7 @@ export function createMainWindow(
     maxWidth: MAIN_WINDOW_WIDTH,
     minHeight: MAIN_WINDOW_MIN_HEIGHT,
     show: false,
-    backgroundColor: "#0f1117",
+    backgroundColor: "#0a0812",
     autoHideMenuBar: true,
     ...(icon.isEmpty() ? {} : { icon }),
     webPreferences: {
@@ -57,7 +56,8 @@ export function createMainWindow(
   }
 
   win.on("ready-to-show", () => {
-    applyWindowTopmost(win, startTopmost());
+    setWindowIcon(win);
+    applyWindowTopmost(win, false);
     win.show();
   });
 

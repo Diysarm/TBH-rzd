@@ -123,7 +123,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v5
         with:
-          name: tbh-companion-windows-${{ env.RELEASE_VERSION }}
+          name: tbh-rzd-windows-${{ env.RELEASE_VERSION }}
           path: app/release/**
           if-no-files-found: error
 

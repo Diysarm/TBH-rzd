@@ -3,9 +3,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { buildStageBoxCatalog } from "../../core/stageBoxes";
 import {
+  canonicalTrackerBoxId,
+  countHeldRareStageBoxes,
+  effectiveBoxCooldownSeconds,
   loadStageBoxCatalogFile,
   loadStageBoxTrackerRoutes,
+  rareBossChestQuantity,
   resolveTrackedDropBoxId,
+  routeForStageKey,
   trackerRoutesById,
   type StageBoxTrackerRoute,
 } from "../../core/stageBoxTracker";
@@ -17,6 +22,7 @@ import type {
   BoxTimerRow,
   BoxTimerState,
   BoxTrackerSortOrder,
+  ChestHolding,
 } from "../../../shared/types";
 import { IPC } from "../../../shared/ipc";
 import { broadcast } from "./broadcast";
@@ -34,6 +40,7 @@ interface PersistedFile {
   timers: PersistedTimer[];
   enabledBoxIds?: number[];
   cooldownSecondsByBoxId?: Record<string, number>;
+  clearTimeSecondsByBoxId?: Record<string, number>;
   idealStageKeyByBoxId?: Record<string, number>;
   notifyWhenReadyByBoxId?: Record<string, boolean>;
   sortOrder?: BoxTrackerSortOrder;
@@ -48,6 +55,7 @@ export class BoxTimerService {
   private timers = new Map<number, number>();
   private enabledBoxIds = new Set<number>();
   private cooldownSecondsByBoxId = new Map<number, number>();
+  private clearTimeSecondsByBoxId = new Map<number, number>();
   private idealStageKeyByBoxId = new Map<number, number>();
   private notifyWhenReadyByBoxId = new Map<number, boolean>();
   private sortOrder: BoxTrackerSortOrder = "cooldown-first";
@@ -57,6 +65,9 @@ export class BoxTimerService {
   private tickTimer: NodeJS.Timeout | null = null;
   private subscribers = 0;
   private currentStageKey = 0;
+  private lastRareChestQty: number | null = null;
+  private lastInventoryBoxCount = new Map<number, number>();
+  private inventoryBaselineSeeded = false;
   private playerLogPath = "";
   private playerLogAvailable = false;
 
@@ -111,13 +122,99 @@ export class BoxTimerService {
       (id) => this.routeById.has(id),
       this.catalogFile,
     );
-    if (boxId == null) return false;
+    if (boxId == null) {
+      this.logIgnoredLogDrop(itemKey);
+      return false;
+    }
 
     log.info(
       `Stage boss drop detected from Player.log (ItemKey ${itemKey} → Lv${this.boxById.get(boxId)?.level ?? "?"})`,
     );
     this.markDropped(boxId);
     return true;
+  }
+
+  /**
+   * Fallback when Player.log is buffered: rare boss chest slot count rose on a
+   * stage that drops a tracked level (save poll, ~5s).
+   */
+  tryMarkDroppedFromSave(chests: ChestHolding[], stageKey = this.currentStageKey): boolean {
+    const rareQty = rareBossChestQuantity(chests);
+    if (this.lastRareChestQty === null) {
+      this.lastRareChestQty = rareQty;
+      return false;
+    }
+
+    const prev = this.lastRareChestQty;
+    this.lastRareChestQty = rareQty;
+    if (rareQty <= prev) return false;
+
+    const route = routeForStageKey(stageKey, this.routes);
+    if (route == null) {
+      log.info(
+        `Rare boss chest slot ${prev}→${rareQty} on stage ${stageKey} (${stageName(stageKey)}) — no tracked level for this stage`,
+      );
+      return false;
+    }
+
+    return this.tryMarkDropped(
+      route.boxId,
+      `save rare slot ${prev}→${rareQty} @ stage ${stageKey}`,
+    );
+  }
+
+  /** Detect new rare stage-box instances in itemSaveDatas (opened or listed items). */
+  tryMarkDroppedFromInventory(items: readonly { itemKey: number }[]): boolean {
+    const counts = countHeldRareStageBoxes(items, this.catalogFile);
+
+    if (!this.inventoryBaselineSeeded) {
+      for (const boxId of this.routeBoxIds) {
+        this.lastInventoryBoxCount.set(boxId, counts.get(boxId) ?? 0);
+      }
+      this.inventoryBaselineSeeded = true;
+      return false;
+    }
+
+    let marked = false;
+    for (const boxId of this.routeBoxIds) {
+      if (!this.enabledBoxIds.has(boxId)) continue;
+      const prev = this.lastInventoryBoxCount.get(boxId) ?? 0;
+      const count = counts.get(boxId) ?? 0;
+      if (count > prev) {
+        if (this.tryMarkDropped(boxId, `save inventory count ${prev}→${count}`)) {
+          marked = true;
+        }
+      }
+      this.lastInventoryBoxCount.set(boxId, count);
+    }
+    return marked;
+  }
+
+  private tryMarkDropped(boxId: number, source: string): boolean {
+    if (!this.isEnabledRoute(boxId)) return false;
+    if (this.isDropOnCooldown(boxId)) return false;
+
+    log.info(
+      `Stage boss drop detected (${source} → Lv${this.boxById.get(boxId)?.level ?? "?"})`,
+    );
+    this.markDropped(boxId);
+    return true;
+  }
+
+  private isDropOnCooldown(boxId: number): boolean {
+    const droppedAt = this.timers.get(boxId);
+    if (droppedAt === undefined) return false;
+    const effectiveCd = this.resolveEffectiveCooldownSeconds(boxId);
+    const elapsed = (Date.now() - droppedAt) / 1000;
+    return elapsed < effectiveCd;
+  }
+
+  private logIgnoredLogDrop(itemKey: number): void {
+    const canonical = canonicalTrackerBoxId(itemKey, this.catalogFile);
+    if (canonical == null || !this.routeById.has(canonical)) return;
+    if (this.enabledBoxIds.has(canonical)) return;
+    const level = this.boxById.get(canonical)?.level ?? "?";
+    log.info(`Player.log Lv${level} drop — enable Lv${level} in tracker chips for auto-detect`);
   }
 
   setPlayerLogStatus(path: string, available: boolean): void {
@@ -160,11 +257,37 @@ export class BoxTimerService {
     if (!this.routeById.has(boxId)) return this.buildState();
     const seconds = Math.max(60, Math.min(86_400, Math.round(cooldownSeconds)));
     this.cooldownSecondsByBoxId.set(boxId, seconds);
+    const clear = this.clearTimeSecondsByBoxId.get(boxId) ?? 0;
+    if (clear > seconds) {
+      this.clearTimeSecondsByBoxId.set(boxId, seconds);
+    }
     return this.commitState();
   }
 
   clearCooldownOverride(boxId: number): BoxTimerState {
     this.cooldownSecondsByBoxId.delete(boxId);
+    const maxClear = this.resolveCooldownSeconds(boxId);
+    const clear = this.clearTimeSecondsByBoxId.get(boxId) ?? 0;
+    if (clear > maxClear) {
+      this.clearTimeSecondsByBoxId.set(boxId, maxClear);
+    }
+    return this.commitState();
+  }
+
+  setClearTimeSeconds(boxId: number, clearTimeSeconds: number): BoxTimerState {
+    if (!this.routeById.has(boxId)) return this.buildState();
+    const maxClear = this.resolveCooldownSeconds(boxId);
+    const seconds = Math.max(0, Math.min(maxClear, Math.round(clearTimeSeconds)));
+    if (seconds === 0) {
+      this.clearTimeSecondsByBoxId.delete(boxId);
+    } else {
+      this.clearTimeSecondsByBoxId.set(boxId, seconds);
+    }
+    return this.commitState();
+  }
+
+  clearClearTimeOverride(boxId: number): BoxTimerState {
+    this.clearTimeSecondsByBoxId.delete(boxId);
     return this.commitState();
   }
 
@@ -199,6 +322,7 @@ export class BoxTimerService {
     this.timers.clear();
     this.enabledBoxIds.clear();
     this.cooldownSecondsByBoxId.clear();
+    this.clearTimeSecondsByBoxId.clear();
     this.idealStageKeyByBoxId.clear();
     this.notifyWhenReadyByBoxId.clear();
     this.sortOrder = "cooldown-first";
@@ -223,7 +347,18 @@ export class BoxTimerService {
   }
 
   private resolveCooldownSeconds(boxId: number): number {
-    return this.cooldownSecondsByBoxId.get(boxId) ?? this.catalogFile.defaultCooldownSeconds ?? 720;
+    return this.cooldownSecondsByBoxId.get(boxId) ?? this.catalogFile.defaultCooldownSeconds ?? 780;
+  }
+
+  private resolveClearTimeSeconds(boxId: number): number {
+    return this.clearTimeSecondsByBoxId.get(boxId) ?? 0;
+  }
+
+  private resolveEffectiveCooldownSeconds(boxId: number): number {
+    return effectiveBoxCooldownSeconds(
+      this.resolveCooldownSeconds(boxId),
+      this.resolveClearTimeSeconds(boxId),
+    );
   }
 
   private seedWasOnCooldown(): void {
@@ -234,7 +369,7 @@ export class BoxTimerService {
         this.wasOnCooldown.set(boxId, false);
         continue;
       }
-      const cooldownSeconds = this.resolveCooldownSeconds(boxId);
+      const cooldownSeconds = this.resolveEffectiveCooldownSeconds(boxId);
       const elapsed = (now - droppedAt) / 1000;
       const remaining = Math.max(0, Math.ceil(cooldownSeconds - elapsed));
       this.wasOnCooldown.set(boxId, remaining > 0);
@@ -300,6 +435,7 @@ export class BoxTimerService {
         dropStageRangeLabel: route?.dropStageRangeLabel ?? "—",
         cooldownSeconds: this.resolveCooldownSeconds(boxId),
         cooldownIsCustom: this.cooldownSecondsByBoxId.has(boxId),
+        clearTimeSeconds: this.resolveClearTimeSeconds(boxId),
         enabled: this.enabledBoxIds.has(boxId),
         notifyWhenReady: this.resolveNotifyWhenReady(boxId),
       };
@@ -309,6 +445,8 @@ export class BoxTimerService {
   private buildRow(boxId: number, now: number): BoxTimerRow {
     const box = this.boxById.get(boxId);
     const cooldownSeconds = this.resolveCooldownSeconds(boxId);
+    const clearTimeSeconds = this.resolveClearTimeSeconds(boxId);
+    const effectiveCooldownSeconds = this.resolveEffectiveCooldownSeconds(boxId);
     const droppedAt = this.timers.get(boxId);
     let remainingSeconds = 0;
     let active = false;
@@ -316,9 +454,10 @@ export class BoxTimerService {
 
     if (droppedAt !== undefined) {
       const elapsed = (now - droppedAt) / 1000;
-      remainingSeconds = Math.max(0, Math.ceil(cooldownSeconds - elapsed));
+      remainingSeconds = Math.max(0, Math.ceil(effectiveCooldownSeconds - elapsed));
       active = remainingSeconds > 0;
-      progress = Math.min(1, elapsed / cooldownSeconds);
+      progress =
+        effectiveCooldownSeconds > 0 ? Math.min(1, elapsed / effectiveCooldownSeconds) : 1;
       if (!active) {
         this.timers.delete(boxId);
         this.persist();
@@ -336,6 +475,8 @@ export class BoxTimerService {
       idealStageLabel: farm.label,
       cooldownSeconds,
       cooldownIsCustom: this.cooldownSecondsByBoxId.has(boxId),
+      clearTimeSeconds,
+      effectiveCooldownSeconds,
       active,
       remainingSeconds,
       progress,
@@ -380,7 +521,7 @@ export class BoxTimerService {
       cooldownCount,
       sortOrder: this.sortOrder,
       currentStageKey: this.currentStageKey,
-      defaultCooldownSeconds: this.catalogFile.defaultCooldownSeconds ?? 720,
+      defaultCooldownSeconds: this.catalogFile.defaultCooldownSeconds ?? 780,
       playerLogPath: this.playerLogPath,
       playerLogAvailable: this.playerLogAvailable,
     };
@@ -415,6 +556,14 @@ export class BoxTimerService {
         const id = Number(boxId);
         if (id > 0 && seconds > 0 && this.routeById.has(id)) {
           this.cooldownSecondsByBoxId.set(id, seconds);
+        }
+      }
+      for (const [boxId, seconds] of Object.entries(raw.clearTimeSecondsByBoxId ?? {})) {
+        const id = Number(boxId);
+        const clear = Number(seconds);
+        if (id > 0 && clear > 0 && this.routeById.has(id)) {
+          const maxClear = this.resolveCooldownSeconds(id);
+          this.clearTimeSecondsByBoxId.set(id, Math.min(clear, maxClear));
         }
       }
       for (const [boxId, stageKey] of Object.entries(raw.idealStageKeyByBoxId ?? {})) {
@@ -453,6 +602,9 @@ export class BoxTimerService {
       droppedAtMs,
     }));
     const cooldownSecondsByBoxId = Object.fromEntries(this.cooldownSecondsByBoxId);
+    const clearTimeSecondsByBoxId = Object.fromEntries(
+      [...this.clearTimeSecondsByBoxId.entries()].filter(([, seconds]) => seconds > 0),
+    );
     const idealStageKeyByBoxId = Object.fromEntries(this.idealStageKeyByBoxId);
     const notifyWhenReadyByBoxId = Object.fromEntries(
       [...this.notifyWhenReadyByBoxId.entries()].filter(([, enabled]) => !enabled),
@@ -464,6 +616,7 @@ export class BoxTimerService {
           timers,
           enabledBoxIds: [...this.enabledBoxIds],
           cooldownSecondsByBoxId,
+          clearTimeSecondsByBoxId,
           idealStageKeyByBoxId,
           notifyWhenReadyByBoxId,
           sortOrder: this.sortOrder,

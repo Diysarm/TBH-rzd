@@ -1,4 +1,9 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["**/*.ts"]
+  "compilerOptions": {
+    "types": ["node", "vitest/globals"],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": ["**/*.ts", "../shared/**/*.ts", "../src/**/*.ts"]
 }

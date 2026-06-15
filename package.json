@@ -4,6 +4,11 @@
   "description": "TBH Companion monorepo root — tooling only",
   "scripts": {
     "sync:skills": "node scripts/sync-agent-skills.mjs",
-    "sync:skills:check": "node scripts/sync-agent-skills.mjs --check"
+    "sync:skills:check": "node scripts/sync-agent-skills.mjs --check",
+    "build:icons": "node scripts/build-rzd-icons.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5",
+    "to-ico": "^1.1.5"
   }
 }

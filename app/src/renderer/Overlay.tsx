@@ -1,18 +1,17 @@
+import { PRODUCT_NAME } from "../../shared/product";
 import { useStats } from "./lib/useStats";
 import { useInventory } from "./lib/useInventory";
 import { usePriceProgress, usePriceStatus } from "./lib/usePrices";
 import { fmtCompact } from "./lib/format";
 import { formatMoney } from "../core/steamPrice";
 import { stageName } from "../core/stages";
+import { AlwaysOnTopIconPin } from "./components/AlwaysOnTopPin";
 import { IconButton } from "./components/ui/IconButton";
 import { OverlayFrame } from "./components/ui/OverlayFrame";
 
 const RATE_TIP =
-  "XP/hour updates only when the game writes new XP to the save (often up to " +
-  "3 minutes apart, sometimes longer). It holds steady between writes instead of decaying.";
-const GOLD_TIP =
-  "Gold earned per hour. Counts gold gained only; spending (upgrades, Cube, " +
-  "runes) is ignored, so it's accurate while farming.";
+  "XP/hour updates when the game writes new XP to the save (often up to 3 minutes apart).";
+const GOLD_TIP = "Gold earned per hour while farming (spending ignored).";
 
 export function Overlay() {
   const stats = useStats();
@@ -24,37 +23,28 @@ export function Overlay() {
   const invValue = inv?.composition.valuedTotal ?? null;
   const pricing = priceStatus?.running ?? false;
   const pricingLabel = priceProgress
-    ? `pricing ${priceProgress.done}/${priceProgress.total}…`
-    : "pricing…";
+    ? `${priceProgress.done}/${priceProgress.total}`
+    : "…";
 
   return (
-    <OverlayFrame>
-      <div className="flex items-center justify-between">
-        <span className="whitespace-nowrap text-[10px] font-bold tracking-wide text-muted">
-          TBH Companion
+    <OverlayFrame density="compact">
+      <div className="flex items-center justify-between gap-1">
+        <span className="rzd-display truncate text-[10px] font-semibold text-accent">
+          {PRODUCT_NAME}
         </span>
-        <div className="no-drag flex gap-1">
-          <IconButton
-            type="button"
-            className="text-xs"
-            title="Reset session stats"
-            onClick={() => window.tbh.reset()}
-          >
+        <div className="no-drag flex shrink-0 gap-0.5">
+          <AlwaysOnTopIconPin />
+          <IconButton type="button" className="text-[11px]" title="Reset" onClick={() => window.tbh.reset()}>
             {"\u21bb"}
           </IconButton>
-          <IconButton
-            type="button"
-            className="text-xs"
-            title="Open full window"
-            onClick={() => window.tbh.showMain()}
-          >
+          <IconButton type="button" className="text-[11px]" title="Main window" onClick={() => window.tbh.showMain()}>
             {"\u2922"}
           </IconButton>
           <IconButton
             type="button"
             edge="end"
-            className="text-xs"
-            title="Close mini overlay (app keeps running in the tray)"
+            className="text-[11px]"
+            title="Close overlay"
             onClick={() => window.tbh.closeOverlay()}
           >
             {"\u2715"}
@@ -63,46 +53,32 @@ export function Overlay() {
       </div>
 
       {!stats ? (
-        <p className="m-0 text-muted">Connecting...</p>
+        <p className="m-0 text-[10px] text-muted">Connecting…</p>
       ) : (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-baseline justify-between gap-2.5">
-            <p className="m-0 flex min-w-0 cursor-help items-baseline gap-1" title={RATE_TIP}>
-              <span className="text-2xl font-bold leading-none tabular-nums text-accent">
-                {fmtCompact(stats.rollingRate)}
-              </span>
-              <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-muted">
-                XP/hr
-              </span>
+        <>
+          <div className="flex items-baseline justify-between gap-2 text-[11px] tabular-nums">
+            <p className="m-0 cursor-help" title={RATE_TIP}>
+              <span className="text-lg font-bold leading-none text-gold">{fmtCompact(stats.rollingRate)}</span>
+              <span className="ml-0.5 text-[8px] uppercase text-muted">xp/h</span>
             </p>
-            <p
-              className="m-0 flex min-w-0 cursor-help items-baseline gap-1 text-right"
-              title={GOLD_TIP}
-            >
-              <span className="text-base font-semibold leading-none tabular-nums text-gold">
+            <p className="m-0 cursor-help text-right" title={GOLD_TIP}>
+              <span className="text-sm font-semibold leading-none text-accent">
                 {fmtCompact(stats.goldRate)}
               </span>
-              <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-muted">
-                gold/hr
-              </span>
+              <span className="ml-0.5 text-[8px] uppercase text-muted">g/h</span>
             </p>
           </div>
-
-          <p className="m-0 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] tabular-nums text-muted">
-            <span>{stageName(stats.stageKey, stats.stageWave)}</span>
-            {inv && (
+          <p className="m-0 truncate text-[9px] text-muted">
+            {stageName(stats.stageKey, stats.stageWave)}
+            {inv ? (
               <>
-                <span className="opacity-55" aria-hidden>
-                  ·
-                </span>
-                <span>
-                  Inv {invValue !== null ? formatMoney(invValue, currency) : "—"}
-                  {pricing && <span className="text-muted"> ({pricingLabel})</span>}
-                </span>
+                {" · Inv "}
+                {invValue !== null ? formatMoney(invValue, currency) : "—"}
+                {pricing ? ` (${pricingLabel})` : ""}
               </>
-            )}
+            ) : null}
           </p>
-        </div>
+        </>
       )}
     </OverlayFrame>
   );

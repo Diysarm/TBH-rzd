@@ -79,6 +79,16 @@ export function canonicalTrackerBoxId(
   return canonical?.id ?? null;
 }
 
+/** Effective cooldown after subtracting clear-time (seconds). */
+export function effectiveBoxCooldownSeconds(
+  baseCooldownSeconds: number,
+  clearTimeSeconds: number,
+): number {
+  const base = Math.max(0, Math.floor(baseCooldownSeconds));
+  const clear = Math.max(0, Math.floor(clearTimeSeconds));
+  return Math.max(0, base - clear);
+}
+
 /** Resolve a Player.log ItemKey to a box id when that level is tracked and enabled. */
 export function resolveTrackedDropBoxId(
   itemKey: number,
@@ -89,4 +99,39 @@ export function resolveTrackedDropBoxId(
   const boxId = canonicalTrackerBoxId(itemKey, catalog);
   if (boxId == null || !isTrackedRoute(boxId) || !enabledBoxIds.has(boxId)) return null;
   return boxId;
+}
+
+/** BoxData slot type for stage-boss (rare / blue) held chests. */
+export const RARE_BOSS_CHEST_BOX_TYPE = 1;
+
+export function rareBossChestQuantity(chests: readonly { type: number; quantity: number }[]): number {
+  return chests
+    .filter((c) => c.type === RARE_BOSS_CHEST_BOX_TYPE)
+    .reduce((sum, c) => sum + c.quantity, 0);
+}
+
+/** Canonical tracker route whose drop stages include this stage key. */
+export function routeForStageKey(
+  stageKey: number,
+  routes: Iterable<StageBoxTrackerRoute>,
+): StageBoxTrackerRoute | null {
+  if (stageKey <= 0) return null;
+  for (const route of routes) {
+    if (route.dropStageKeys.includes(stageKey)) return route;
+  }
+  return null;
+}
+
+/** Count held rare stage-box instances in save itemSaveDatas (by canonical tracker id). */
+export function countHeldRareStageBoxes(
+  items: readonly { itemKey: number }[],
+  catalog: StageBoxCatalogFile = loadStageBoxCatalogFile(),
+): Map<number, number> {
+  const counts = new Map<number, number>();
+  for (const item of items) {
+    const boxId = canonicalTrackerBoxId(item.itemKey, catalog);
+    if (boxId == null) continue;
+    counts.set(boxId, (counts.get(boxId) ?? 0) + 1);
+  }
+  return counts;
 }

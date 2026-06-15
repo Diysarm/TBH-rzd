@@ -1,36 +1,26 @@
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import { ErrorBoundary } from "./lib/ErrorBoundary";
-import { AppTabBar, type TabId } from "./components/AppTabBar";
+import { AppSidebar } from "./components/AppSidebar";
+import type { TabId } from "./components/AppTabBar";
 import { SaveStatusBar } from "./components/SaveStatusBar";
-
-const Live = lazy(() => import("./tabs/Live").then((m) => ({ default: m.Live })));
-const Inventory = lazy(() => import("./tabs/Inventory").then((m) => ({ default: m.Inventory })));
-const Chests = lazy(() => import("./tabs/Chests").then((m) => ({ default: m.Chests })));
-const Pets = lazy(() => import("./tabs/Pets").then((m) => ({ default: m.Pets })));
-const Market = lazy(() => import("./tabs/Market").then((m) => ({ default: m.Market })));
-const Settings = lazy(() => import("./tabs/Settings").then((m) => ({ default: m.Settings })));
-const About = lazy(() => import("./tabs/About").then((m) => ({ default: m.About })));
-
-function TabFallback() {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <p className="m-0 text-muted">Loading tab…</p>
-    </div>
-  );
-}
+import { Live } from "./tabs/Live";
+import { Inventory } from "./tabs/Inventory";
+import { Chests } from "./tabs/Chests";
+import { Pets } from "./tabs/Pets";
+import { Market } from "./tabs/Market";
+import { Settings } from "./tabs/Settings";
+import { About } from "./tabs/About";
 
 export function App() {
   const [tab, setTab] = useState<TabId>("live");
 
   return (
-    <div className="flex h-full flex-col">
-      <header>
-        <AppTabBar tab={tab} onTabChange={setTab} />
+    <div className="flex h-full">
+      <AppSidebar tab={tab} onTabChange={setTab} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SaveStatusBar />
-      </header>
-      <main className="min-h-0 flex-1 overflow-auto p-5">
-        <ErrorBoundary title={`${tab} tab crashed`}>
-          <Suspense fallback={<TabFallback />}>
+        <main className="min-h-0 flex-1 overflow-auto p-5">
+          <ErrorBoundary key={tab} title={`${tab} tab crashed`}>
             {tab === "live" && <Live />}
             {tab === "inventory" && <Inventory onOpenChests={() => setTab("chests")} />}
             {tab === "chests" && <Chests />}
@@ -38,9 +28,9 @@ export function App() {
             {tab === "market" && <Market />}
             {tab === "settings" && <Settings />}
             {tab === "about" && <About />}
-          </Suspense>
-        </ErrorBoundary>
-      </main>
+          </ErrorBoundary>
+        </main>
+      </div>
     </div>
   );
 }

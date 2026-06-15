@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GITHUB_REPO, PRODUCT_NAME } from "../../../shared/product";
 import type { UpdateStatus } from "../../../shared/types";
 import { useUpdate } from "../lib/useUpdate";
 import { reportIpcError } from "../lib/reportError";
@@ -8,7 +9,6 @@ import { Section } from "../components/ui/Section";
 import { TabHeader } from "../components/ui/TabHeader";
 import { TabPage } from "../components/ui/TabPage";
 
-const GITHUB_REPO = "https://github.com/lucasfevi/tbh-companion";
 const GITHUB_RELEASES = `${GITHUB_REPO}/releases`;
 
 function githubReleaseUrl(version: string): string {
@@ -100,7 +100,7 @@ export function About() {
     <TabPage>
       <TabHeader
         title="About"
-        intro="TBH Companion is an unofficial fan tool for Task Bar Hero. It reads your local save only — it never changes your save or connects to game servers."
+        intro={`${PRODUCT_NAME} is an unofficial fan toolkit for Task Bar Hero. It reads your local save only — it never changes your save or connects to game servers.`}
       />
 
       <div className="flex flex-col gap-3.5">

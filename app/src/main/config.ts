@@ -27,7 +27,7 @@ const DEFAULTS: AppConfig = {
   es3Password: DEFAULT_PASSWORD,
   pollIntervalSeconds: 5,
   rollingWindowMinutes: 5,
-  startTopmost: true,
+  startTopmost: false,
   logHistoryCsv: true,
   currency: "USD",
   notificationsEnabled: true,
