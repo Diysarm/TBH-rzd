@@ -7,7 +7,6 @@ import { cn } from "../lib/cn";
 const NAV: { id: TabId; label: string; icon: string }[] = [
   { id: "live", label: "Live", icon: "⚡" },
   { id: "inventory", label: "Inventory", icon: "🎒" },
-  { id: "chests", label: "Chests", icon: "📦" },
   { id: "pets", label: "Pets", icon: "🐾" },
   { id: "market", label: "Market", icon: "💰" },
   { id: "settings", label: "Settings", icon: "⚙" },

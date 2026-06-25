@@ -1,4 +1,10 @@
-import type { BoxTimerCatalogEntry, BoxTimerRow, BoxTrackerSortOrder } from "../../../shared/types";
+import type {
+  BoxTimerCatalogEntry,
+  BoxTimerRow,
+  BoxTrackerSortOrder,
+  SlotChestKind,
+  SlotLevelTimerGroup,
+} from "../../../shared/types";
 import { normalizeBoxTrackerSortOrder } from "../../core/boxTrackerSort";
 
 export { normalizeBoxTrackerSortOrder };
@@ -47,6 +53,16 @@ export function formatCooldownMinutes(seconds: number): string {
   return `${minutes} min`;
 }
 
+export function slotChestIconUrl(slot: SlotChestKind): string {
+  return slot === "common" ? "/chest-icons/common.png" : "/chest-icons/stage-boss.png";
+}
+
+/** @deprecated Wiki uses generic box art per grade, not per item id. */
+export function stageBoxWikiIconUrl(boxId: number): string {
+  const grade = boxId >= 920_000 && boxId < 930_000 ? "stageBoss" : "common";
+  return slotChestIconUrl(grade);
+}
+
 export function formatEffectiveCooldown(
   baseSeconds: number,
   clearTimeSeconds: number,
@@ -89,4 +105,29 @@ export function boxTrackerRowsBySection(
   section: "cooldown" | "ready",
 ): BoxTimerRow[] {
   return rows.filter((row) => row.status === section);
+}
+
+export function compareRowsByLevel(a: BoxTimerRow, b: BoxTimerRow): number {
+  return (a.level ?? 0) - (b.level ?? 0) || a.boxId - b.boxId;
+}
+
+export function sortRowsByLevel(rows: BoxTimerRow[]): BoxTimerRow[] {
+  return rows.toSorted(compareRowsByLevel);
+}
+
+export function sortSlotGroupsByLevel(groups: SlotLevelTimerGroup[]): SlotLevelTimerGroup[] {
+  return groups.toSorted((a, b) => a.level - b.level);
+}
+
+/** Ascending level order for overlay (slot groups + boss rows interleaved). */
+export function overlayLevelsSorted(
+  slotGroups: SlotLevelTimerGroup[],
+  rows: BoxTimerRow[],
+): number[] {
+  const levels = new Set<number>();
+  for (const group of slotGroups) levels.add(group.level);
+  for (const row of rows) {
+    if (row.level != null) levels.add(row.level);
+  }
+  return [...levels].sort((a, b) => a - b);
 }

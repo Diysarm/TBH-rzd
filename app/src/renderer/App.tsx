@@ -5,7 +5,6 @@ import type { TabId } from "./components/AppTabBar";
 import { SaveStatusBar } from "./components/SaveStatusBar";
 import { Live } from "./tabs/Live";
 import { Inventory } from "./tabs/Inventory";
-import { Chests } from "./tabs/Chests";
 import { Pets } from "./tabs/Pets";
 import { Market } from "./tabs/Market";
 import { Settings } from "./tabs/Settings";
@@ -22,8 +21,7 @@ export function App() {
         <main className="min-h-0 flex-1 overflow-auto p-5">
           <ErrorBoundary key={tab} title={`${tab} tab crashed`}>
             {tab === "live" && <Live />}
-            {tab === "inventory" && <Inventory onOpenChests={() => setTab("chests")} />}
-            {tab === "chests" && <Chests />}
+            {tab === "inventory" && <Inventory />}
             {tab === "pets" && <Pets />}
             {tab === "market" && <Market />}
             {tab === "settings" && <Settings />}

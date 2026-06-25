@@ -458,8 +458,44 @@ export interface BoxTimerCatalogEntry {
   notifyWhenReady: boolean;
 }
 
+export type SlotChestKind = "common" | "stageBoss";
+
+export interface SlotChestTimerRow {
+  slot: SlotChestKind;
+  level: number;
+  label: string;
+  dropStageRangeLabel: string;
+  cooldownSeconds: number;
+  cooldownIsCustom: boolean;
+  active: boolean;
+  remainingSeconds: number;
+  progress: number;
+  status: "ready" | "cooldown";
+}
+
+export interface SlotChestCooldownConfig {
+  commonSeconds: number;
+  stageBossSeconds: number;
+  commonIsCustom: boolean;
+  stageBossIsCustom: boolean;
+  defaultCommonSeconds: number;
+  defaultStageBossSeconds: number;
+}
+
+export interface SlotLevelTimerGroup {
+  level: number;
+  commonBoxId: number;
+  rareBoxId: number;
+  dropStageRangeLabel: string;
+  common: SlotChestTimerRow;
+  stageBoss: SlotChestTimerRow;
+}
+
 export interface BoxTimerState {
   rows: BoxTimerRow[];
+  slotRows: SlotChestTimerRow[];
+  slotLevelGroups: SlotLevelTimerGroup[];
+  slotCooldown: SlotChestCooldownConfig;
   catalog: BoxTimerCatalogEntry[];
   enabledCount: number;
   readyCount: number;
@@ -528,6 +564,10 @@ export interface TbhApi {
   onBoxTimers(cb: (state: BoxTimerState) => void): () => void;
   markBoxDropped(boxId: number): Promise<BoxTimerState>;
   clearBoxTimer(boxId: number): Promise<BoxTimerState>;
+  markSlotChestDropped(slot: SlotChestKind, level: number): Promise<BoxTimerState>;
+  clearSlotChestTimer(slot: SlotChestKind, level: number): Promise<BoxTimerState>;
+  setSlotChestCooldown(slot: SlotChestKind, cooldownSeconds: number): Promise<BoxTimerState>;
+  clearSlotChestCooldown(slot: SlotChestKind): Promise<BoxTimerState>;
   setBoxTrackerBoxes(boxIds: number[]): Promise<BoxTimerState>;
   setBoxTrackerCooldown(boxId: number, cooldownSeconds: number): Promise<BoxTimerState>;
   clearBoxTrackerCooldown(boxId: number): Promise<BoxTimerState>;

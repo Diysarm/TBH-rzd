@@ -1,5 +1,5 @@
 import type { IpcMain } from "electron";
-import type { BoxTrackerSortOrder } from "../../../../shared/types";
+import type { BoxTrackerSortOrder, SlotChestKind } from "../../../../shared/types";
 import { IPC } from "../../../../shared/ipc";
 import type { AppServices } from "../../app/appState";
 
@@ -11,6 +11,18 @@ export function registerBoxTimerHandlers(ipc: IpcMain, services: AppServices): v
   ipc.handle(IPC.GET_BOX_TIMERS, () => services.getBoxTimers());
   ipc.handle(IPC.MARK_BOX_DROPPED, (_e, boxId: number) => services.markBoxDropped(boxId));
   ipc.handle(IPC.CLEAR_BOX_TIMER, (_e, boxId: number) => services.clearBoxTimer(boxId));
+  ipc.handle(IPC.MARK_SLOT_CHEST_DROPPED, (_e, slot: SlotChestKind, level: number) =>
+    services.markSlotChestDropped(slot, level),
+  );
+  ipc.handle(IPC.CLEAR_SLOT_CHEST_TIMER, (_e, slot: SlotChestKind, level: number) =>
+    services.clearSlotChestTimer(slot, level),
+  );
+  ipc.handle(IPC.SET_SLOT_CHEST_COOLDOWN, (_e, slot: SlotChestKind, cooldownSeconds: number) =>
+    services.setSlotChestCooldown(slot, cooldownSeconds),
+  );
+  ipc.handle(IPC.CLEAR_SLOT_CHEST_COOLDOWN, (_e, slot: SlotChestKind) =>
+    services.clearSlotChestCooldown(slot),
+  );
   ipc.handle(IPC.SET_BOX_TRACKER_BOXES, (_e, boxIds: number[]) =>
     services.setBoxTrackerBoxes(boxIds),
   );

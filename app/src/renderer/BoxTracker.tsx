@@ -1,59 +1,53 @@
 import { useBoxTimers, fmtTimer } from "./lib/useBoxTimers";
 import { stageName } from "../core/stages";
-import type { BoxTimerRow } from "../../shared/types";
+import type { SlotLevelTimerGroup } from "../../shared/types";
 import { AlwaysOnTopIconPin } from "./components/AlwaysOnTopPin";
 import { IconButton } from "./components/ui/IconButton";
 import { OverlayFrame } from "./components/ui/OverlayFrame";
+import { sortSlotGroupsByLevel } from "./lib/boxTrackerUi";
 import { cn } from "./lib/cn";
 
-function CompactTimerRow({ row }: { row: BoxTimerRow }) {
-  const onCooldown = row.status === "cooldown";
+function CompactSlotLevelRow({ group }: { group: SlotLevelTimerGroup }) {
+  const commonCd = group.common.status === "cooldown";
+  const blueCd = group.stageBoss.status === "cooldown";
 
   return (
-    <li
-      className={cn(
-        "flex items-center gap-1 rounded border border-border/70 bg-card/50 px-1 py-0.5",
-        "border-l-2",
-        onCooldown ? "border-l-status-info" : "border-l-status-success",
-        row.atIdealStage && "ring-1 ring-ideal/20",
-      )}
-      title={`${row.idealStageLabel}${row.clearTimeSeconds > 0 ? ` · −${row.clearTimeSeconds}s clear` : ""}`}
-    >
-      <span className="w-7 shrink-0 text-[11px] font-semibold tabular-nums">Lv{row.level ?? "?"}</span>
-      <span
-        className={cn(
-          "min-w-[3.25rem] shrink-0 text-center text-[10px] font-bold tabular-nums",
-          onCooldown ? "text-status-info" : "text-status-success",
-        )}
-      >
-        {onCooldown ? fmtTimer(row.remainingSeconds) : "OK"}
-      </span>
-      {onCooldown ? (
-        <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border/80">
-          <div
-            className="h-full rounded-full bg-status-info transition-[width]"
-            style={{ width: `${Math.round(row.progress * 100)}%` }}
-          />
-        </div>
-      ) : (
-        <span className="min-w-0 flex-1 truncate text-[9px] text-muted">{row.idealStageLabel}</span>
-      )}
-      <button
-        type="button"
-        className={cn(
-          "shrink-0 cursor-pointer rounded border px-1.5 py-0 text-[10px] font-semibold leading-5",
-          onCooldown
-            ? "border-border bg-transparent text-muted hover:text-fg"
-            : "border-status-success-border bg-status-success/15 text-status-success hover:bg-status-success/25",
-        )}
-        onClick={() =>
-          void (onCooldown
-            ? window.tbh.clearBoxTimer(row.boxId)
-            : window.tbh.markBoxDropped(row.boxId))
-        }
-      >
-        {onCooldown ? "Rst" : "Drop"}
-      </button>
+    <li className="flex flex-col gap-0.5 rounded border border-border/70 bg-card/50 px-1 py-0.5">
+      <span className="truncate text-[9px] font-semibold text-muted">Lv{group.level} slots</span>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          className={cn(
+            "min-w-0 flex-1 rounded border px-1 py-0 text-[9px] font-semibold tabular-nums",
+            commonCd
+              ? "border-status-danger/40 text-status-danger"
+              : "border-status-info/30 text-status-info",
+          )}
+          onClick={() =>
+            void (commonCd
+              ? window.tbh.clearSlotChestTimer("common", group.level)
+              : window.tbh.markSlotChestDropped("common", group.level))
+          }
+        >
+          G {commonCd ? fmtTimer(group.common.remainingSeconds) : "OK"}
+        </button>
+        <button
+          type="button"
+          className={cn(
+            "min-w-0 flex-1 rounded border px-1 py-0 text-[9px] font-semibold tabular-nums",
+            blueCd
+              ? "border-status-danger/40 text-status-danger"
+              : "border-status-info/30 text-status-info",
+          )}
+          onClick={() =>
+            void (blueCd
+              ? window.tbh.clearSlotChestTimer("stageBoss", group.level)
+              : window.tbh.markSlotChestDropped("stageBoss", group.level))
+          }
+        >
+          B {blueCd ? fmtTimer(group.stageBoss.remainingSeconds) : "OK"}
+        </button>
+      </div>
     </li>
   );
 }
@@ -70,11 +64,12 @@ export function BoxTracker() {
   }
 
   const currentLabel = stageName(state.currentStageKey);
+  const slotGroups = sortSlotGroupsByLevel(state.slotLevelGroups);
 
   return (
     <OverlayFrame density="compact">
       <div className="drag-handle flex shrink-0 items-center justify-between gap-1">
-        <span className="truncate text-[10px] font-semibold text-muted">Boss chests</span>
+        <span className="truncate text-[10px] font-semibold text-muted">Chest timers</span>
         <div className="no-drag flex shrink-0 items-center gap-0.5">
           <AlwaysOnTopIconPin />
           <IconButton type="button" title="Minimize" onClick={() => window.tbh.minimizeBoxTracker()}>
@@ -95,23 +90,19 @@ export function BoxTracker() {
       </div>
 
       <div className="no-drag flex shrink-0 items-center gap-1.5 text-[9px] text-muted">
-        <span className="text-status-info">{state.cooldownCount} cd</span>
-        <span aria-hidden>·</span>
-        <span className="text-status-success">{state.readyCount} ok</span>
-        <span aria-hidden>·</span>
         <span className="truncate" title={currentLabel}>
           {currentLabel}
         </span>
       </div>
 
-      {state.rows.length === 0 ? (
-        <p className="no-drag m-0 text-center text-[10px] text-muted">No levels tracked.</p>
-      ) : (
+      {slotGroups.length > 0 ? (
         <ul className="no-drag m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-0">
-          {state.rows.map((row) => (
-            <CompactTimerRow key={row.boxId} row={row} />
+          {slotGroups.map((group) => (
+            <CompactSlotLevelRow key={group.level} group={group} />
           ))}
         </ul>
+      ) : (
+        <p className="no-drag m-0 text-center text-[10px] text-muted">No levels tracked.</p>
       )}
     </OverlayFrame>
   );

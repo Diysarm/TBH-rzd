@@ -5,6 +5,7 @@ import type {
   AppDataPaths,
   AppConfig,
   BoxTimerState,
+  SlotChestKind,
   ChestState,
   ClearAppDataResult,
   ClearDiagnosticLogResult,
@@ -95,6 +96,18 @@ const api: TbhApi = {
   },
   clearBoxTimer(boxId: number): Promise<BoxTimerState> {
     return ipcRenderer.invoke(IPC.CLEAR_BOX_TIMER, boxId);
+  },
+  markSlotChestDropped(slot: SlotChestKind, level: number): Promise<BoxTimerState> {
+    return ipcRenderer.invoke(IPC.MARK_SLOT_CHEST_DROPPED, slot, level);
+  },
+  clearSlotChestTimer(slot: SlotChestKind, level: number): Promise<BoxTimerState> {
+    return ipcRenderer.invoke(IPC.CLEAR_SLOT_CHEST_TIMER, slot, level);
+  },
+  setSlotChestCooldown(slot: SlotChestKind, cooldownSeconds: number): Promise<BoxTimerState> {
+    return ipcRenderer.invoke(IPC.SET_SLOT_CHEST_COOLDOWN, slot, cooldownSeconds);
+  },
+  clearSlotChestCooldown(slot: SlotChestKind): Promise<BoxTimerState> {
+    return ipcRenderer.invoke(IPC.CLEAR_SLOT_CHEST_COOLDOWN, slot);
   },
   setBoxTrackerBoxes(boxIds: number[]): Promise<BoxTimerState> {
     return ipcRenderer.invoke(IPC.SET_BOX_TRACKER_BOXES, boxIds);

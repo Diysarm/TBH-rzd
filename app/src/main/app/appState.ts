@@ -16,6 +16,7 @@ import { NotificationService } from "../services/NotificationService";
 import type {
   AppDataClearTarget,
   BoxTrackerSortOrder,
+  SlotChestKind,
   RendererLogPayload,
   SessionUiSnapshot,
   WindowLayoutPrefs,
@@ -184,6 +185,15 @@ export function getAppServices() {
     getBoxTimers: () => boxTimers.getState(),
     markBoxDropped: (boxId: number) => boxTimers.markDropped(boxId),
     clearBoxTimer: (boxId: number) => boxTimers.clearTimer(boxId),
+    markSlotChestDropped: (slot: SlotChestKind, level: number) => {
+      boxTimers.markSlotDropped(slot, level);
+      return boxTimers.getState();
+    },
+    clearSlotChestTimer: (slot: SlotChestKind, level: number) =>
+      boxTimers.clearSlotTimer(slot, level),
+    setSlotChestCooldown: (slot: SlotChestKind, cooldownSeconds: number) =>
+      boxTimers.setSlotCooldownSeconds(slot, cooldownSeconds),
+    clearSlotChestCooldown: (slot: SlotChestKind) => boxTimers.clearSlotCooldownOverride(slot),
     setBoxTrackerBoxes: (boxIds: number[]) => boxTimers.setEnabledBoxIds(boxIds),
     setBoxTrackerCooldown: (boxId: number, cooldownSeconds: number) =>
       boxTimers.setCooldownSeconds(boxId, cooldownSeconds),

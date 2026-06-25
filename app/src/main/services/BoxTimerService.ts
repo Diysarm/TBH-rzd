@@ -10,19 +10,37 @@ import {
   loadStageBoxTrackerRoutes,
   rareBossChestQuantity,
   resolveTrackedDropBoxId,
-  routeForStageKey,
   trackerRoutesById,
   type StageBoxTrackerRoute,
 } from "../../core/stageBoxTracker";
+import {
+  bossLevelForStageKey,
+  commonChestQuantity,
+  commonBoxIdForLevel,
+  parseSlotTimerStorageKey,
+  rareBoxIdForLevel,
+  SLOT_CHEST_DEFAULT_COOLDOWN_SECONDS,
+  SLOT_CHEST_KINDS,
+  SLOT_CHEST_SHORT_LABELS,
+  slotChestKindFromItemKey,
+  slotLevelsForEnabledRoutes,
+  slotTimerStorageKey,
+  stageBoxLevelFromItemKey,
+  totalHeldCommonStageBoxes,
+  trackerMetaForChestLevel,
+  type SlotChestKind,
+} from "../../core/slotChestTracker";
 import { stageName } from "../../core/stages";
-import { compareBoxTimerRows, normalizeBoxTrackerSortOrder } from "../../core/boxTrackerSort";
+import { normalizeBoxTrackerSortOrder } from "../../core/boxTrackerSort";
 import type {
   BoxTimerCatalogEntry,
   BoxTimerFarmStageOption,
-  BoxTimerRow,
   BoxTimerState,
   BoxTrackerSortOrder,
   ChestHolding,
+  SlotChestTimerRow,
+  SlotChestCooldownConfig,
+  SlotLevelTimerGroup,
 } from "../../../shared/types";
 import { IPC } from "../../../shared/ipc";
 import { broadcast } from "./broadcast";
@@ -44,6 +62,8 @@ interface PersistedFile {
   idealStageKeyByBoxId?: Record<string, number>;
   notifyWhenReadyByBoxId?: Record<string, boolean>;
   sortOrder?: BoxTrackerSortOrder;
+  slotDroppedAtMs?: Record<string, number>;
+  slotCooldownSecondsByKind?: Record<string, number>;
 }
 
 export class BoxTimerService {
@@ -53,6 +73,8 @@ export class BoxTimerService {
   private readonly boxById = new Map(buildStageBoxCatalog().items.map((b) => [b.id, b]));
   private readonly routeBoxIds: number[];
   private timers = new Map<number, number>();
+  private slotTimers = new Map<string, number>();
+  private slotCooldownSecondsByKind = new Map<SlotChestKind, number>();
   private enabledBoxIds = new Set<number>();
   private cooldownSecondsByBoxId = new Map<number, number>();
   private clearTimeSecondsByBoxId = new Map<number, number>();
@@ -65,7 +87,9 @@ export class BoxTimerService {
   private tickTimer: NodeJS.Timeout | null = null;
   private subscribers = 0;
   private currentStageKey = 0;
+  private lastCommonChestQty: number | null = null;
   private lastRareChestQty: number | null = null;
+  private lastHeldCommonBoxCount: number | null = null;
   private lastInventoryBoxCount = new Map<number, number>();
   private inventoryBaselineSeeded = false;
   private playerLogPath = "";
@@ -76,7 +100,6 @@ export class BoxTimerService {
       (a, b) => (this.boxById.get(a)?.level ?? 0) - (this.boxById.get(b)?.level ?? 0) || a - b,
     );
     this.load();
-    this.seedWasOnCooldown();
   }
 
   setCurrentStageKey(key: number): void {
@@ -104,18 +127,20 @@ export class BoxTimerService {
 
   markDropped(boxId: number): BoxTimerState {
     if (!this.isEnabledRoute(boxId)) return this.buildState();
-    this.timers.set(boxId, Date.now());
-    const box = this.boxById.get(boxId);
-    this.onChestDropped?.({
-      boxId,
-      name: box?.name ?? `Box ${boxId}`,
-      level: box?.level ?? null,
-    });
-    return this.commitState();
+    return this.buildState();
   }
 
   /** Start cooldown when Player.log reports a tracked stage boss box drop. */
   tryMarkDroppedFromLog(itemKey: number): boolean {
+    let marked = false;
+    const slot = slotChestKindFromItemKey(itemKey, this.catalogFile);
+    const chestLevel = stageBoxLevelFromItemKey(itemKey, this.catalogFile);
+    if (slot && chestLevel != null) {
+      if (this.markSlotDropped(slot, chestLevel, `Player.log ItemKey ${itemKey}`)) {
+        marked = true;
+      }
+    }
+
     const boxId = resolveTrackedDropBoxId(
       itemKey,
       this.enabledBoxIds,
@@ -124,14 +149,8 @@ export class BoxTimerService {
     );
     if (boxId == null) {
       this.logIgnoredLogDrop(itemKey);
-      return false;
     }
-
-    log.info(
-      `Stage boss drop detected from Player.log (ItemKey ${itemKey} → Lv${this.boxById.get(boxId)?.level ?? "?"})`,
-    );
-    this.markDropped(boxId);
-    return true;
+    return marked;
   }
 
   /**
@@ -139,32 +158,62 @@ export class BoxTimerService {
    * stage that drops a tracked level (save poll, ~5s).
    */
   tryMarkDroppedFromSave(chests: ChestHolding[], stageKey = this.currentStageKey): boolean {
+    const commonQty = commonChestQuantity(chests);
     const rareQty = rareBossChestQuantity(chests);
+    let marked = false;
+
+    const bossLevel = bossLevelForStageKey(stageKey, this.routes);
+
+    if (this.lastCommonChestQty !== null && commonQty > this.lastCommonChestQty && bossLevel != null) {
+      if (
+        this.markSlotDropped(
+          "common",
+          bossLevel,
+          `save common slot ${this.lastCommonChestQty}→${commonQty} @ ${stageName(stageKey)}`,
+        )
+      ) {
+        marked = true;
+      }
+    }
+    this.lastCommonChestQty = commonQty;
+
     if (this.lastRareChestQty === null) {
       this.lastRareChestQty = rareQty;
-      return false;
+      return marked;
     }
 
-    const prev = this.lastRareChestQty;
+    const prevRare = this.lastRareChestQty;
     this.lastRareChestQty = rareQty;
-    if (rareQty <= prev) return false;
+    if (rareQty <= prevRare) return marked;
 
-    const route = routeForStageKey(stageKey, this.routes);
-    if (route == null) {
-      log.info(
-        `Rare boss chest slot ${prev}→${rareQty} on stage ${stageKey} (${stageName(stageKey)}) — no tracked level for this stage`,
-      );
-      return false;
+    if (bossLevel != null && this.markSlotDropped("stageBoss", bossLevel, `save blue slot ${prevRare}→${rareQty} @ ${stageName(stageKey)}`)) {
+      marked = true;
     }
 
-    return this.tryMarkDropped(
-      route.boxId,
-      `save rare slot ${prev}→${rareQty} @ stage ${stageKey}`,
-    );
+    return marked;
   }
 
   /** Detect new rare stage-box instances in itemSaveDatas (opened or listed items). */
   tryMarkDroppedFromInventory(items: readonly { itemKey: number }[]): boolean {
+    const commonHeld = totalHeldCommonStageBoxes(items, this.catalogFile);
+    let marked = false;
+
+    if (this.lastHeldCommonBoxCount !== null && commonHeld > this.lastHeldCommonBoxCount) {
+      const bossLevel = bossLevelForStageKey(this.currentStageKey, this.routes);
+      if (bossLevel != null) {
+        if (
+          this.markSlotDropped(
+            "common",
+            bossLevel,
+            `save inventory common count ${this.lastHeldCommonBoxCount}→${commonHeld}`,
+          )
+        ) {
+          marked = true;
+        }
+      }
+    }
+    this.lastHeldCommonBoxCount = commonHeld;
+
     const counts = countHeldRareStageBoxes(items, this.catalogFile);
 
     if (!this.inventoryBaselineSeeded) {
@@ -172,41 +221,30 @@ export class BoxTimerService {
         this.lastInventoryBoxCount.set(boxId, counts.get(boxId) ?? 0);
       }
       this.inventoryBaselineSeeded = true;
-      return false;
+      return marked;
     }
 
-    let marked = false;
     for (const boxId of this.routeBoxIds) {
       if (!this.enabledBoxIds.has(boxId)) continue;
       const prev = this.lastInventoryBoxCount.get(boxId) ?? 0;
       const count = counts.get(boxId) ?? 0;
       if (count > prev) {
-        if (this.tryMarkDropped(boxId, `save inventory count ${prev}→${count}`)) {
-          marked = true;
+        const level = this.boxById.get(boxId)?.level;
+        if (level != null) {
+          if (
+            this.markSlotDropped(
+              "stageBoss",
+              level,
+              `save inventory rare+ @ Lv${level}`,
+            )
+          ) {
+            marked = true;
+          }
         }
       }
       this.lastInventoryBoxCount.set(boxId, count);
     }
     return marked;
-  }
-
-  private tryMarkDropped(boxId: number, source: string): boolean {
-    if (!this.isEnabledRoute(boxId)) return false;
-    if (this.isDropOnCooldown(boxId)) return false;
-
-    log.info(
-      `Stage boss drop detected (${source} → Lv${this.boxById.get(boxId)?.level ?? "?"})`,
-    );
-    this.markDropped(boxId);
-    return true;
-  }
-
-  private isDropOnCooldown(boxId: number): boolean {
-    const droppedAt = this.timers.get(boxId);
-    if (droppedAt === undefined) return false;
-    const effectiveCd = this.resolveEffectiveCooldownSeconds(boxId);
-    const elapsed = (Date.now() - droppedAt) / 1000;
-    return elapsed < effectiveCd;
   }
 
   private logIgnoredLogDrop(itemKey: number): void {
@@ -228,6 +266,89 @@ export class BoxTimerService {
     this.timers.delete(boxId);
     this.wasOnCooldown.delete(boxId);
     return this.commitState();
+  }
+
+  markSlotDropped(slot: SlotChestKind, level: number, source?: string): boolean {
+    if (!SLOT_CHEST_KINDS.includes(slot) || level <= 0) return false;
+    if (!this.isSlotLevelTracked(level)) {
+      log.info(`Slot ${slot} Lv${level} ignored — enable Lv${level} in tracker chips`);
+      return false;
+    }
+    const key = slotTimerStorageKey(slot, level);
+    log.info(
+      `Slot chest drop (${SLOT_CHEST_SHORT_LABELS[slot]} Lv${level}${source ? `, ${source}` : ""})`,
+    );
+    this.slotTimers.set(key, Date.now());
+    this.commitState();
+    return true;
+  }
+
+  clearSlotTimer(slot: SlotChestKind, level: number): BoxTimerState {
+    if (level > 0) this.slotTimers.delete(slotTimerStorageKey(slot, level));
+    return this.commitState();
+  }
+
+  setSlotCooldownSeconds(slot: SlotChestKind, cooldownSeconds: number): BoxTimerState {
+    if (!SLOT_CHEST_KINDS.includes(slot)) return this.buildState();
+    const seconds = Math.max(60, Math.min(86_400, Math.round(cooldownSeconds)));
+    if (seconds === SLOT_CHEST_DEFAULT_COOLDOWN_SECONDS[slot]) {
+      this.slotCooldownSecondsByKind.delete(slot);
+    } else {
+      this.slotCooldownSecondsByKind.set(slot, seconds);
+    }
+    return this.commitState();
+  }
+
+  clearSlotCooldownOverride(slot: SlotChestKind): BoxTimerState {
+    if (!SLOT_CHEST_KINDS.includes(slot)) return this.buildState();
+    this.slotCooldownSecondsByKind.delete(slot);
+    return this.commitState();
+  }
+
+  private resolveSlotCooldownSeconds(slot: SlotChestKind): number {
+    return (
+      this.slotCooldownSecondsByKind.get(slot) ?? SLOT_CHEST_DEFAULT_COOLDOWN_SECONDS[slot]
+    );
+  }
+
+  private buildSlotCooldownConfig(): SlotChestCooldownConfig {
+    return {
+      commonSeconds: this.resolveSlotCooldownSeconds("common"),
+      stageBossSeconds: this.resolveSlotCooldownSeconds("stageBoss"),
+      commonIsCustom: this.slotCooldownSecondsByKind.has("common"),
+      stageBossIsCustom: this.slotCooldownSecondsByKind.has("stageBoss"),
+      defaultCommonSeconds: SLOT_CHEST_DEFAULT_COOLDOWN_SECONDS.common,
+      defaultStageBossSeconds: SLOT_CHEST_DEFAULT_COOLDOWN_SECONDS.stageBoss,
+    };
+  }
+
+  private isSlotLevelTracked(level: number): boolean {
+    return slotLevelsForEnabledRoutes(this.enabledBoxIds, this.routes).includes(level);
+  }
+
+  private pruneExpiredSlotTimers(now: number): void {
+    for (const storageKey of [...this.slotTimers.keys()]) {
+      const parsed = parseSlotTimerStorageKey(storageKey);
+      if (!parsed) {
+        this.slotTimers.delete(storageKey);
+        continue;
+      }
+      const droppedAt = this.slotTimers.get(storageKey);
+      if (droppedAt === undefined) continue;
+      const elapsed = (now - droppedAt) / 1000;
+      if (elapsed >= this.resolveSlotCooldownSeconds(parsed.slot)) {
+        this.slotTimers.delete(storageKey);
+      }
+    }
+  }
+
+  private visibleSlotLevels(): number[] {
+    const levels = new Set(slotLevelsForEnabledRoutes(this.enabledBoxIds, this.routes));
+    for (const storageKey of this.slotTimers.keys()) {
+      const parsed = parseSlotTimerStorageKey(storageKey);
+      if (parsed) levels.add(parsed.level);
+    }
+    return [...levels].sort((a, b) => a - b);
   }
 
   setOnChestReady(callback: (payload: ChestEventPayload) => void): void {
@@ -320,6 +441,8 @@ export class BoxTimerService {
   /** Reset timers and enabled routes after box_timers.json was deleted. */
   resetStorage(): BoxTimerState {
     this.timers.clear();
+    this.slotTimers.clear();
+    this.slotCooldownSecondsByKind.clear();
     this.enabledBoxIds.clear();
     this.cooldownSecondsByBoxId.clear();
     this.clearTimeSecondsByBoxId.clear();
@@ -359,21 +482,6 @@ export class BoxTimerService {
       this.resolveCooldownSeconds(boxId),
       this.resolveClearTimeSeconds(boxId),
     );
-  }
-
-  private seedWasOnCooldown(): void {
-    const now = Date.now();
-    for (const boxId of this.enabledBoxIds) {
-      const droppedAt = this.timers.get(boxId);
-      if (droppedAt === undefined) {
-        this.wasOnCooldown.set(boxId, false);
-        continue;
-      }
-      const cooldownSeconds = this.resolveEffectiveCooldownSeconds(boxId);
-      const elapsed = (now - droppedAt) / 1000;
-      const remaining = Math.max(0, Math.ceil(cooldownSeconds - elapsed));
-      this.wasOnCooldown.set(boxId, remaining > 0);
-    }
   }
 
   private resolveNotifyWhenReady(boxId: number): boolean {
@@ -442,79 +550,68 @@ export class BoxTimerService {
     });
   }
 
-  private buildRow(boxId: number, now: number): BoxTimerRow {
-    const box = this.boxById.get(boxId);
-    const cooldownSeconds = this.resolveCooldownSeconds(boxId);
-    const clearTimeSeconds = this.resolveClearTimeSeconds(boxId);
-    const effectiveCooldownSeconds = this.resolveEffectiveCooldownSeconds(boxId);
-    const droppedAt = this.timers.get(boxId);
+  private buildSlotRow(slot: SlotChestKind, level: number, now: number): SlotChestTimerRow {
+    const cooldownSeconds = this.resolveSlotCooldownSeconds(slot);
+    const storageKey = slotTimerStorageKey(slot, level);
+    const droppedAt = this.slotTimers.get(storageKey);
+    const meta = trackerMetaForChestLevel(level, this.catalogFile);
+    const dropStageRangeLabel = meta?.dropStageRangeLabel ?? "—";
     let remainingSeconds = 0;
     let active = false;
     let progress = 0;
 
     if (droppedAt !== undefined) {
       const elapsed = (now - droppedAt) / 1000;
-      remainingSeconds = Math.max(0, Math.ceil(effectiveCooldownSeconds - elapsed));
+      remainingSeconds = Math.max(0, Math.ceil(cooldownSeconds - elapsed));
       active = remainingSeconds > 0;
-      progress =
-        effectiveCooldownSeconds > 0 ? Math.min(1, elapsed / effectiveCooldownSeconds) : 1;
+      progress = cooldownSeconds > 0 ? Math.min(1, elapsed / cooldownSeconds) : 1;
       if (!active) {
-        this.timers.delete(boxId);
+        this.slotTimers.delete(storageKey);
         this.persist();
       }
     }
 
-    const farm = this.resolveFarmStage(boxId);
-    const atIdealStage = farm.key > 0 && this.currentStageKey === farm.key;
-
     return {
-      boxId,
-      name: box?.name ?? `Box ${boxId}`,
-      level: box?.level ?? null,
-      idealStageKey: farm.key,
-      idealStageLabel: farm.label,
+      slot,
+      level,
+      label: `${SLOT_CHEST_SHORT_LABELS[slot]} Lv${level}`,
+      dropStageRangeLabel,
       cooldownSeconds,
-      cooldownIsCustom: this.cooldownSecondsByBoxId.has(boxId),
-      clearTimeSeconds,
-      effectiveCooldownSeconds,
+      cooldownIsCustom: this.slotCooldownSecondsByKind.has(slot),
       active,
       remainingSeconds,
       progress,
       status: active ? "cooldown" : "ready",
-      atIdealStage,
     };
+  }
+
+  private buildSlotLevelGroups(now: number): SlotLevelTimerGroup[] {
+    this.pruneExpiredSlotTimers(now);
+    return this.visibleSlotLevels().map((level) => {
+      const meta = trackerMetaForChestLevel(level, this.catalogFile);
+      return {
+        level,
+        commonBoxId: commonBoxIdForLevel(level, this.catalogFile) ?? 0,
+        rareBoxId: rareBoxIdForLevel(level, this.catalogFile) ?? 0,
+        dropStageRangeLabel: meta?.dropStageRangeLabel ?? "—",
+        common: this.buildSlotRow("common", level, now),
+        stageBoss: this.buildSlotRow("stageBoss", level, now),
+      };
+    });
   }
 
   private buildState(): BoxTimerState {
     const now = Date.now();
-    const rows: BoxTimerRow[] = [];
-    const readyNotifications: ChestEventPayload[] = [];
-
-    for (const boxId of this.routeBoxIds) {
-      if (!this.enabledBoxIds.has(boxId)) {
-        this.wasOnCooldown.delete(boxId);
-        continue;
-      }
-      const prevOnCooldown = this.wasOnCooldown.get(boxId) ?? false;
-      const row = this.buildRow(boxId, now);
-      if (prevOnCooldown && !row.active && this.resolveNotifyWhenReady(boxId)) {
-        readyNotifications.push({ boxId, name: row.name, level: row.level });
-      }
-      this.wasOnCooldown.set(boxId, row.active);
-      rows.push(row);
-    }
-
-    for (const payload of readyNotifications) {
-      this.onChestReady?.(payload);
-    }
-
-    rows.sort((a, b) => compareBoxTimerRows(a, b, this.sortOrder));
-
-    const readyCount = rows.filter((r) => r.status === "ready").length;
-    const cooldownCount = rows.filter((r) => r.status === "cooldown").length;
+    const slotLevelGroups = this.buildSlotLevelGroups(now);
+    const slotRows = slotLevelGroups.flatMap((group) => [group.common, group.stageBoss]);
+    const readyCount = slotRows.filter((r) => r.status === "ready").length;
+    const cooldownCount = slotRows.filter((r) => r.status === "cooldown").length;
 
     return {
-      rows,
+      rows: [],
+      slotRows,
+      slotLevelGroups,
+      slotCooldown: this.buildSlotCooldownConfig(),
       catalog: this.buildCatalog(),
       enabledCount: this.enabledBoxIds.size,
       readyCount,
@@ -549,8 +646,24 @@ export class BoxTimerService {
     }
     try {
       const raw = JSON.parse(readFileSync(path, "utf-8")) as PersistedFile;
-      for (const t of raw.timers ?? []) {
-        if (t.boxId && t.droppedAtMs) this.timers.set(t.boxId, t.droppedAtMs);
+      for (const [storageKey, droppedAtMs] of Object.entries(raw.slotDroppedAtMs ?? {})) {
+        if (droppedAtMs <= 0) continue;
+        const parsed = parseSlotTimerStorageKey(storageKey);
+        if (!parsed) continue;
+        let level = parsed.level;
+        if (level > 1000) {
+          const migrated = bossLevelForStageKey(level, this.routes);
+          if (migrated == null) continue;
+          level = migrated;
+        }
+        this.slotTimers.set(slotTimerStorageKey(parsed.slot, level), droppedAtMs);
+      }
+      for (const [slot, seconds] of Object.entries(raw.slotCooldownSecondsByKind ?? {})) {
+        if (!SLOT_CHEST_KINDS.includes(slot as SlotChestKind)) continue;
+        const value = Number(seconds);
+        if (value >= 60 && value <= 86_400) {
+          this.slotCooldownSecondsByKind.set(slot as SlotChestKind, Math.round(value));
+        }
       }
       for (const [boxId, seconds] of Object.entries(raw.cooldownSecondsByBoxId ?? {})) {
         const id = Number(boxId);
@@ -591,16 +704,12 @@ export class BoxTimerService {
     } catch {
       for (const id of this.defaultEnabledIds()) this.enabledBoxIds.add(id);
     }
-    this.seedWasOnCooldown();
   }
 
   private persist(): void {
     const path = this.persistPath();
     mkdirSync(dirname(path), { recursive: true });
-    const timers: PersistedTimer[] = [...this.timers.entries()].map(([boxId, droppedAtMs]) => ({
-      boxId,
-      droppedAtMs,
-    }));
+    const timers: PersistedTimer[] = [];
     const cooldownSecondsByBoxId = Object.fromEntries(this.cooldownSecondsByBoxId);
     const clearTimeSecondsByBoxId = Object.fromEntries(
       [...this.clearTimeSecondsByBoxId.entries()].filter(([, seconds]) => seconds > 0),
@@ -609,11 +718,17 @@ export class BoxTimerService {
     const notifyWhenReadyByBoxId = Object.fromEntries(
       [...this.notifyWhenReadyByBoxId.entries()].filter(([, enabled]) => !enabled),
     );
+    const slotDroppedAtMs = Object.fromEntries(
+      [...this.slotTimers.entries()].filter(([, droppedAtMs]) => droppedAtMs > 0),
+    );
+    const slotCooldownSecondsByKind = Object.fromEntries(this.slotCooldownSecondsByKind);
     writeFileSync(
       path,
       JSON.stringify(
         {
           timers,
+          slotDroppedAtMs,
+          slotCooldownSecondsByKind,
           enabledBoxIds: [...this.enabledBoxIds],
           cooldownSecondsByBoxId,
           clearTimeSecondsByBoxId,
