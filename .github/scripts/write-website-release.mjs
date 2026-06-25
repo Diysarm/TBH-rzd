@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 /**
- * Writes website/data/release.json from a built NSIS installer in app/release/.
- * Used by the Release workflow so the landing page has a direct .exe link without
- * relying on the GitHub API in the browser.
+ * Writes website/data/release.json from built release artifacts in app/release/.
+ * Prefers the portable zip (extract & run) over the NSIS installer when present.
  */
 import { readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -18,21 +17,33 @@ if (!tag || !version) {
   process.exit(1);
 }
 
-const exe = readdirSync(releaseDir).find((name) => name.endsWith(".exe") && !name.endsWith(".blockmap"));
-if (!exe) {
-  console.error("No installer .exe found in app/release");
+const portableZip = readdirSync(releaseDir).find((name) => name.endsWith("-portable.zip"));
+const installerExe = readdirSync(releaseDir).find(
+  (name) => name.endsWith(".exe") && !name.endsWith(".blockmap"),
+);
+
+if (!portableZip && !installerExe) {
+  console.error("No portable zip or installer .exe found in app/release");
   process.exit(1);
 }
 
-const sizeBytes = statSync(join(releaseDir, exe)).size;
-const downloadUrl = `https://github.com/${repo}/releases/download/${tag}/${exe}`;
+const primary = portableZip ?? installerExe;
+const sizeBytes = statSync(join(releaseDir, primary)).size;
+const downloadUrl = `https://github.com/${repo}/releases/download/${tag}/${primary}`;
 
 const manifest = {
   version: tag,
   downloadUrl,
-  fileName: exe,
+  fileName: primary,
   sizeBytes,
+  kind: portableZip ? "portable" : "installer",
 };
+
+if (installerExe && installerExe !== primary) {
+  manifest.installerUrl = `https://github.com/${repo}/releases/download/${tag}/${installerExe}`;
+  manifest.installerFileName = installerExe;
+  manifest.installerSizeBytes = statSync(join(releaseDir, installerExe)).size;
+}
 
 writeFileSync(outPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
 console.log("Wrote", outPath);

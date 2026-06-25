@@ -15,6 +15,10 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 - Slot chest cooldown tracker in the overlay; **Chests** tab hidden from the sidebar.
 
+### Releases
+
+- GitHub Releases include a **portable zip** — extract the folder and run `TBH Rzd.exe` (no installer).
+
 ## [1.10.0] - 2026-06-14
 
 ### Market

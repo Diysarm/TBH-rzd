@@ -52,15 +52,17 @@ npm run qa:dev   # dev server smoke when UI is not visible
 Shipping a Windows build is two Actions steps (see `.github/workflows/`):
 
 1. **Release prepare** (`release-prepare.yml`) — Actions → **Release prepare** → Run workflow → enter semver **without** `v` (e.g. `1.0.2`). This bumps `app/package.json`, syncs the lockfile, commits to `main`, and pushes tag `v1.0.2`.
-2. **Release** (`release.yml`) — runs automatically when a `v*` tag is pushed. It runs QA, builds the NSIS installer, and publishes a GitHub Release with install/upgrade notes.
+2. **Release** (`release.yml`) — runs automatically when a `v*` tag is pushed. It runs QA, builds the NSIS installer **and a portable zip** (`TBH-Rzd-X.Y.Z-portable.zip`), and publishes both on GitHub Releases.
 
 The release tag **must match** `app/package.json` exactly (package `1.0.2` → tag `v1.0.2`). CI fails if they differ.
+
+**For friends (no installer):** download `TBH-Rzd-X.Y.Z-portable.zip`, extract the folder, double-click `TBH Rzd.exe`. Do not move the `.exe` out of the folder.
 
 **Advanced (manual):** merge to `main`, bump `app/package.json`, run `npm install` in `app/`, commit, then `git tag vX.Y.Z` and `git push origin vX.Y.Z`.
 
 **Rebuild an existing tag:** Actions → **Release** → Run workflow → enter the tag (e.g. `v1.0.1`).
 
-CI uploads the NSIS installer plus `latest.yml` and `.blockmap` so the installed app can update itself from GitHub Releases (see **About** tab). Builds are unsigned — Windows SmartScreen may prompt **Run anyway** on install and after an update.
+CI uploads the portable zip plus the NSIS installer, `latest.yml`, and `.blockmap` (installer path is used for in-app updates from **About**). Builds are unsigned — Windows SmartScreen may prompt **Run anyway**.
 
 ## Features
 

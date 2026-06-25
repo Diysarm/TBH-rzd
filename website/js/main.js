@@ -49,6 +49,15 @@
     return String(n);
   }
 
+  function pickDownloadAsset(assets) {
+    if (!Array.isArray(assets)) return null;
+    const portable = assets.find(function (asset) {
+      return (asset.name || "").toLowerCase().endsWith("-portable.zip");
+    });
+    if (portable) return portable;
+    return pickInstaller(assets);
+  }
+
   function pickInstaller(assets) {
     if (!Array.isArray(assets)) return null;
     const exes = assets.filter(function (asset) {
@@ -72,14 +81,16 @@
     if (footerLink) footerLink.href = RELEASES_LATEST_PAGE;
   }
 
-  function applyDownload(version, url, sizeBytes) {
+  function applyDownload(version, url, sizeBytes, kind) {
     if (downloadLink && url) downloadLink.href = url;
     if (footerLink && url) footerLink.href = url;
 
     const sizeLabel = formatBytes(sizeBytes);
     if (statVersion && version) statVersion.textContent = version;
     if (statSize && sizeLabel) statSize.textContent = sizeLabel;
-    else if (statSize && version) statSize.textContent = "Windows installer";
+    else if (statSize && version) {
+      statSize.textContent = kind === "portable" ? "Portable zip" : "Windows installer";
+    }
   }
 
   function setStat(el, value) {
@@ -105,6 +116,7 @@
           manifest.version || "",
           manifest.downloadUrl,
           manifest.sizeBytes || 0,
+          manifest.kind || "",
         );
       })
       .catch(function () {
@@ -125,9 +137,10 @@
   function loadLatestRelease() {
     return fetchJson(RELEASES_API)
       .then(function (release) {
-        const asset = pickInstaller(release.assets);
+        const asset = pickDownloadAsset(release.assets);
         if (!asset || !asset.browser_download_url) return;
-        applyDownload(release.tag_name || "", asset.browser_download_url, asset.size);
+        const kind = (asset.name || "").toLowerCase().endsWith("-portable.zip") ? "portable" : "installer";
+        applyDownload(release.tag_name || "", asset.browser_download_url, asset.size, kind);
       })
       .catch(function () {
         /* manifest or fallback href already set */
