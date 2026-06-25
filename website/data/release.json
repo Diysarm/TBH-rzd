@@ -1,6 +1,10 @@
 {
-  "version": "v1.10.0",
-  "downloadUrl": "https://github.com/Diysarm/TBH-rzd/releases/download/v1.10.0/tbh-rzd-setup-1.10.0.exe",
-  "fileName": "tbh-rzd-setup-1.10.0.exe",
-  "sizeBytes": 104246576
+  "version": "v1.11.0",
+  "downloadUrl": "https://github.com/Diysarm/TBH-rzd/releases/download/v1.11.0/TBH-Rzd-1.11.0-portable.zip",
+  "fileName": "TBH-Rzd-1.11.0-portable.zip",
+  "sizeBytes": 152437905,
+  "kind": "portable",
+  "installerUrl": "https://github.com/Diysarm/TBH-rzd/releases/download/v1.11.0/tbh-rzd-setup-1.11.0.exe",
+  "installerFileName": "tbh-rzd-setup-1.11.0.exe",
+  "installerSizeBytes": 104716477
 }
