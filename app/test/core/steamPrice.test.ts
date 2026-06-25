@@ -97,12 +97,13 @@ describe("currency map", () => {
     expect(formatMoney(0.04, "BRL")).toBe("R$ 0,04");
     expect(formatMoney(120, "JPY")).toBe("¥120");
     expect(formatMoney(6.49, "PHP")).toBe("P6.49");
-    expect(formatMoney(123039, "IDR")).toBe("Rp 123039.00");
-    expect(formatMoney(181500, "VND")).toBe("181500,00");
+    expect(formatMoney(123039, "IDR")).toBe("Rp 123.039,00");
+    expect(formatMoney(100_000_000, "IDR")).toBe("Rp 100.000.000,00");
+    expect(formatMoney(181500, "VND")).toBe("181.500,00");
     expect(formatMoney(3.24, "UAH")).toBe("3,24");
     expect(formatMoney(257.74, "MYR")).toBe("RM257.74");
     expect(formatMoney(107.55, "NZD")).toBe("NZ$ 107.55");
-    expect(formatMoney(55695.47, "CLP")).toBe("CLP$ 55695,47");
+    expect(formatMoney(55695.47, "CLP")).toBe("CLP$ 55.695,47");
   });
 });
 

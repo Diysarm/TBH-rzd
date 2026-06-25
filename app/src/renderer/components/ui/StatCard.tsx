@@ -23,7 +23,7 @@ export function StatCard({
     >
       {valueFirst ? (
         <div className="flex flex-col gap-1">
-          <div className="text-lg font-bold tabular-nums text-gold">{value}</div>
+          <div className="text-[15px] font-bold leading-snug tabular-nums text-gold sm:text-lg">{value}</div>
           <div className="text-[10px] font-medium uppercase tracking-wider text-muted">{label}</div>
         </div>
       ) : (

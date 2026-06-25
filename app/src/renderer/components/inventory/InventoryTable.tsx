@@ -1,7 +1,5 @@
 import { memo } from "react";
 import { gradeLabel, typeLabel } from "../../../core/labels";
-import { formatMoney } from "../../../core/steamPrice";
-import { unassignedCount } from "../../../core/inventory/location";
 import { gradeColor } from "./gradeColor";
 import { MarketListingLink } from "./MarketListingLink";
 import type { ResolvedInventoryRow } from "../../../../shared/types";
@@ -18,7 +16,7 @@ function priceSourceTitle(source: ResolvedInventoryRow["priceSource"]): string |
 function emptyPriceDisplay(row: ResolvedInventoryRow): { label: string; title: string } {
   if (row.priceChecked) {
     return {
-      label: "No active listings",
+      label: "No listings",
       title: "No active Steam Market listings or recent sales for this item",
     };
   }
@@ -30,7 +28,6 @@ function emptyPriceDisplay(row: ResolvedInventoryRow): { label: string; title: s
 
 export interface InventoryTableProps {
   rows: ResolvedInventoryRow[];
-  currency: string;
   sortKey: "name" | "grade" | "level" | "type" | "count" | "inUse" | "price" | "value";
   sortDir: "asc" | "desc";
   onSort: (
@@ -45,18 +42,12 @@ function SortArrow({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
 }
 
 const thClass =
-  "sticky top-0 z-[1] bg-panel px-2.5 py-1.5 text-left text-muted cursor-pointer select-none border-b border-border font-semibold";
+  "sticky top-0 z-[1] bg-panel px-2 py-1.5 text-left text-[11px] uppercase tracking-wide text-muted cursor-pointer select-none border-b border-border font-semibold";
 const thNumClass = cn(thClass, "text-right");
-const tdClass = "px-2.5 py-1.5 border-b border-border";
-const tdNumClass = cn(tdClass, "text-right");
+const tdClass = "px-2 py-1.5 border-b border-border";
+const tdNumClass = cn(tdClass, "text-right tabular-nums");
 
-const InventoryRow = memo(function InventoryRow({
-  row,
-  currency,
-}: {
-  row: ResolvedInventoryRow;
-  currency: string;
-}) {
+const InventoryRow = memo(function InventoryRow({ row }: { row: ResolvedInventoryRow }) {
   const inUse = row.inUseCount ?? 0;
   const emptyPrice = row.marketHashName ? emptyPriceDisplay(row) : null;
   return (
@@ -66,18 +57,19 @@ const InventoryRow = memo(function InventoryRow({
         !row.known && "opacity-70",
       )}
     >
-      <td className={tdClass}>
-        <span
-          className="mr-1 inline-block size-[9px] shrink-0 rounded-full"
-          style={{ background: gradeColor(row.grade) }}
-        />
-        {row.name}
-        {row.chaoticCount > 0 && (
-          <span className="text-gold" title="Chaotic">
-            {" "}
-            &#9670;
-          </span>
-        )}
+      <td className={cn(tdClass, "max-w-[11rem]")} title={row.name}>
+        <div className="flex min-w-0 items-center gap-1">
+          <span
+            className="size-[9px] shrink-0 rounded-full"
+            style={{ background: gradeColor(row.grade) }}
+          />
+          <span className="min-w-0 truncate">{row.name}</span>
+          {row.chaoticCount > 0 && (
+            <span className="shrink-0 text-gold" title="Chaotic">
+              &#9670;
+            </span>
+          )}
+        </div>
       </td>
       <td className={tdClass} style={{ color: gradeColor(row.grade) }}>
         {gradeLabel(row.grade)}
@@ -85,35 +77,8 @@ const InventoryRow = memo(function InventoryRow({
       <td className={tdNumClass}>
         {row.level != null ? row.level : <span className="text-muted">-</span>}
       </td>
-      <td className={cn(tdClass, "text-muted")}>{typeLabel(row.type)}</td>
+      <td className={cn(tdClass, "text-muted text-[12px]")}>{typeLabel(row.type)}</td>
       <td className={tdNumClass}>{row.count}</td>
-      <td className={tdNumClass}>
-        {(row.inventoryCount ?? 0) > 0 && (
-          <span className="mr-1.5 inline-block text-[11px] text-muted" title="Inventory">
-            Inv {row.inventoryCount}
-          </span>
-        )}
-        {(row.stashCount ?? 0) > 0 && (
-          <span className="mr-1.5 inline-block text-[11px] text-muted" title="Stash">
-            St {row.stashCount}
-          </span>
-        )}
-        {(row.tradingCount ?? 0) > 0 && (
-          <span className="mr-1.5 inline-block text-[11px] text-muted" title="Trading">
-            Tr {row.tradingCount}
-          </span>
-        )}
-        {inUse > 0 && (
-          <span className="mr-1.5 inline-block text-[11px] text-muted" title="Equipped">
-            Eq {inUse}
-          </span>
-        )}
-        {unassignedCount(row) > 0 && (
-          <span className="mr-1.5 inline-block text-[11px] text-muted" title="Unassigned">
-            ?
-          </span>
-        )}
-      </td>
       <td className={tdNumClass}>
         {inUse > 0 ? (
           <span className="text-accent">
@@ -124,15 +89,19 @@ const InventoryRow = memo(function InventoryRow({
           <span className="text-muted">-</span>
         )}
       </td>
-      <td className={tdNumClass}>
+      <td className={cn(tdNumClass, "whitespace-nowrap")}>
         {row.marketHashName ? (
           row.priceRaw ? (
-            <MarketListingLink hash={row.marketHashName} title={priceSourceTitle(row.priceSource)}>
+            <MarketListingLink
+              hash={row.marketHashName}
+              title={priceSourceTitle(row.priceSource)}
+              className="text-gold no-underline hover:text-accent hover:underline"
+            >
               {row.priceRaw}
             </MarketListingLink>
           ) : (
             <MarketListingLink hash={row.marketHashName} title={emptyPrice!.title}>
-              <span className="text-muted">{emptyPrice!.label}</span>
+              <span className="text-[12px] text-muted">{emptyPrice!.label}</span>
             </MarketListingLink>
           )
         ) : (
@@ -141,31 +110,12 @@ const InventoryRow = memo(function InventoryRow({
           </span>
         )}
       </td>
-      <td className={tdNumClass}>
-        {row.marketHashName ? (
-          <MarketListingLink
-            hash={row.marketHashName}
-            title={
-              row.value != null && Number.isFinite(row.value)
-                ? `${priceSourceTitle(row.priceSource) ?? "Steam Market"} · stack value`
-                : "Open on Steam Market"
-            }
-          >
-            {row.value != null && Number.isFinite(row.value)
-              ? formatMoney(row.value, currency)
-              : "-"}
-          </MarketListingLink>
-        ) : (
-          "-"
-        )}
-      </td>
     </tr>
   );
 });
 
 export function InventoryTable({
   rows,
-  currency,
   sortKey,
   sortDir,
   onSort,
@@ -196,7 +146,6 @@ export function InventoryTable({
               Count
               <SortArrow active={sortKey === "count"} dir={sortDir} />
             </th>
-            <th className={thNumClass}>Location</th>
             <th className={thNumClass} onClick={() => onSort("inUse")}>
               In use
               <SortArrow active={sortKey === "inUse"} dir={sortDir} />
@@ -205,16 +154,12 @@ export function InventoryTable({
               Price
               <SortArrow active={sortKey === "price"} dir={sortDir} />
             </th>
-            <th className={thNumClass} onClick={() => onSort("value")}>
-              Value
-              <SortArrow active={sortKey === "value"} dir={sortDir} />
-            </th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={9} className="px-3 py-6 text-center text-muted">
+              <td colSpan={7} className="px-3 py-6 text-center text-muted">
                 No items match these filters.{" "}
                 <Button size="sm" className="ml-1.5" onClick={onClearFilters}>
                   Clear filters
@@ -222,7 +167,7 @@ export function InventoryTable({
               </td>
             </tr>
           ) : (
-            rows.map((row) => <InventoryRow key={row.itemKey} row={row} currency={currency} />)
+            rows.map((row) => <InventoryRow key={row.itemKey} row={row} />)
           )}
         </tbody>
       </table>

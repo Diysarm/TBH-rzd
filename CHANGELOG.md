@@ -4,7 +4,16 @@ User-facing changes for TBH Companion releases. Update the **[Unreleased]** sect
 
 ## [Unreleased]
 
-## [1.11.0] - 2026-06-14
+## [1.11.0] - 2026-06-25
+
+### Inventory
+
+- Removed **Location** and **Value** table columns so Steam prices fit narrow windows.
+- **Steam value (priced)** summary uses locale thousands separators (e.g. `Rp 100.000.000,00` for IDR).
+
+### Chests
+
+- Slot chest cooldown tracker in the overlay; **Chests** tab hidden from the sidebar.
 
 ## [1.10.0] - 2026-06-14
 

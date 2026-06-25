@@ -124,16 +124,74 @@ const COMMA_DECIMAL = new Set([
 /** ISO codes shown without fractional digits (whole units). */
 const INTEGER_MONEY = new Set(["JPY", "KRW"]);
 
+/** BCP-47 locale for grouping/decimals when formatting numeric amounts. */
+const DISPLAY_LOCALE: Record<string, string> = {
+  AED: "ar-AE",
+  AUD: "en-AU",
+  BGN: "bg-BG",
+  BRL: "pt-BR",
+  CAD: "en-CA",
+  CHF: "de-CH",
+  CLP: "es-CL",
+  CNY: "zh-CN",
+  COP: "es-CO",
+  CRC: "es-CR",
+  CZK: "cs-CZ",
+  DKK: "da-DK",
+  EUR: "de-DE",
+  GBP: "en-GB",
+  HKD: "en-HK",
+  HUF: "hu-HU",
+  IDR: "id-ID",
+  ILS: "he-IL",
+  INR: "en-IN",
+  JPY: "ja-JP",
+  KRW: "ko-KR",
+  KWD: "ar-KW",
+  KZT: "kk-KZ",
+  MXN: "es-MX",
+  MYR: "ms-MY",
+  NOK: "nb-NO",
+  NZD: "en-NZ",
+  PEN: "es-PE",
+  PHP: "en-PH",
+  PLN: "pl-PL",
+  QAR: "ar-QA",
+  RON: "ro-RO",
+  RUB: "ru-RU",
+  SAR: "ar-SA",
+  SGD: "en-SG",
+  THB: "th-TH",
+  TRY: "tr-TR",
+  TWD: "zh-TW",
+  UAH: "uk-UA",
+  USD: "en-US",
+  UYU: "es-UY",
+  VND: "vi-VN",
+  ZAR: "en-ZA",
+};
+
+function displayLocale(iso: string): string {
+  const code = iso.toUpperCase();
+  return DISPLAY_LOCALE[code] ?? (COMMA_DECIMAL.has(code) ? "de-DE" : "en-US");
+}
+
+function formatAmountBody(amount: number, iso: string): string {
+  const code = iso.toUpperCase();
+  const locale = displayLocale(code);
+  if (INTEGER_MONEY.has(code)) {
+    return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(Math.round(amount));
+  }
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
 /** Format a numeric amount for display in the chosen currency. */
 export function formatMoney(amount: number, iso: string): string {
   const code = iso.toUpperCase();
-  const prefix = currencyPrefix(code);
-  if (INTEGER_MONEY.has(code)) {
-    return `${prefix}${Math.round(amount).toLocaleString("en-US")}`;
-  }
-  const fixed = amount.toFixed(2);
-  const body = COMMA_DECIMAL.has(code) ? fixed.replace(".", ",") : fixed;
-  return `${prefix}${body}`;
+  return `${currencyPrefix(code)}${formatAmountBody(amount, code)}`;
 }
 
 /**

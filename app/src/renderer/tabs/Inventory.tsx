@@ -131,7 +131,6 @@ export function Inventory({ onOpenChests }: { onOpenChests?: () => void }) {
 
       <InventoryTable
         rows={rows}
-        currency={currency}
         sortKey={sortKey}
         sortDir={sortDir}
         onSort={toggleSort}

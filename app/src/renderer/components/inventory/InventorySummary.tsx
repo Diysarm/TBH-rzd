@@ -53,7 +53,13 @@ export function InventorySummary({
         <StatCard valueFirst label="distinct" value={inv.rows.length.toLocaleString()} />
         <StatCard
           valueFirst
-          label="Steam value (priced)"
+          className="border-gold/20 bg-gradient-to-br from-gold/5 to-card"
+          label={
+            <>
+              Steam value
+              <span className="normal-case tracking-normal text-muted"> (priced)</span>
+            </>
+          }
           value={
             c.valuedTotal != null && Number.isFinite(c.valuedTotal)
               ? formatMoney(c.valuedTotal, currency)
