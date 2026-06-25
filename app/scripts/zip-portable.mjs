@@ -15,7 +15,9 @@ const staging = join(appDir, "release", folderName);
 const zipPath = join(appDir, "release", `${folderName}.zip`);
 
 if (!existsSync(unpacked)) {
-  console.error("Missing release/win-unpacked — run npm run pack first (or npm run pack:portable).");
+  console.error(
+    "Missing release/win-unpacked — run npm run pack first (or npm run pack:portable).",
+  );
   process.exit(1);
 }
 

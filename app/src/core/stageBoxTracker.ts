@@ -104,7 +104,9 @@ export function resolveTrackedDropBoxId(
 /** BoxData slot type for stage-boss (rare / blue) held chests. */
 export const RARE_BOSS_CHEST_BOX_TYPE = 1;
 
-export function rareBossChestQuantity(chests: readonly { type: number; quantity: number }[]): number {
+export function rareBossChestQuantity(
+  chests: readonly { type: number; quantity: number }[],
+): number {
   return chests
     .filter((c) => c.type === RARE_BOSS_CHEST_BOX_TYPE)
     .reduce((sum, c) => sum + c.quantity, 0);

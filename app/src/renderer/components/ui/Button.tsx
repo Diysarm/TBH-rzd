@@ -5,12 +5,12 @@ type Variant = "default" | "primary" | "danger" | "ghost" | "success";
 type Size = "default" | "lg" | "sm";
 
 const variantClasses: Record<Variant, string> = {
-  default:
-    "bg-card/80 border-border text-fg hover:border-accent/50 hover:bg-card",
+  default: "bg-card/80 border-border text-fg hover:border-accent/50 hover:bg-card",
   primary:
     "bg-accent border-accent/80 text-accent-fg font-semibold shadow-[0_2px_12px_rgb(240_180_41/0.25)] hover:brightness-110",
   danger: "bg-card border-danger/60 text-danger-fg hover:border-danger",
-  ghost: "border-border/60 bg-transparent text-muted hover:border-accent/30 hover:bg-card/50 hover:text-fg",
+  ghost:
+    "border-border/60 bg-transparent text-muted hover:border-accent/30 hover:bg-card/50 hover:text-fg",
   success:
     "border-status-success-border bg-status-success/10 font-semibold text-status-success hover:bg-status-success/20",
 };

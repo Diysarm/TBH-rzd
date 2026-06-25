@@ -159,7 +159,11 @@ export class BoxTimerService {
 
     const bossLevel = bossLevelForStageKey(stageKey, this.routes);
 
-    if (this.lastCommonChestQty !== null && commonQty > this.lastCommonChestQty && bossLevel != null) {
+    if (
+      this.lastCommonChestQty !== null &&
+      commonQty > this.lastCommonChestQty &&
+      bossLevel != null
+    ) {
       if (
         this.markSlotDropped(
           "common",
@@ -181,7 +185,14 @@ export class BoxTimerService {
     this.lastRareChestQty = rareQty;
     if (rareQty <= prevRare) return marked;
 
-    if (bossLevel != null && this.markSlotDropped("stageBoss", bossLevel, `save blue slot ${prevRare}→${rareQty} @ ${stageName(stageKey)}`)) {
+    if (
+      bossLevel != null &&
+      this.markSlotDropped(
+        "stageBoss",
+        bossLevel,
+        `save blue slot ${prevRare}→${rareQty} @ ${stageName(stageKey)}`,
+      )
+    ) {
       marked = true;
     }
 
@@ -226,13 +237,7 @@ export class BoxTimerService {
       if (count > prev) {
         const level = this.boxById.get(boxId)?.level;
         if (level != null) {
-          if (
-            this.markSlotDropped(
-              "stageBoss",
-              level,
-              `save inventory rare+ @ Lv${level}`,
-            )
-          ) {
+          if (this.markSlotDropped("stageBoss", level, `save inventory rare+ @ Lv${level}`)) {
             marked = true;
           }
         }
@@ -300,9 +305,7 @@ export class BoxTimerService {
   }
 
   private resolveSlotCooldownSeconds(slot: SlotChestKind): number {
-    return (
-      this.slotCooldownSecondsByKind.get(slot) ?? SLOT_CHEST_DEFAULT_COOLDOWN_SECONDS[slot]
-    );
+    return this.slotCooldownSecondsByKind.get(slot) ?? SLOT_CHEST_DEFAULT_COOLDOWN_SECONDS[slot];
   }
 
   private buildSlotCooldownConfig(): SlotChestCooldownConfig {

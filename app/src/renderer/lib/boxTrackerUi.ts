@@ -63,10 +63,7 @@ export function stageBoxWikiIconUrl(boxId: number): string {
   return slotChestIconUrl(grade);
 }
 
-export function formatEffectiveCooldown(
-  baseSeconds: number,
-  clearTimeSeconds: number,
-): string {
+export function formatEffectiveCooldown(baseSeconds: number, clearTimeSeconds: number): string {
   const effective = Math.max(0, baseSeconds - clearTimeSeconds);
   if (clearTimeSeconds <= 0) return formatCooldownMinutes(baseSeconds);
   return `${formatCooldownMinutes(effective)} (−${clearTimeSeconds}s clear)`;

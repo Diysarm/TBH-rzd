@@ -22,9 +22,7 @@ export function Overlay() {
   const currency = inv?.currency ?? priceStatus?.currency ?? "USD";
   const invValue = inv?.composition.valuedTotal ?? null;
   const pricing = priceStatus?.running ?? false;
-  const pricingLabel = priceProgress
-    ? `${priceProgress.done}/${priceProgress.total}`
-    : "…";
+  const pricingLabel = priceProgress ? `${priceProgress.done}/${priceProgress.total}` : "…";
 
   return (
     <OverlayFrame density="compact">
@@ -34,10 +32,20 @@ export function Overlay() {
         </span>
         <div className="no-drag flex shrink-0 gap-0.5">
           <AlwaysOnTopIconPin />
-          <IconButton type="button" className="text-[11px]" title="Reset" onClick={() => window.tbh.reset()}>
+          <IconButton
+            type="button"
+            className="text-[11px]"
+            title="Reset"
+            onClick={() => window.tbh.reset()}
+          >
             {"\u21bb"}
           </IconButton>
-          <IconButton type="button" className="text-[11px]" title="Main window" onClick={() => window.tbh.showMain()}>
+          <IconButton
+            type="button"
+            className="text-[11px]"
+            title="Main window"
+            onClick={() => window.tbh.showMain()}
+          >
             {"\u2922"}
           </IconButton>
           <IconButton
@@ -58,7 +66,9 @@ export function Overlay() {
         <>
           <div className="flex items-baseline justify-between gap-2 text-[11px] tabular-nums">
             <p className="m-0 cursor-help" title={RATE_TIP}>
-              <span className="text-lg font-bold leading-none text-gold">{fmtCompact(stats.rollingRate)}</span>
+              <span className="text-lg font-bold leading-none text-gold">
+                {fmtCompact(stats.rollingRate)}
+              </span>
               <span className="ml-0.5 text-[8px] uppercase text-muted">xp/h</span>
             </p>
             <p className="m-0 cursor-help text-right" title={GOLD_TIP}>

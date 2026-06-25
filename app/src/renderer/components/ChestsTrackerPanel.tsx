@@ -55,8 +55,7 @@ export function ChestsTrackerPanel() {
               ? state.slotLevelGroups.find((group) => group.level === entry.level)
               : undefined;
           const onCooldown =
-            slotGroup?.common.status === "cooldown" ||
-            slotGroup?.stageBoss.status === "cooldown";
+            slotGroup?.common.status === "cooldown" || slotGroup?.stageBoss.status === "cooldown";
           return (
             <button
               key={entry.boxId}

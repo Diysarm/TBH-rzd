@@ -209,9 +209,9 @@ describe("BoxTimerService", () => {
     svc.setCurrentStageKey(2108);
     expect(svc.tryMarkDroppedFromSave([{ type: 0, quantity: 1 }])).toBe(false);
     expect(svc.tryMarkDroppedFromSave([{ type: 0, quantity: 2 }])).toBe(true);
-    expect(
-      svc.getState().slotRows.find((r) => r.slot === "common" && r.level === 30)?.status,
-    ).toBe("cooldown");
+    expect(svc.getState().slotRows.find((r) => r.slot === "common" && r.level === 30)?.status).toBe(
+      "cooldown",
+    );
 
     const svc2 = await loadService();
     svc2.setEnabledBoxIds([920301]);

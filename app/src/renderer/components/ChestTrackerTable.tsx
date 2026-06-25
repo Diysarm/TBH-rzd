@@ -39,21 +39,25 @@ function CdInput({
 }
 
 function SlotCooldownStrip({ slotCooldown }: { slotCooldown: SlotChestCooldownConfig }) {
-  const slots: Array<{ slot: SlotChestKind; minutes: number; defaultMin: number; isCustom: boolean }> =
-    [
-      {
-        slot: "common",
-        minutes: Math.round(slotCooldown.commonSeconds / 60),
-        defaultMin: Math.round(slotCooldown.defaultCommonSeconds / 60),
-        isCustom: slotCooldown.commonIsCustom,
-      },
-      {
-        slot: "stageBoss",
-        minutes: Math.round(slotCooldown.stageBossSeconds / 60),
-        defaultMin: Math.round(slotCooldown.defaultStageBossSeconds / 60),
-        isCustom: slotCooldown.stageBossIsCustom,
-      },
-    ];
+  const slots: Array<{
+    slot: SlotChestKind;
+    minutes: number;
+    defaultMin: number;
+    isCustom: boolean;
+  }> = [
+    {
+      slot: "common",
+      minutes: Math.round(slotCooldown.commonSeconds / 60),
+      defaultMin: Math.round(slotCooldown.defaultCommonSeconds / 60),
+      isCustom: slotCooldown.commonIsCustom,
+    },
+    {
+      slot: "stageBoss",
+      minutes: Math.round(slotCooldown.stageBossSeconds / 60),
+      defaultMin: Math.round(slotCooldown.defaultStageBossSeconds / 60),
+      isCustom: slotCooldown.stageBossIsCustom,
+    },
+  ];
 
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-b border-border/70 bg-panel/50 px-3 py-2 text-xs text-muted">
@@ -67,7 +71,8 @@ function SlotCooldownStrip({ slotCooldown }: { slotCooldown: SlotChestCooldownCo
               const sec = min * 60;
               const def = item.defaultMin * 60;
               if (sec === def && item.isCustom) void window.tbh.clearSlotChestCooldown(item.slot);
-              else if (sec !== item.minutes * 60) void window.tbh.setSlotChestCooldown(item.slot, sec);
+              else if (sec !== item.minutes * 60)
+                void window.tbh.setSlotChestCooldown(item.slot, sec);
             }}
           />
           <span>min</span>

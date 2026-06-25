@@ -72,7 +72,11 @@ export function BoxTracker() {
         <span className="truncate text-[10px] font-semibold text-muted">Chest timers</span>
         <div className="no-drag flex shrink-0 items-center gap-0.5">
           <AlwaysOnTopIconPin />
-          <IconButton type="button" title="Minimize" onClick={() => window.tbh.minimizeBoxTracker()}>
+          <IconButton
+            type="button"
+            title="Minimize"
+            onClick={() => window.tbh.minimizeBoxTracker()}
+          >
             {"\u2212"}
           </IconButton>
           <IconButton type="button" title="Open main window" onClick={() => window.tbh.showMain()}>

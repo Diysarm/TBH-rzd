@@ -53,7 +53,9 @@ export function Live() {
           <span className="text-[42px] font-bold leading-none text-gold drop-shadow-sm">
             {fmtCompact(stats.rollingRate)}
           </span>
-          <span className="text-[13px] font-medium uppercase tracking-wider text-muted">XP / hr</span>
+          <span className="text-[13px] font-medium uppercase tracking-wider text-muted">
+            XP / hr
+          </span>
         </div>
 
         <div className="relative flex min-w-0 flex-col gap-1">
