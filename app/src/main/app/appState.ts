@@ -56,8 +56,6 @@ const updates = new UpdateService({
   onUpdateAvailable: (version) => notifications.showUpdateAvailable(version),
 });
 
-boxTimers.setOnChestReady((payload) => notifications.showChestReady(payload));
-boxTimers.setOnChestDropped((payload) => notifications.showChestDrop(payload));
 const tracking = new TrackingService(
   (snap) => inventory.onInventory(snap),
   (text, mtime) => {

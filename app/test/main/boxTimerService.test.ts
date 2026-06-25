@@ -300,24 +300,6 @@ describe("BoxTimerService", () => {
     expect(svc2.getState().catalog.find((e) => e.boxId === 920151)?.notifyWhenReady).toBe(false);
   });
 
-  it("does not fire chest-dropped for legacy markDropped", async () => {
-    const onDropped = vi.fn();
-    const svc = await loadService();
-    svc.setEnabledBoxIds([920151]);
-    svc.setOnChestDropped(onDropped);
-    svc.markDropped(920151);
-    expect(onDropped).not.toHaveBeenCalled();
-  });
-
-  it("does not fire chest-dropped for disabled routes", async () => {
-    const onDropped = vi.fn();
-    const svc = await loadService();
-    svc.setEnabledBoxIds([]);
-    svc.setOnChestDropped(onDropped);
-    svc.markDropped(920151);
-    expect(onDropped).not.toHaveBeenCalled();
-  });
-
   it("does not load legacy boss timers from disk", async () => {
     writeFileSync(
       join(userDataDir, "box_timers.json"),

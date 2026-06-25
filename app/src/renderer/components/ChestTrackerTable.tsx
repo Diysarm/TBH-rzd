@@ -4,7 +4,6 @@ import type {
   SlotChestKind,
   SlotLevelTimerGroup,
 } from "../../../shared/types";
-import { fmtTimer } from "../lib/useBoxTimers";
 import { slotChestIconUrl } from "../lib/boxTrackerUi";
 import { ChestTimerIcon } from "./ChestTimerIcon";
 import { Select } from "./ui/Select";

@@ -5,7 +5,6 @@ import { buildStageBoxCatalog } from "../../core/stageBoxes";
 import {
   canonicalTrackerBoxId,
   countHeldRareStageBoxes,
-  effectiveBoxCooldownSeconds,
   loadStageBoxCatalogFile,
   loadStageBoxTrackerRoutes,
   rareBossChestQuantity,
@@ -45,7 +44,6 @@ import type {
 import { IPC } from "../../../shared/ipc";
 import { broadcast } from "./broadcast";
 import { createLogger } from "../log";
-import type { ChestEventPayload } from "./NotificationService";
 
 const log = createLogger("boxTimers");
 
@@ -81,9 +79,6 @@ export class BoxTimerService {
   private idealStageKeyByBoxId = new Map<number, number>();
   private notifyWhenReadyByBoxId = new Map<number, boolean>();
   private sortOrder: BoxTrackerSortOrder = "cooldown-first";
-  private wasOnCooldown = new Map<number, boolean>();
-  private onChestReady: ((payload: ChestEventPayload) => void) | null = null;
-  private onChestDropped: ((payload: ChestEventPayload) => void) | null = null;
   private tickTimer: NodeJS.Timeout | null = null;
   private subscribers = 0;
   private currentStageKey = 0;
@@ -264,7 +259,6 @@ export class BoxTimerService {
 
   clearTimer(boxId: number): BoxTimerState {
     this.timers.delete(boxId);
-    this.wasOnCooldown.delete(boxId);
     return this.commitState();
   }
 
@@ -349,14 +343,6 @@ export class BoxTimerService {
       if (parsed) levels.add(parsed.level);
     }
     return [...levels].sort((a, b) => a - b);
-  }
-
-  setOnChestReady(callback: (payload: ChestEventPayload) => void): void {
-    this.onChestReady = callback;
-  }
-
-  setOnChestDropped(callback: (payload: ChestEventPayload) => void): void {
-    this.onChestDropped = callback;
   }
 
   setBoxTrackerNotify(boxId: number, enabled: boolean): BoxTimerState {
@@ -449,7 +435,6 @@ export class BoxTimerService {
     this.idealStageKeyByBoxId.clear();
     this.notifyWhenReadyByBoxId.clear();
     this.sortOrder = "cooldown-first";
-    this.wasOnCooldown.clear();
     for (const id of this.defaultEnabledIds()) this.enabledBoxIds.add(id);
     return this.commitState();
   }
@@ -475,13 +460,6 @@ export class BoxTimerService {
 
   private resolveClearTimeSeconds(boxId: number): number {
     return this.clearTimeSecondsByBoxId.get(boxId) ?? 0;
-  }
-
-  private resolveEffectiveCooldownSeconds(boxId: number): number {
-    return effectiveBoxCooldownSeconds(
-      this.resolveCooldownSeconds(boxId),
-      this.resolveClearTimeSeconds(boxId),
-    );
   }
 
   private resolveNotifyWhenReady(boxId: number): boolean {

@@ -2,7 +2,6 @@ import { useBoxTimers } from "../lib/useBoxTimers";
 import {
   applyTrackerPreset,
   enabledCatalogEntries,
-  overlayLevelsSorted,
   toggleTrackedLevel,
   TRACKER_LEVEL_CHIP_GRID_CLASS,
   TRACKER_LEVEL_CHIP_WIDTH_CLASS,
